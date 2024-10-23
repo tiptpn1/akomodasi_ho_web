@@ -7,10 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreSendviconAdminRequest;
 use App\Models\Bagian;
 use App\Models\JenisRapat;
+use App\Models\Konsumsi;
 use App\Models\Ruangan;
 use App\Models\SendVicon;
 use App\Services\ApiResponse;
 use Carbon\Carbon;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -510,5 +512,69 @@ class SendviconController extends Controller
         $vicon->save();
 
         return ApiResponse::success('Data status presensi berhasil diupdate', $vicon, 200);
+    }
+
+    /**
+     * Approve vicon
+     *
+     * @param int $id
+     */
+    public function approve(int $id)
+    {
+        $user = request()->current_user;
+
+        if (!in_array($user->master_hak_akses_id, [2, 4])) {
+            throw new HttpResponseException(response([
+                'errors' => [
+                    'message' => [
+                        'Anda tidak punya hak akses untuk melakukan persetujuan vicon'
+                    ],
+                ]
+            ], 403));
+        }
+
+        $vicon = SendVicon::find($id);
+
+        if (!$vicon) {
+            throw new HttpResponseException(response([
+                'errors' => [
+                    'message' => [
+                        'Data Vicon Tidak Ditemukan'
+                    ],
+                ]
+            ], 404));
+        }
+
+        if ($vicon->status_approval == 1) {
+            throw new HttpResponseException(response([
+                'errors' => [
+                    'message' => [
+                        'Data Vicon Sudah Diapprove'
+                    ],
+                ]
+            ], 403));
+        }
+
+        $konsumsi = Konsumsi::where('id_sendvicon', $id)->first();
+
+        if (!$konsumsi) {
+            throw new HttpResponseException(response([
+                'errors' => [
+                    'message' => [
+                        'Data Konsumsi Tidak Ditemukan'
+                    ],
+                ]
+            ], 404));
+        }
+
+        if ($konsumsi->status == 0 || $konsumsi->status == '' || $konsumsi->status == null) {
+            $konsumsi->status = 1;
+            $konsumsi->save();
+        }
+
+        $vicon->status_approval = 1;
+        $vicon->save();
+
+        return ApiResponse::success('Vicon Berhasil Diapprove', SendVicon::with('konsumsi')->find($vicon->id), 200);
     }
 }

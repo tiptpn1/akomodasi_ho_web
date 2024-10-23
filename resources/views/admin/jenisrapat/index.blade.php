@@ -20,6 +20,9 @@
                                         <center>Nama
                                     </th>
                                     <th>
+                                        <center>Warna
+                                    </th>
+                                    <th>
                                         <center>Status
                                     </th>
                                     <th>
@@ -38,6 +41,15 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $result->nama }}</td>
+                                        <td style="text-align: center;">
+                                            <div
+                                                style="display: flex; flex-direction: row; gap: 10px; justify-content: center;">
+                                                <div
+                                                    style="width: 20px; height: 20px; background-color:{{ $result->kode_warna }}">
+                                                </div>
+                                                <div>{{ $result->kode_warna }}</div>
+                                            </div>
+                                        </td>
                                         <td style="text-align: center;">{{ $result->status }}</td>
                                         <td>{{ $result->keterangan }}</td>
                                         @if (auth()->user()->role != 'Read Only')
@@ -73,22 +85,27 @@
                     <label class="col-sm-13 control-label"></label>
                     <div class="col-sm-12">
                         <b>Nama Jenis Rapat *</b>
-                        <input type="text" class="form-control" name="nama" value="<?php echo $result->nama; ?>"
+                        <input type="text" class="form-control" name="nama" value="{{ $result->nama }}"
                             placeholder="Isikan Nama dari Jenis Rapat " required>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-13 control-label"></label>
                     <div class="col-sm-12">
+                        <b>Warna *</b>
+                        <input type="color" class="form-control" name="kode_warna" value="{{ $result->kode_warna }}"
+                            required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-13 control-label"></label>
+                    <div class="col-sm-12">
                         <b>Status *</b>
-                        <select name="status" class="form-control" value="<?php echo $result->status; ?>" required>
+                        <select name="status" class="form-control" value="{{ $result->status }}" required>
                             <option value='' disabled>Pilihan</option>
-                            <option value='Aktif' <?php if ($result->status == 'Aktif') {
-                                echo 'selected';
-                            } ?>>Aktif</option>
-                            <option value='Non-Aktif' <?php if ($result->status == 'Non-Aktif') {
-                                echo 'selected';
-                            } ?>>Non-Aktif</option>
+                            <option value='Aktif' @if ($result->status == 'Aktif') selected @endif>Aktif</option>
+                            <option value='Non-Aktif' @if ($result->status == 'Non-Aktif') selected @endif>Non-Aktif
+                            </option>
                         </select>
                     </div>
                 </div>
@@ -96,7 +113,7 @@
                     <label class="col-sm-13 control-label"></label>
                     <div class="col-sm-12">
                         <b>Keterangan</b>
-                        <input type="text" class="form-control" name="keterangan" value="<?php echo $result->keterangan; ?>"
+                        <input type="text" class="form-control" name="keterangan" value="{{ $result->keterangan }}"
                             placeholder="Isikan Keterangan Jenis Rapat">
                     </div>
                 </div>
@@ -117,6 +134,13 @@
                     <b>Nama Jenis Rapat *</b>
                     <input type="text" class="form-control" name="nama" placeholder="Isikan Nama dari Jenis Rapat"
                         required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-13 control-label"></label>
+                <div class="col-sm-12">
+                    <b>Warna *</b>
+                    <input type="color" class="form-control" name="kode_warna" required>
                 </div>
             </div>
             <div class="form-group">

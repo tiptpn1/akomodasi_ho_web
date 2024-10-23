@@ -1,13 +1,9 @@
-<div class="color-legend mb-2">
-    <div>
-        <div class="square" style="background-color: {{ $jenis_rapat[0]->kode_warna }}"></div>Rapat External
-    </div>
-    <div>
-        <div class="square" style="background-color: {{ $jenis_rapat[1]->kode_warna }}"></div>Rapat Internal
-    </div>
-    <div>
-        <div class="square" style="background-color: {{ $jenis_rapat[2]->kode_warna }}"></div>Rapat Direksi/Komisaris
-    </div>
+<div class="color-legend mb-2" id="legendInfo">
+    @foreach ($jenis_rapat as $jr)
+        <div>
+            <div class="square" style="background-color: {{ $jr->kode_warna }}"></div>{{ $jr->nama }}
+        </div>
+    @endforeach
     <div>
         <div class="grey square"></div>Available
     </div>
@@ -128,22 +124,22 @@
                             @if ($rowspan == 1 || ($rowspan > 1 && $waktu == $startTime))
                                 <td rowspan="{{ $rowspan }}" class="align-middle"
                                     style="background-color: {{ $vicon->jenisrapat->kode_warna }}; font-size: 14px; font-weight: bold; border: 0px solid black;">
-                                    <div style="display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div style="display: flex; flex-direction: column; justify-content: space-between;" onclick="detail('{{ $vicon->id }}')">
                                         <div>
-                                            Acara: {{ $acara }}<br />
-                                            Waktu: {{ explode(':', $vicon->waktu)[0] . '.' . explode(':', $vicon->waktu)[1]  }} - {{ explode(':', $vicon->waktu2)[0] . '.' . explode(':', $vicon->waktu2)[1] }}<br />
+                                            <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ">{{ $acara }}</div><br />
+                                            {{ explode(':', $vicon->waktu)[0] . '.' . explode(':', $vicon->waktu)[1]  }} - {{ explode(':', $vicon->waktu2)[0] . '.' . explode(':', $vicon->waktu2)[1] }}<br />
+                                            {{ $vicon->bagian->master_bagian_nama }}<br />
                                             Peserta: {{ $vicon->jumlahpeserta != null? $vicon->jumlahpeserta . ' Orang' : '-' }}<br />
-                                            Divisi: {{ $vicon->bagian->master_bagian_nama }}<br />
                                             PIC: {{ $vicon->personil }}<br />
                                         </div>
                                         <div class="text-right">
-                                            <i class="fas {{ $vicon->status_approval == 1? 'fa-check-circle' : 'fa-clock' }}"></i>
+                                            <i class="fas fa-2x {{ $vicon->status_approval == 1? 'fa-check-circle' : 'fa-clock' }}" style="color: {{ $vicon->status_approval == 1? 'blue' : 'black' }}"></i>
                                         </div>
                                     </div>
                                 </td>
                             @endif
                         @else
-                            <td class="grey" style="border: 0px solid black;"></td>
+                            <td class="grey"></td>
                         @endif
                     @endforeach
                 </tr>

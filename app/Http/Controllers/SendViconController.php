@@ -15,6 +15,7 @@ use App\Models\Konsumsi;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -741,6 +742,12 @@ class SendViconController extends Controller
                     'status' => 'error',
                     'message' => 'Data tidak ditemukan',
                 ], 404);
+            }
+            $konsumsi = Konsumsi::where('id_sendvicon', $request->id)->first();
+
+            if ($konsumsi && $konsumsi->status == 0) {
+                $konsumsi->status = 1;
+                $konsumsi->save();
             }
 
             $vicon->update(['status_approval' => 1]);

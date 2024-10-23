@@ -31,11 +31,13 @@ class MasterJenisRapatController extends Controller
     public function save(Request $request)
     {
         $nama = $request->nama;
+        $warna = $request->kode_warna;
         $status = $request->status;
         $keterangan = $request->keterangan;
 
         $data = array(
             'nama' => $nama,
+            'kode_warna' => $warna,
             'status' => $status,
             'keterangan' => $keterangan ?? ''
         );
@@ -49,11 +51,14 @@ class MasterJenisRapatController extends Controller
     public function update(Request $request, $id)
     {
         $nama = $request->nama;
+        $warna = $request->kode_warna;
         $status = $request->status;
         $keterangan = $request->keterangan;
+
         $where = 'id = ' . $id;
         $data = array(
             'nama' => $nama,
+            'kode_warna' =>  $warna,
             'status' => $status,
             'keterangan' => $keterangan ?? ''
         );

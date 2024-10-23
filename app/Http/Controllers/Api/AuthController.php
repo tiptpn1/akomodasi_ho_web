@@ -42,7 +42,7 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Login successful',
                 'token' => $token,
-                'user' => $user
+                'user' => User::with(['hakAkses', 'bagian'])->find($user->master_user_id),
             ]);
         } catch (\Exception $th) {
             return response()->json(['message' => $th->getMessage()], 500);

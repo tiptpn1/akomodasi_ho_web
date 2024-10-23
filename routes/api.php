@@ -53,6 +53,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => 'auth.api']
         Route::post('{id}/presensis/status', [AdminSendViconController::class, 'presensiStatus'])->name('presensis.status');
         Route::post('cancel', [AdminSendViconController::class, 'destroy'])->name('destroy');
         Route::get('export', [AdminSendViconController::class, 'export'])->name('export');
+        Route::post('{id}/approve', [AdminSendViconController::class, 'approve']);
 
         Route::group(['prefix' => 'paginate', 'as' => 'paginate.'], function () {
             Route::get('/', [AdminSendViconController::class, 'pagination'])->name('index');

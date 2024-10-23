@@ -58,4 +58,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(HakAkses::class, 'master_hak_akses_id', 'hak_akses_id');
     }
+
+    public function bagian()
+    {
+        return $this->belongsTo(Bagian::class, 'master_nama_bagian_id', 'master_bagian_id');
+    }
 }
