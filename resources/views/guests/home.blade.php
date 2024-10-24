@@ -963,7 +963,7 @@
                         data: $(this).serialize(),
                         success: function(data, status, xhr) {
                             if (data.success) {
-                                window.location.href = "{{ route('admin.dashboard.index') }}";
+                                window.location.href = "{{ route('admin.agenda.index') }}";
                             }
                         },
                         error: function(xhr) {

@@ -10,10 +10,10 @@
                     Agenda Kendaraan
                 </a> --}}
                 @else
-                    <a class="nav-link" href="{{ route('admin.dashboard.index') }}">
+                    {{-- <a class="nav-link" href="{{ route('admin.dashboard.index') }}">
                         <div class="sb-nav-link-icon"></div>
                         Dashboard
-                    </a>
+                    </a> --}}
                     <a class="nav-link" href="{{ route('admin.agenda.index') }}">
                         <div class="sb-nav-link-icon"></div>
                         Dashboard Agenda
