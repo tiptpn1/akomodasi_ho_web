@@ -35,6 +35,7 @@ class SendViconController extends Controller
     public function index()
     {
         $bagians = Bagian::orderBy('master_bagian_id', 'desc')->get();
+        $userBagianId = Auth::user()->master_nama_bagian_id;
         $jenisRapat = JenisRapat::orderBy('id', 'desc')->get();
         $jenisRapatWithStatus = JenisRapat::where('status', 'Aktif')->get();
         $ruangans = Ruangan::orderBy('id', 'desc')->get();
@@ -51,7 +52,8 @@ class SendViconController extends Controller
             // 'petugas_rapat' => $petugasRapat,
             // 'petugas_ti' => $petugasTI,
             'masterlink' => $masterlink,
-            'konsumsi' => $konsumsi
+            'konsumsi' => $konsumsi,
+            'bagian_id'=> $userBagianId
         ];
         return view('admin.jadwal-vicon.index', $view_data);
     }
@@ -238,7 +240,7 @@ class SendViconController extends Controller
                 $sendvicon->bagian_id = $validated['bagian'];
                 $sendvicon->acara = $validated['acara'];
                 $sendvicon->tanggal = $eventDate;
-                $sendvicon->agenda_direksi = $validated['agenda_direksi'];
+                //$sendvicon->agenda_direksi = $validated['agenda_direksi'];
                 $sendvicon->jenisrapat_id = $validated['jenisrapat'];
                 $sendvicon->waktu = $validated['waktu'];
                 $sendvicon->waktu2 = $validated['waktu2'];
@@ -247,13 +249,13 @@ class SendViconController extends Controller
                 $sendvicon->id_ruangan = $id_ruangan ?? null;
                 $sendvicon->ruangan = $ruangan;
                 $sendvicon->ruangan_lain = $ruangan_lain;
-                $sendvicon->privat = $validated['privat'];
+                //$sendvicon->privat = $validated['privat'];
                 $sendvicon->vicon = $validated['vicon'];
                 $sendvicon->jenis_link = $validated['jenis_link'];
                 $sendvicon->personil = $validated['nopersonel'];
                 $sendvicon->keterangan = $validated['keterangan'];
-                $sendvicon->link = $validated['link'];
-                $sendvicon->password = $validated['password'];
+                //$sendvicon->link = $validated['link'];
+                //$sendvicon->password = $validated['password'];
                 $sendvicon->dokumentasi = null;
                 $sendvicon->persiapanrapat = '';
                 $sendvicon->persiapanvicon = '';
@@ -688,7 +690,7 @@ class SendViconController extends Controller
                 $approval_btn = '';
                 if ($item->status_approval == 0) {
                     if (in_array($item->ruangan, ['Ruangan Rapat Teh', 'Ruangan Rapat Karet', 'Ruangan Rapat Robusta']) || in_array($item->id_ruangan, [13, 14, 15])) {
-                        if (auth()->user()->master_hak_akses_id == 4) {
+                        if (auth()->user()->master_hak_akses_id == 4 || auth()->user()->master_hak_akses_id == 2) {
                             $approval_btn = '<button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" class="btn btn-success btn-approve" onclick="approve(' . $item->id . ', \'' . $item->acara . '\')"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-check"></i></div></button>';
                         }
                     } else if (auth()->user()->master_hak_akses_id == 2) {
@@ -698,15 +700,15 @@ class SendViconController extends Controller
 
                 $detailButton = '<button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="detail(' . "'" . $item->id . "'" . ')" class="btn btn-primary btn-sm"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-eye" aria-hidden="true"></i></div>';
                 $absensiButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="absensi(' . "'" . $item->id . "'" . ')" class="btn btn-outline-success btn-sm"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-star"></i></div>';
-                $invitation = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="invitation(' . "'" . $item->id . "'" . ')" class="btn btn-info btn-sm"><i class="nav-icon fas fa-file"></i>';
+               // $invitation = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="invitation(' . "'" . $item->id . "'" . ')" class="btn btn-info btn-sm"><i class="nav-icon fas fa-file"></i>';
                 $editButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="update(' . "'" . $item->id . "'" . ')" class="btn btn-warning btn-sm"><i class="nav-icon fas fa-edit"></i>';
                 $hapusButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" class="btn btn-sm btn-danger" onclick="hapus(' . "'" . $item->id . "'" . '); return false"><i class="far fa-trash-alt"></i>';
 
                 if (!is_null($item->token)) {
-                    $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ? $detailButton . $absensiButton . $invitation . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ? $detailButton . $absensiButton . $invitation . $editButton . $hapusButton : $detailButton . $absensiButton . $invitation) : '');
+                    $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ? $detailButton . $absensiButton . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ? $detailButton . $absensiButton . $editButton . $hapusButton : $detailButton . $absensiButton ) : '');
                     $row[] = '<center>' . $approval_btn . $actionButton;
                 } else {
-                    $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ? $detailButton . $invitation . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ? $detailButton . $invitation . $editButton . $hapusButton : $detailButton . $invitation) : '');
+                    $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ? $detailButton . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ? $detailButton . $editButton . $hapusButton : $detailButton) : '');
                     $row[] = '<center>' . $approval_btn . $actionButton;
                 }
             } else {

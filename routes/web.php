@@ -48,15 +48,16 @@ Route::post('sendvicon/store', [SendViconController::class, 'store'])->name('sen
 Route::post('sendvicon/cancel', [SendViconController::class, 'cancel'])->name('sendvicon.cancel');
 Route::get('sendvicon/check-nama', [SendViconController::class, 'ceknama'])->name('sendvicon.ceknama');
 
-// Route::group(['middleware' => 'role:GA'], function () {
 Route::group(['prefix' => 'konsumsi', 'as' => 'konsumsi.'], function () {
-    // Route::resource('konsumsi', KonsumsiController::class);
     Route::get('/', [KonsumsiController::class, 'index'])->name('index');
     Route::put('/update/{id}', [KonsumsiController::class, 'update'])->name('update');
     Route::post('/approve/{id}', [KonsumsiController::class, 'approve'])->name('approve');
     Route::delete('/destroy/{id}', [KonsumsiController::class, 'destroy'])->name('destroy');
+    Route::post('/export-excel', [KonsumsiController::class, 'exportExcel'])->name('exportExcel');
+    Route::post('/kirim/{id}', [KonsumsiController::class, 'kirim'])->name('kirim');
+    Route::get('/data', [KonsumsiController::class, 'data'])->name('data');
 });
-// });
+
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     route::get('logout', [UserController::class, 'logout'])->name('logout');
@@ -171,5 +172,6 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::group(['prefix' => 'agenda', 'as' => 'agenda.', 'middleware' => 'role:admin,GA,divisi,sekper,read'], function () {
         Route::get('/', [DashboardAgendaController::class, 'index'])->name('index');
         Route::post('/get-content', [DashboardAgendaController::class, 'getContent'])->name('content');
+        Route::post('/export-pdf', [DashboardAgendaController::class, 'export_pdf'])->name('exportPdf');
     });
 });

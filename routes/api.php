@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\BagianController;
+use App\Http\Controllers\Api\Admin\FeedbackController;
 use App\Http\Controllers\Api\Admin\JenisRapatController;
 use App\Http\Controllers\Api\Admin\KendaraanController;
 use App\Http\Controllers\Api\Admin\KonsumsiController;
@@ -37,6 +38,7 @@ Route::middleware('auth.api')->group(function () {
 });
 
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+Route::get('dashboard/export', [DashboardController::class, 'export'])->middleware('auth.api')->name('dashboard.export');
 Route::get('vicon', [SendViconController::class, 'index'])->name('vicon.index');
 
 // API membuat absensi
@@ -72,6 +74,11 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => 'auth.api']
             Route::get('/', [PresensiController::class, 'index'])->name('index');
             Route::get('{id}/show', [PresensiController::class, 'show'])->name('presensis.show');
         });
+
+        // Feedback
+        Route::get('{id}/feedbacks', [FeedbackController::class, 'show'])->where('id', '[0-9]+');
+        Route::post('{id}/feedbacks/store', [FeedbackController::class, 'store'])->where('id', '[0-9]+');
+        Route::patch('{idVicon}/feedbacks/{idFeedback}/update', [FeedbackController::class, 'update'])->where('idVicon', '[0-9]+')->where('idFeedback', '[0-9]+');
     });
 
     // agenda kendaraan
@@ -119,5 +126,6 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => 'auth.api']
         Route::post('{id}/update', [KonsumsiController::class, 'update'])->name('update');
         Route::post('{id}/destroy', [KonsumsiController::class, 'destroy'])->name('destroy');
         Route::post('{id}/approve', [KonsumsiController::class, 'approve'])->name('approve');
+        Route::post('export', [KonsumsiController::class, 'exportExcel'])->name('export');
     });
 });

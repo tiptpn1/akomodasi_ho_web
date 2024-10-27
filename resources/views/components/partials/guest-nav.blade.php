@@ -23,7 +23,7 @@
                 </li> --}}
                 <li class="nav-item">
                     @auth
-                        <a class="nav-link" href="{{ route('admin.dashboard.index') }}">
+                        <a class="nav-link" href="{{ route('admin.agenda.index') }}">
                             Dashboard
                         </a>
                     @else

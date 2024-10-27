@@ -61,6 +61,10 @@
                 height: 0;
                 background: transparent;
             }
+
+            td>div:hover {
+                cursor: pointer;
+            }
         </style>
     </x-slot>
 
@@ -86,12 +90,15 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row mb-4">
+                            <div class="row mb-2">
                                 <b>Tanggal:</b>
                                 <div class="ml-2">
                                     <input type="text" id="tanggal" name="tanggal" class="form-control"
                                         placeholder="Pilih Tanggal" style="height: 100% !important;">
                                 </div>
+                            </div>
+                            <div class="mb-4">
+                                <button class="btn btn-success" id="exportPdf">Export PDF</button>
                             </div>
                             <div id="agendaContent"></div>
                         </div>
@@ -149,11 +156,11 @@
                                             <td> : </td>
                                             <td id="det_tempat"></td>
                                         </tr>
-                                        <tr>
+                                        {{-- <tr>
                                             <td>Bersifat Privat</td>
                                             <td> : </td>
                                             <td id="det_privat"></td>
-                                        </tr>
+                                        </tr> --}}
                                         <tr>
                                             <td>Bersifat Vicon</td>
                                             <td> : </td>
@@ -169,11 +176,11 @@
                                             <td> : </td>
                                             <td id="det_jenisrapat"></td>
                                         </tr>
-                                        <tr>
+                                        {{-- <tr>
                                             <td>Agenda Direksi</td>
                                             <td> : </td>
                                             <td id="det_agendadireksi"></td>
-                                        </tr>
+                                        </tr> --}}
                                         <tr>
                                             <td>Personel yang dapat dihubungi</td>
                                             <td> : </td>
@@ -190,16 +197,16 @@
                                             <td> : </td>
                                             <td id="det_status"></td>
                                         </tr>
-                                        <tr>
+                                        {{-- <tr>
                                             <td>Link</td>
                                             <td> : </td>
                                             <td id="det_link"></td>
-                                        </tr>
-                                        <tr>
+                                        </tr> --}}
+                                        {{-- <tr>
                                             <td>Password</td>
                                             <td> : </td>
                                             <td id="det_password"></td>
-                                        </tr>
+                                        </tr> --}}
                                         <tr>
                                             <td>Keterangan</td>
                                             <td> : </td>
@@ -348,16 +355,16 @@
                         $('#det_peserta').html(data.peserta);
                         $('#det_jumlahpeserta').html(data.jumlahpeserta);
                         $('#det_tempat').html(tempat);
-                        $('#det_privat').html(data.privat);
+                        // $('#det_privat').html(data.privat);
                         $('#det_vicon').html(data.vicon);
                         $('#det_jenislink').html(data.jenis_link);
                         $('#det_jenisrapat').html(data.jenisrapat.nama);
-                        $('#det_agendadireksi').html(data.agenda_direksi);
+                        // $('#det_agendadireksi').html(data.agenda_direksi);
                         $('#det_personil').html(data.personil);
                         $('#det_sk').html(sk);
                         $('#det_status').html(data.status);
-                        $('#det_link').html(link);
-                        $('#det_pass').html(data.password);
+                        // $('#det_link').html(link);
+                        // $('#det_pass').html(data.password);
                         $('#det_keterangan').html(data.keterangan);
                         $('#det_user').html(data.user);
                         $('#detail').modal('show');
@@ -367,6 +374,55 @@
                     }
                 });
             }
+
+            $('#exportPdf').on('click', function() {
+                buttonExportPdf = $(this);
+                buttonExportPdf.html('<i class="fas fa-spin fa-spinner"></i> Loading...');
+                buttonExportPdf.prop('disabled', true);
+
+                fetch('{{ route('admin.agenda.exportPdf') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({
+                            // lt: lantai,
+                            date: date,
+                        }),
+                    }).then(response => {
+                        if (!response.ok) {
+                            throw new Error('Gagal Export PDF');
+                        }
+                        return response.blob(); // Mengonversi respons menjadi Blob
+                    })
+                    .then(blob => {
+                        const url = URL.createObjectURL(blob); // Membuat URL objek dari Blob
+
+                        const a = document.createElement('a'); // Membuat elemen anchor
+                        a.href = url;
+                        a.target = '_blank';
+                        a.download = `Laporan Agenda pada Tanggal ${date}_{{ time() }}.pdf`; // Nama file yang akan diunduh
+                        document.body.appendChild(a); // Menambahkan elemen anchor ke body
+                        a.click(); // Mengklik anchor untuk memulai unduhan
+                        a.remove(); // Menghapus elemen anchor setelah unduhan
+
+                        URL.revokeObjectURL(url); // Menghapus URL objek untuk membebaskan memori
+
+                        buttonExportPdf.html(`Export PDF`);
+                        buttonExportPdf.prop('disabled', false);
+                    })
+                    .catch(error => {
+                        buttonExportPdf.html(`Export PDF`);
+                        buttonExportPdf.prop('disabled', false);
+
+                        swal({
+                            title: 'Error!',
+                            text: 'Gagal Export PDF!',
+                            type: 'error',
+                        });
+                    });;
+            });
         </script>
     </x-slot>
 </x-layouts.app>

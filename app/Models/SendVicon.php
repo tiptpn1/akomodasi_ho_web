@@ -75,9 +75,9 @@ class SendVicon extends Model
         return $this->hasMany(Absensi::class, 'sendvicon_id', 'id');
     }
 
-    public function feedbacks()
+    public function feedback()
     {
-        return $this->hasMany(Feedback::class, 'sendvicon_id', 'id');
+        return $this->hasOne(Feedback::class, 'sendvicon_id', 'id');
     }
 
     public function masterLink()

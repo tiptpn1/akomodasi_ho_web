@@ -23,8 +23,21 @@ class PresensiController extends Controller
             if ($absensis->isEmpty()) {
                 throw new \Exception('Data Tidak Ditemukan', 404);
             }
-
-            return ApiResponse::success('Data ditemukan', $absensis, 200);
+            return ApiResponse::success('Data ditemukan', [
+                'current_page' => $absensis->currentPage(),
+                'items' => $absensis->items(),
+                'first_page_url' => $absensis->url(1),
+                'from' => $absensis->firstItem(),
+                'last_page' => $absensis->lastPage(),
+                'last_page_url' => $absensis->url($absensis->lastPage()),
+                'links' => $absensis->links(),
+                'next_page_url' => $absensis->nextPageUrl(),
+                'path' => $absensis->path(),
+                'per_page' => $absensis->perPage(),
+                'prev_page_url' => $absensis->previousPageUrl(),
+                'to' => $absensis->lastItem(),
+                'total' => $absensis->total(),
+            ], 200);
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), [], $e->getCode());
         }

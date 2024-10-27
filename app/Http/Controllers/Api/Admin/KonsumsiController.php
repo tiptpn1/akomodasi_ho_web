@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Exports\KonsumsiExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\UpdateKonsumsiRequest;
+use App\Models\Bagian;
 use App\Models\Konsumsi;
+use App\Models\SendVicon;
 use App\Models\User;
 use App\Services\ApiResponse;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class KonsumsiController extends Controller
 {
@@ -148,6 +154,89 @@ class KonsumsiController extends Controller
             }
         } catch (\Exception $e) {
             return ApiResponse::error($e->getMessage(), [], 500);
+        }
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $tanggal_mulai = $request->input('tanggal_mulai', Carbon::parse(SendVicon::with(['konsumsi'])->whereHas('konsumsi')->orderBy('tanggal', 'asc')->first()->tanggal)->format('d-m-Y'));
+        $tanggal_akhir = $request->input('tanggal_akhir', Carbon::parse(SendVicon::with(['konsumsi'])->whereHas('konsumsi')->orderBy('tanggal', 'desc')->first()->tanggal)->format('d-m-Y'));
+        $status = $request->input('status');
+        /**
+         * Bagian bisa lebih dari 1, dipisahkan dengan koma(,)
+         * @example bagian nama, bagian nama
+         */
+        $posisi = $request->input('posisi');
+
+        /**
+         * Bagian bisa lebih dari 1, dalam bentuk array [1,2,3]
+         * @example [1,2,3]
+         */
+        $bagian = $request->input('bagian');
+
+
+        date_default_timezone_set('Asia/Jakarta');
+
+        $tanggal_mulai = $request->tanggal_mulai ?  $request->tanggal_mulai : Carbon::parse(SendVicon::with(['konsumsi'])->whereHas('konsumsi')->orderBy('tanggal', 'asc')->first()->tanggal)->format('d-m-Y');
+        $tanggal_akhir = $request->tanggal_akhir ?  $request->tanggal_akhir : Carbon::parse(SendVicon::with(['konsumsi'])->whereHas('konsumsi')->orderBy('tanggal', 'desc')->first()->tanggal)->format('d-m-Y');
+        $request_status = $request->status != '' ? [$request->status] : [0, 1, 2];
+        $status = $request->status ? ($request->status == '0' ? 'Tidak Batal' : ($request->status == '1' ? 'Batal, Sudah Beli' : 'Batal, Belum Beli')) : 'Semua';
+        $posisi = $request->posisi ? $request->posisi : 'Semua';
+        $divisi = $request->bagian ? (count($request->bagian) ? implode(', ', Bagian::whereIn('master_bagian_id', $request->bagian)->pluck('master_bagian_nama')->toArray()) : 'Semua') : 'Semua';
+        try {
+            $query = DB::table('konsumsi')
+                ->join('sendvicon', 'konsumsi.id_sendvicon', '=', 'sendvicon.id')
+                ->join('master_bagian', 'sendvicon.bagian_id', '=', 'master_bagian.master_bagian_id')
+                ->where('konsumsi.status', '!=', 4)
+                ->select(
+                    'konsumsi.id as konsumsi_id',
+                    'konsumsi.keterangan as konsumsi_keterangan',
+                    'sendvicon.id as sendvicon_id',
+                    'konsumsi.status as konsumsi_status',
+                    'sendvicon.keterangan as sendvicon_keterangan',
+                    'konsumsi.*',
+                    'sendvicon.*',
+                    'master_bagian.*'
+                );
+
+            if ($request->tanggal_mulai) {
+                $query->where('sendvicon.tanggal', '>=', implode('-', array_reverse(explode('-', $request->tanggal_mulai))));
+            }
+
+            if ($request->tanggal_akhir) {
+                $query->where('sendvicon.tanggal', '<=', implode('-', array_reverse(explode('-', $request->tanggal_akhir))));
+            }
+
+            if ($request->bagian) {
+                $query->whereIn('master_bagian.master_bagian_id', $request->bagian);
+            }
+
+            if ($request->posisi != '') {
+                if ($request->posisi == 'kadiv') {
+                    $query->whereIn('konsumsi.status', [2, 3]);
+                }
+
+                if ($request->posisi == 'kasubdiv') {
+                    $query->where('konsumsi.konsumsi_kirim', 1)
+                        ->whereIn('konsumsi.status', [1, 2]);
+                }
+
+                if ($request->posisi == 'asisten') {
+                    $query->where('konsumsi.konsumsi_kirim', 0)
+                        ->whereIn('konsumsi.status', [0, 1]);
+                }
+            }
+
+            $konsumsi = $query->get();
+
+
+            return Excel::download(new KonsumsiExport($konsumsi, $tanggal_mulai, $tanggal_akhir, $divisi, $posisi, $status, $request_status), 'Laporan_Permintaan_Konsumsi.xlsx');
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => $th->getMessage(),
+                'line' => $th->getLine(),
+                'file' => $th->getFile(),
+            ], 500);
         }
     }
 }

@@ -14,6 +14,7 @@ class Feedback extends Model
     protected $keyType = 'int';
     public $incrementing = true;
     public $timestamps = true;
+    const UPDATED_AT = 'update_at';
 
     protected $fillable = [
         'sendvicon_id',

@@ -32,7 +32,6 @@ class StoreSendviconAdminRequest extends FormRequest
              * @example Direksi
              */
             'bagian' => 'required|exists:master_bagian,master_bagian_nama',
-            'agenda_direksi' => 'required|in:Ya,Tidak',
             /**
              * @example Rapat Umum
              */
@@ -50,14 +49,13 @@ class StoreSendviconAdminRequest extends FormRequest
              */
             'waktu2' => 'required|date_format:H:i',
             /**
-             * @example Ruangan Kopi
+             * @example Ruang Rapat Property
              */
-            'id_ruangan' => 'required',
+            'ruangan' => 'required',
             /**
              * @example Coffee shop
              */
             'ruangan_lain' => 'nullable|string',
-            'privat' => 'required|in:Ya,Tidak',
             'vicon' => 'required|in:Ya,Tidak',
             'dokumentasi' => 'required|in:Ya,Tidak',
             /**
@@ -72,16 +70,6 @@ class StoreSendviconAdminRequest extends FormRequest
              * @example 12
              */
             'jumlahpeserta' => 'nullable|integer',
-            // 'petugasruangrapat' => 'nullable|string',
-            // 'petugasti' => 'nullable|string',
-            /**
-             * @example Kakao
-             */
-            'link' => 'nullable|exists:masterlink,namalink',
-            /**
-             * @example 12233
-             */
-            'password' => 'nullable',
             /**
              * @example keterangan
              */
@@ -95,12 +83,12 @@ class StoreSendviconAdminRequest extends FormRequest
              */
             'user' => 'required|string',
             'sk' => 'nullable|file|mimes:pdf,jpg|max:20480',
-            'makan.pagi' => 'nullable|in:0,1',
-            'makan.siang' => 'nullable|in:0,1',
-            'makan.malam' => 'nullable|in:0,1',
-            'snack.pagi' => 'nullable|in:0,1',
-            'snack.siang' => 'nullable|in:0,1',
-            'snack.malam' => 'nullable|in:0,1',
+            'm_pagi' => 'nullable|in:0,1',
+            'm_siang' => 'nullable|in:0,1',
+            'm_malam' => 'nullable|in:0,1',
+            's_pagi' => 'nullable|in:0,1',
+            's_siang' => 'nullable|in:0,1',
+            's_sore' => 'nullable|in:0,1',
         ];
     }
 
@@ -121,33 +109,27 @@ class StoreSendviconAdminRequest extends FormRequest
         return [
             'acara' => 'Acara',
             'bagian' => 'Bagian',
-            'agenda_direksi' => 'Agenda Direksi',
             'jenisrapat' => 'Jenis Rapat',
             'tanggal' => 'Tanggal',
             'waktu' => 'Waktu Mulai',
             'waktu2' => 'Waktu Akhir',
             'id_ruangan' => 'Ruangan',
             'ruangan_lain' => 'Ruangan Lain',
-            'privat' => 'Privat',
             'vicon' => 'Vicon',
             'dokumentasi' => 'Dokumentasi',
             'personil' => 'Personil',
             'peserta' => 'Peserta',
             'jumlahpeserta' => 'Jumlah Peserta',
-            'petugasruangrapat' => 'Petugas Ruang Rapat',
-            'petugasti' => 'Petugas T.I',
-            'link' => 'Link',
-            'password' => 'Password',
             'keterangan' => 'Keterangan',
             'jenis_link' => 'Jenis Link',
             'user' => 'User',
             'sk' => 'SK',
-            'makan.pagi' => 'Makan Pagi',
-            'makan.siang' => 'Makan Siang',
-            'makan.malam' => 'Makan Malam',
-            'snack.pagi' => 'Snack Pagi',
-            'snack.siang' => 'Snack Siang',
-            'snack.malam' => 'Snack Malam',
+            'm_pagi' => 'Makan Pagi',
+            'm_siang' => 'Makan Siang',
+            'm_malam' => 'Makan Malam',
+            's_pagi' => 'Snack Pagi',
+            's_siang' => 'Snack Siang',
+            's_sore' => 'Snack Malam',
         ];
     }
 

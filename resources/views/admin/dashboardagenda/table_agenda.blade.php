@@ -89,7 +89,7 @@
             @foreach ($all_jam_with_minutes as $waktu)
                 <tr>
                     @if (in_array($waktu, $all_jam))
-                        <th scope="row" rowspan="{{ count($all_minutes) }}" class="align-middle">{{ $waktu }}</th>
+                        <th scope="row" rowspan="{{ $waktu != '21.00'? count($all_minutes) : 1 }}" class="align-middle">{{ $waktu }}</th>
                     @endif
                     @foreach ($ruangan as $r)
                         @php
@@ -126,7 +126,7 @@
                                     style="background-color: {{ $vicon->jenisrapat->kode_warna }}; font-size: 14px; font-weight: bold; border: 0px solid black;">
                                     <div style="display: flex; flex-direction: column; justify-content: space-between;" onclick="detail('{{ $vicon->id }}')">
                                         <div>
-                                            <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ">{{ $acara }}</div><br />
+                                            <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ">{{ $acara }}</div>
                                             {{ explode(':', $vicon->waktu)[0] . '.' . explode(':', $vicon->waktu)[1]  }} - {{ explode(':', $vicon->waktu2)[0] . '.' . explode(':', $vicon->waktu2)[1] }}<br />
                                             {{ $vicon->bagian->master_bagian_nama }}<br />
                                             Peserta: {{ $vicon->jumlahpeserta != null? $vicon->jumlahpeserta . ' Orang' : '-' }}<br />

@@ -11,7 +11,17 @@
                 color: rgb(0, 128, 0);
                 font-weight: bold;
             }
+
+            .select2-selection__choice {
+                background-color: rgb(0, 195, 255) !important;
+            }
+
+            .select2-selection__choice__remove {
+                color: white !important;
+            }
         </style>
+
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     </x-slot>
 
     <div id="layoutSidenav_content">
@@ -99,13 +109,13 @@
                                         readonly="true" value="">
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="form-group col-md-6">
+                            {{-- <div class="row"> --}}
+                                <div class="form-group">
                                     <b>Agenda</b>
                                     <input type="text" class="form-control" name="acara" id="acara"
                                         placeholder="Pencarian Agenda">
                                 </div>
-                                <div class="form-group col-md-6">
+                                {{-- <div class="form-group col-md-6">
                                     <b>Agenda Direksi</b>
                                     <select name="agenda_direksi" id="agenda_direksi" class="form-control">
                                         <option selected disabled>Pilih Agenda Direksi</option>
@@ -113,8 +123,8 @@
                                         <option value="Ya">Ya</option>
                                         <option value="Tidak">Tidak</option>
                                     </select>
-                                </div>
-                            </div>
+                                </div> --}}
+                            {{-- </div> --}}
                             <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Rapat Vicon</b>
@@ -136,17 +146,15 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="form-group col-md-6">
-                                    <b>PIC/Bagian (bisa lebih dari satu dengan +Ctrl)</b>
-                                    <select id="bagian" name="bagian[]" class="custom-select" multiple>
-                                        <option selected disabled>Pilih PIC/Bagian</option>
-                                        <option value="">Semua PIC/Bagian</option>
-                                        @foreach ($bagians as $bagian)
-                                            <option value="{{ $bagian->id }}">{{ $bagian->bagian }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                            <div class="form-group">
+                                <b>PIC/Bagian</b><br />
+                                <select id="bagian" name="bagian[]" class="custom-select" style="width: 100% !important;" multiple>
+                                    <option selected disabled>Pilih PIC/Bagian</option>
+                                    <option value="">Semua PIC/Bagian</option>
+                                    @foreach ($bagians as $bagian)
+                                        <option value="{{ $bagian->id }}">{{ $bagian->bagian }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" id="vicon_filter_excel" class="btn btn-warning">
@@ -187,6 +195,18 @@
                                     </span>
                                 </div>
                                 <div class="form-group col-md-6">
+                                    <b>Jenis Rapat <span class="text-danger">*</span></b>
+                                    <select name="jenisrapat" class="form-control" required>
+                                        <option value="">Pilih Jenis Rapat</option>
+                                        @foreach ($jenis_rapat_with_status as $jenis)
+                                            <option value='{{ $jenis->id }}'>{{ $jenis->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                    <span class="text-danger">
+                                        <strong id="jenisrapat_error"></strong>
+                                    </span>
+                                </div>
+                                {{-- <div class="form-group col-md-6">
                                     <b>Privat <span class="text-danger">*</span></b>
                                     <select name="privat" class="form-control" required>
                                         <option value=''>Pilihan</option>
@@ -196,9 +216,9 @@
                                     <span class="text-danger">
                                         <strong id="privat_error"></strong>
                                     </span>
-                                </div>
+                                </div> --}}
                             </div>
-                            <div class="row">
+                            {{-- <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Jenis Rapat <span class="text-danger">*</span></b>
                                     <select name="jenisrapat" class="form-control" required>
@@ -222,14 +242,17 @@
                                         <strong id="agenda_direksi_error"></strong>
                                     </span>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Bagian <span class="text-danger">*</span></b>
                                     <select name="bagian" class="form-control" required>
                                         <option value=''>Pilih Bagian</option>
                                         @foreach ($bagians as $bagian)
-                                            <option value='{{ $bagian->id }}'>{{ $bagian->bagian }}</option>
+                                            {{-- <option value='{{ $bagian->id }}'>{{ $bagian->bagian }}</option> --}}
+                                            <option value='{{ $bagian->id }}'
+                                                {{ $bagian->id == $bagian_id ? 'selected' : '' }}>{{ $bagian->bagian }}
+                                            </option>
                                         @endforeach
                                     </select>
                                     <span class="text-danger">
@@ -333,7 +356,7 @@
                                     </span>
                                 </div>
                                 <div class="form-group col-md-6">
-                                    <b>Estimasi Jumlah Peserta di Kandir (jika ada)</b>
+                                    <b>Estimasi Jumlah Peserta</b>
                                     <input type="text" class="form-control" name="jumlahpeserta"
                                         placeholder="Isikan Estimasi Jumlah Peserta">
                                     <span class="text-danger">
@@ -358,7 +381,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="row">
+                            {{-- <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Link</b>
                                     <select name="link" class="form-control" id="link_add">
@@ -379,7 +402,7 @@
                                         <strong id="password_error"></strong>
                                     </span>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Personel yang dapat dihubungi(nama dan no handphone) *</b>
@@ -500,11 +523,11 @@
                                         <td> : </td>
                                         <td id="det_tempat"></td>
                                     </tr>
-                                    <tr>
+                                    {{-- <tr>
                                         <td>Bersifat Privat</td>
                                         <td> : </td>
                                         <td id="det_privat"></td>
-                                    </tr>
+                                    </tr> --}}
                                     <tr>
                                         <td>Bersifat Vicon</td>
                                         <td> : </td>
@@ -520,11 +543,11 @@
                                         <td> : </td>
                                         <td id="det_jenisrapat"></td>
                                     </tr>
-                                    <tr>
+                                    {{-- <tr>
                                         <td>Agenda Direksi</td>
                                         <td> : </td>
                                         <td id="det_agendadireksi"></td>
-                                    </tr>
+                                    </tr> --}}
                                     <tr>
                                         <td>Personel yang dapat dihubungi</td>
                                         <td> : </td>
@@ -541,7 +564,7 @@
                                         <td> : </td>
                                         <td id="det_status"></td>
                                     </tr>
-                                    <tr>
+                                    {{-- <tr>
                                         <td>Link</td>
                                         <td> : </td>
                                         <td id="det_link"></td>
@@ -550,7 +573,7 @@
                                         <td>Password</td>
                                         <td> : </td>
                                         <td id="det_password"></td>
-                                    </tr>
+                                    </tr> --}}
                                     <tr>
                                         <td>Keterangan</td>
                                         <td> : </td>
@@ -662,7 +685,7 @@
                                         <strong id="ubah_acara_error"></strong>
                                     </span>
                                 </div>
-                                <div class="form-group col-md-6">
+                                {{-- <div class="form-group col-md-6">
                                     <b>Privat <span class="text-danger">*</span></b>
                                     <select name="privat" class="form-control" id="update_privat" required>
                                         <option value=''>Pilihan</option>
@@ -672,7 +695,7 @@
                                     <span class="text-danger">
                                         <strong id="ubah_privat_error"></strong>
                                     </span>
-                                </div>
+                                </div> --}}
                             </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
@@ -687,7 +710,7 @@
                                         <strong id="ubah_jenisrapat_error"></strong>
                                     </span>
                                 </div>
-                                <div class="form-group col-md-6">
+                                {{-- <div class="form-group col-md-6">
                                     <b>Agenda Direksi <span class="text-danger">*</span></b>
                                     <select name="agenda_direksi" id="update_agendadireksi" class="form-control"
                                         required>
@@ -698,7 +721,7 @@
                                     <span class="text-danger">
                                         <strong id="ubah_agenda_direksi_error"></strong>
                                     </span>
-                                </div>
+                                </div> --}}
                             </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
@@ -984,6 +1007,8 @@
     </form>
 
     @push('js')
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
         <script>
             var today = new Date();
             var dd = String(today.getDate()).padStart(2, '0');
@@ -1120,16 +1145,16 @@
                         $('#det_peserta').html(data.peserta);
                         $('#det_jumlahpeserta').html(data.jumlahpeserta);
                         $('#det_tempat').html(tempat);
-                        $('#det_privat').html(data.privat);
+                        //$('#det_privat').html(data.privat);
                         $('#det_vicon').html(data.vicon);
                         $('#det_jenislink').html(data.jenis_link);
                         $('#det_jenisrapat').html(data.jenisrapat.nama);
-                        $('#det_agendadireksi').html(data.agenda_direksi);
+                        //$('#det_agendadireksi').html(data.agenda_direksi);
                         $('#det_personil').html(data.personil);
                         $('#det_sk').html(sk);
                         $('#det_status').html(data.status);
-                        $('#det_link').html(link);
-                        $('#det_pass').html(data.password);
+                        // $('#det_link').html(link);
+                        // $('#det_pass').html(data.password);
                         $('#det_keterangan').html(data.keterangan);
                         $('#det_user').html(data.user);
                         $('#detail').modal('show');
@@ -1250,20 +1275,6 @@
                             $('#update_snack_siang').prop('checked', false);
                             $('#update_snack_sore').prop('checked', false);
                         }
-                        console.log("Konsumsi Makan Pagi:", konsumsi.m_pagi);
-                        console.log("Konsumsi Makan Siang:", konsumsi.m_siang);
-                        console.log("Konsumsi Makan Malam:", konsumsi.m_malam);
-                        console.log("Konsumsi Snack Pagi:", konsumsi.s_pagi);
-                        console.log("Konsumsi Snack Siang:", konsumsi.s_siang);
-                        console.log("Konsumsi Snack Sore:", konsumsi.s_sore);
-
-                        console.log("Checkbox status:");
-                        console.log("Makan Pagi:", $('#update_makan_pagi').is(':checked'));
-                        console.log("Makan Siang:", $('#update_makan_siang').is(':checked'));
-                        console.log("Makan Malam:", $('#update_makan_malam').is(':checked'));
-                        console.log("Snack Pagi:", $('#update_snack_pagi').is(':checked'));
-                        console.log("Snack Siang:", $('#update_snack_siang').is(':checked'));
-                        console.log("Snack Sore:", $('#update_snack_sore').is(':checked'));
 
                         $('#update_id').val(data.id);
                         $('#update_bagian').val(data.bagian_id);
@@ -1273,7 +1284,7 @@
                         $('#update_waktu2').val(waktu2);
                         $('#update_peserta').val(data.peserta);
                         $('#update_jumlahpeserta').val(data.jumlahpeserta);
-                        $('#update_privat').val(data.privat);
+                        //$('#update_privat').val(data.privat);
                         $('#update_vicon').val(data.vicon);
                         $('#update_jenisrapat').val(data.jenisrapat_id);
                         $('#update_agendadireksi').val(data.agenda_direksi);
@@ -1690,6 +1701,12 @@
                     window.open("{{ route('admin.vicon.pdf') }}?" + formData, '_blank');
                 })
             })
+        </script>
+
+        <script>
+            $(document).ready(function () {
+                $('#bagian').select2();
+            });
         </script>
     @endpush
 </x-layouts.app>

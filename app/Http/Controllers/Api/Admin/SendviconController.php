@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Helpers\FunctionHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreSendviconAdminRequest;
+use App\Http\Resources\SendviconCustomResource;
+use App\Http\Resources\SendviconResource;
 use App\Models\Bagian;
 use App\Models\JenisRapat;
 use App\Models\Konsumsi;
@@ -25,7 +27,7 @@ class SendviconController extends Controller
     public function index()
     {
         try {
-            $sendvicons = SendVicon::with(['bagian', 'ruangan', 'jenisrapat', 'masterLink', 'feedbacks'])
+            $sendvicons = SendVicon::with(['bagian', 'ruangan', 'jenisrapat', 'feedback'])
                 ->orderByDesc('tanggal')
                 ->orderBy('waktu')
                 ->limit(10)
@@ -40,7 +42,7 @@ class SendviconController extends Controller
                 $status_ruangan = SendVicon::cek_vicon_ruangan_waktu($sendvicon->id_ruangan, $sendvicon->tanggal, $sendvicon->waktu, $sendvicon->waktu2) > 1 ? 1 : 0;
 
                 return [
-                    'data' => $sendvicon,
+                    'items' => $sendvicon,
                     'status_nama' => $status_nama,
                     'status_ruangan' => $status_ruangan
                 ];
@@ -48,7 +50,7 @@ class SendviconController extends Controller
 
             return ApiResponse::success('Data ditemukan', $results, 200);
         } catch (\Exception $e) {
-            return ApiResponse::error($e->getMessage(), [], $e->getCode());
+            return ApiResponse::error($e->getMessage(), [], 500);
         }
     }
 
@@ -63,21 +65,19 @@ class SendviconController extends Controller
                 throw new \Exception('Waktu akhir harus lebih besar dari waktu Awal', 400);
             }
 
-            $duration = FunctionHelper::countDuration($validated['waktu'], $validated['waktu2']);
-            $bagianId = Bagian::where('master_bagian_nama', '=', $validated['bagian'])->first()->master_bagian_id;
-            $jenisrapatId = JenisRapat::where('nama', '=', $validated['jenisrapat'])->first()->id;
+            $validated['duration'] = FunctionHelper::countDuration($validated['waktu'], $validated['waktu2']);
+            $validated['bagian_id'] = Bagian::where('master_bagian_nama', '=', $validated['bagian'])->first()->master_bagian_id;
+            $validated['jenisrapat_id'] = JenisRapat::where('nama', '=', $validated['jenisrapat'])->first()->id;
 
-            $ruanganId = null;
-            $ruanganNama = null;
-            $ruanganLain = null;
-            if ($validated['id_ruangan'] != 'lain') {
-                $ruanganNama = $validated['id_ruangan'];
-                $ruangan = Ruangan::where('nama', '=', $ruanganNama)->first();
+            $validated['id_ruangan'] = null;
+            if ($validated['ruangan'] != 'lain') {
+                $ruangan = Ruangan::where('nama', '=', $validated['ruangan'])->first();
                 if ($ruangan) {
-                    $ruanganId = $ruangan->id;
+                    $validated['id_ruangan'] = $ruangan->id;
                 }
+                $validated['ruangan_lain'] = null;
             } else {
-                $ruanganLain = $validated['ruangan_lain'] ?? null;
+                $validated['ruangan'] = null;
             }
 
             $validated['sk'] = null;
@@ -89,58 +89,33 @@ class SendviconController extends Controller
                 $validated['sk'] = 'uploads/sk/' . $namefile;
             }
 
-            $status = null;
+            $validated['status'] = null;
             $dateToday = Carbon::now('Asia/Jakarta')->format('Y-m-d');
             $timeNow = Carbon::now('Asia/Jakarta')->format('H:i');
             if ($validated['tanggal'] == $dateToday) {
                 if ($validated['waktu'] > $timeNow) {
-                    $status = "Booked";
+                    $validated['status'] = "Booked";
                 } else if ($validated['waktu'] < $timeNow) {
-                    $status = "Expired";
+                    $validated['status'] = "Expired";
                 }
             }
 
-            $token = Str::random(8);
+            $validated['token'] = Str::random(8);
 
-            $sendvicon = SendVicon::create([
-                'acara' => $validated['acara'],
-                'dokumentasi' => $validated['dokumentasi'],
-                'bagian_id' => $bagianId,
-                'agenda_direksi' => $validated['agenda_direksi'],
-                'jenisrapat_id' => $jenisrapatId,
-                'tanggal' => $validated['tanggal'],
-                'waktu' => $validated['waktu'],
-                'waktu2' => $validated['waktu2'],
-                'ruangan' => $ruanganNama,
-                'ruangan_lain' => $ruanganLain,
-                'id_ruangan' => $ruanganId,
-                'privat' => $validated['privat'],
-                'vicon' => $validated['vicon'],
-                'personil' => $validated['personil'],
-                'peserta' => $validated['peserta'],
-                'jumlahpeserta' => $validated['jumlahpeserta'],
-                'sk' => $validated['sk'],
-                'status' => $status,
-                'link' => $validated['link'],
-                'password' => $validated['password'],
-                'keterangan' => $validated['keterangan'],
-                'persiapanrapat' => '',
-                'persiapanvicon' => '',
-                'durasi' => $duration,
-                'jenis_link' => $validated['jenis_link'],
-                'user' => $validated['user'],
-                'created' => Carbon::now()->format('Y-m-d H:i:s'),
-                'token' => $token,
-                'is_reminded' => 0,
-            ]);
-
-            $sendvicon->konsumsi()->create([
-                'm_pagi' => $validated['makan']['pagi'] ?? 0,
-                'm_siang' => $validated['makan']['siang'] ?? 0,
-                'm_malam' => $validated['makan']['malam'] ?? 0,
-                's_pagi' => $validated['snack']['pagi'] ?? 0,
-                's_siang' => $validated['snack']['siang'] ?? 0,
-                's_malam' => $validated['snack']['malam'] ?? 0,
+            // Create vicon and konsumsi
+            $vicon = new SendVicon($validated);
+            $vicon->persiapanrapat = '';
+            $vicon->persiapanvicon = '';
+            $vicon->created = Carbon::now()->format('Y-m-d H:i:s');
+            $vicon->is_reminded = 0;
+            $vicon->save();
+            $vicon->konsumsi()->create([
+                'm_pagi' => $validated['m_pagi'] ?? 0,
+                'm_siang' => $validated['m_siang'] ?? 0,
+                'm_malam' => $validated['m_malam'] ?? 0,
+                's_pagi' => $validated['s_pagi'] ?? 0,
+                's_siang' => $validated['s_siang'] ?? 0,
+                's_sore' => $validated['s_sore'] ?? 0,
             ]);
 
             // Check ruangan dan jadwal
@@ -151,14 +126,14 @@ class SendviconController extends Controller
             $statusNama = SendVicon::cekvicon_nama_waktu($validated['acara'], $validated['tanggal'], $validated['waktu'], $validated['waktu2']) > 1 ? 1 : 0;
 
             $statusRuangan = SendVicon::cek_vicon_ruangan_waktu($validated['id_ruangan'], $validated['tanggal'], $validated['waktu'], $validated['waktu2']) > 1 ? 1 : 0;
-
-            return ApiResponse::success('Data berhasil disimpan', [
-                'id' => $sendvicon->id,
-                'data' => SendVicon::with('konsumsi')->find($sendvicon->id),
+            $data = [
+                'id' => $vicon->id,
+                'items' => new SendviconResource(SendVicon::with('konsumsi')->find($vicon->id)),
                 'status_nama' => $statusNama,
                 'status_ruangan' => $statusRuangan,
                 'available_ruangan' => $arrayRuangan,
-            ]);
+            ];
+            return (new SendviconCustomResource($data))->response()->setStatusCode(201);
         } catch (\Exception $e) {
             return ApiResponse::error("Data tidak valid", [
                 'message' => $e->getMessage(),
@@ -172,7 +147,7 @@ class SendviconController extends Controller
     public function show(string $id)
     {
         try {
-            $sendvicon = SendVicon::with(['ruangan', 'masterLink', 'bagian', 'jenisrapat', 'feedbacks'])
+            $sendvicon = SendVicon::with(['ruangan', 'bagian', 'jenisrapat', 'feedback'])
                 ->where('id', '=', $id)
                 ->orderByDesc('tanggal')
                 ->orderBy('waktu')
@@ -186,7 +161,7 @@ class SendviconController extends Controller
             $status_ruangan = SendVicon::cek_vicon_ruangan_waktu($sendvicon->id_ruangan, $sendvicon->tanggal, $sendvicon->waktu, $sendvicon->waktu2) > 1 ? 1 : 0;
 
             return ApiResponse::success('Data ditemukan', [
-                'data' => $sendvicon,
+                'items' => $sendvicon,
                 'status_nama' => $status_nama,
                 'status_ruangan' => $status_ruangan
             ], 200);
@@ -245,7 +220,7 @@ class SendviconController extends Controller
         $acara = $request->input('acara', '');
 
         try {
-            $query = SendVicon::with(['ruangan', 'masterlink', 'feedbacks', 'bagian', 'jenisrapat'])
+            $query = SendVicon::with(['ruangan', 'feedback', 'bagian', 'jenisrapat'])
                 ->when($cari, function ($q) use ($cari) {
                     $q->where('acara', 'like', '%' . str_replace("'", '', $cari) . '%');
                 })
@@ -285,7 +260,7 @@ class SendviconController extends Controller
 
             return ApiResponse::success('Data ditemukan', [
                 'current_page' => $sendvicons->currentPage(),
-                'data' => $results,
+                'items' => $results,
                 'first_page_url' => $sendvicons->url(1),
                 'from' => $sendvicons->firstItem(),
                 'last_page' => $sendvicons->lastPage(),
@@ -316,7 +291,7 @@ class SendviconController extends Controller
         $today = now()->toDateString();
 
         try {
-            $sendvicons = Sendvicon::with(['ruangan', 'masterLink', 'feedbacks', 'bagian', 'jenisrapat'])
+            $sendvicons = Sendvicon::with(['ruangan', 'feedback', 'bagian', 'jenisrapat'])
                 ->where('tanggal', $today)
                 ->when($cari, fn($q) => $q->where('acara', 'like', "%$cari_v%"))
                 ->orderBy('waktu')
@@ -339,7 +314,7 @@ class SendviconController extends Controller
 
             return ApiResponse::success('Data ditemukan', [
                 'current_page' => $sendvicons->currentPage(),
-                'data' => $results,
+                'items' => $results,
                 'first_page_url' => $sendvicons->url(1),
                 'from' => $sendvicons->firstItem(),
                 'last_page' => $sendvicons->lastPage(),
@@ -385,7 +360,7 @@ class SendviconController extends Controller
 
             return ApiResponse::success('Data ditemukan', [
                 'current_page' => $sendvicons->currentPage(),
-                'data' => $results,
+                'items' => $results,
                 'first_page_url' => $sendvicons->url(1),
                 'from' => $sendvicons->firstItem(),
                 'last_page' => $sendvicons->lastPage(),
@@ -441,7 +416,7 @@ class SendviconController extends Controller
         $acara = $request->input('acara');
 
         try {
-            $sendvicons = Sendvicon::with(['ruangan', 'masterLink', 'bagian', 'jenisrapat'])
+            $sendvicons = Sendvicon::with(['ruangan', 'bagian', 'jenisrapat'])
                 ->when($tgl_awal, fn($q) => $q->where('tanggal', '>=', $tgl_awal))
                 ->when($tgl_akhir, fn($q) => $q->where('tanggal', '<=', $tgl_akhir))
                 ->when($acara, fn($q) => $q->where('acara', 'like', "%$acara%"))
@@ -476,7 +451,7 @@ class SendviconController extends Controller
     public function presensis($id)
     {
         try {
-            $sendvicons = SendVicon::with(['ruangan', 'masterlink', 'absensis', 'bagian', 'jenisrapat'])
+            $sendvicons = SendVicon::with(['ruangan', 'absensis', 'bagian', 'jenisrapat'])
                 ->where('id', '=', $id)
                 ->first();
 

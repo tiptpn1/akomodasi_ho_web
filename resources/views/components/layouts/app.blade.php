@@ -9,6 +9,7 @@
     <meta name="author" content="" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Pemesanan Layanan Ruang Rapat Dan Video Conference</title>
+    <script src="{{ asset('dist/counselor/js/jquery.min.js') }}"></script>
 
     <link href="{{ asset('dist/admin-lte/css/styles.css') }}" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet">
@@ -27,6 +28,7 @@
     <link rel="stylesheet" href="https://jonthornton.github.io/jquery-timepicker/jquery.timepicker.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.6/css/responsive.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.1.3/css/rowGroup.dataTables.min.css">
 
     <!-- template LTE -->
     <link rel="stylesheet" href="{{ asset('plugins/fontawesome-free/css/all.min.css') }}">
@@ -103,7 +105,8 @@
     <script src="{{ asset('plugins/summernote/summernote-bs4.min.js') }}"></script>
     <script src="{{ asset('dist/admin-lte/js/adminlte.js') }}"></script>
 
-    <script src="{{ asset('dist/counselor/js/jquery.min.js') }}"></script>
+    {{-- <script src="{{ asset('dist/counselor/js/jquery.min.js') }}"></script> --}}
+
     <script src="{{ asset('dist/counselor/js/jquery-migrate-3.0.1.min.js') }}"></script>
     <script src="{{ asset('dist/counselor/js/popper.min.js') }}"></script>
     <script src="{{ asset('dist/counselor/js/bootstrap.min.js') }}"></script>
@@ -121,6 +124,7 @@
     <script src="https://jonthornton.github.io/jquery-timepicker/jquery.timepicker.js"></script>
     <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.2.6/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/rowgroup/1.1.3/js/dataTables.rowGroup.min.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
 

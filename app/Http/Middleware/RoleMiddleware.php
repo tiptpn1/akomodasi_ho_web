@@ -19,7 +19,7 @@ class RoleMiddleware
             if (in_array(auth()->user()->hakAkses->hak_akses_nama, $roles)) {
                 return $next($request);
             } else {
-                return redirect()->route('admin.dashboard.index');
+                return redirect()->route('admin.agenda.index');
             }
         }
 

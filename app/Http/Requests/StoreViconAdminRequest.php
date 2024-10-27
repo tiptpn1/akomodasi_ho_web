@@ -25,9 +25,7 @@ class StoreViconAdminRequest extends FormRequest
     {
         return [
             'acara' => 'required',
-            'privat' => 'required|in:Ya,Tidak',
             'jenisrapat' => 'required|exists:jenisrapat,id',
-            'agenda_direksi' => 'required|in:Ya,Tidak',
             'bagian' => 'required|exists:master_bagian,master_bagian_id',
             'tanggal' => 'required',
             'waktu' => 'required|date_format:H:i',
@@ -44,8 +42,6 @@ class StoreViconAdminRequest extends FormRequest
             'petugasruangrapat.*' => 'nullable|exists:user,username',
             'petugasti' => 'nullable|array',
             'petugasti.*' => 'nullable|exists:user,username',
-            'link' => 'nullable|exists:masterlink,namalink',
-            'password' => 'nullable',
             'nopersonel' => 'required|string',
         ];
     }
@@ -55,11 +51,9 @@ class StoreViconAdminRequest extends FormRequest
     {
         return [
             'acara.required' => 'Acara wajib diisi!!!',
-            'privat.required' => 'Privat wajib diisi!!!',
             'privat.in' => 'Privat harus berupa "Ya" or "Tidak".',
             'jenisrapat.required' => 'Jenis Rapat wajib diisi!!!',
             'jenisrapat.exists' => 'Jenis Rapat tidak ditemukan',
-            'agenda_direksi.required' => 'Agenda Direksi wajib diisi!!!',
             'agenda_direksi.in' => 'Agenda Direksi harus berupa "Ya" or "Tidak".',
             'bagian.required' => 'Bagian wajib diisi!!!',
             'bagian.exists' => 'Bagian tidak ditemukan',
