@@ -27,7 +27,7 @@
     <div id="layoutSidenav_content">
         <main>
             <div class="container-fluid">
-                <h3 class="mt-4">Jadwal Vicon</h3>
+                <h3 class="mt-4">Jadwal Agenda</h3>
                 @if (!in_array(Auth::user()->master_hak_akses_id, [5, 6]))
                     <button type="button" data-toggle="modal" data-target="#tambah" class="btn btn-success">Tambah</button>
                 @endif
@@ -62,7 +62,7 @@
                                             <center>Tempat</center>
                                         </th>
                                         <th style="width: 25%">
-                                            <center>PIC</center>
+                                            <center>Divisi</center>
                                         </th>
                                         <th style="width: 10%">
                                             <center>Vicon</center>
@@ -147,10 +147,9 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <b>PIC/Bagian</b><br />
+                                <b>PIC/Divisi</b><br />
                                 <select id="bagian" name="bagian[]" class="custom-select" style="width: 100% !important;" multiple>
-                                    <option selected disabled>Pilih PIC/Bagian</option>
-                                    <option value="">Semua PIC/Bagian</option>
+                                    <option value="">Semua PIC/Divisi</option>
                                     @foreach ($bagians as $bagian)
                                         <option value="{{ $bagian->id }}">{{ $bagian->bagian }}</option>
                                     @endforeach
@@ -177,7 +176,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="myModalLabel">Tambah Video Conference</h4>
+                    <h4 class="modal-title" id="myModalLabel">Tambah Agenda</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                 </div>
                 <div class="modal-body">
@@ -245,9 +244,9 @@
                             </div> --}}
                             <div class="row">
                                 <div class="form-group col-md-6">
-                                    <b>Bagian <span class="text-danger">*</span></b>
+                                    <b>Divisi <span class="text-danger">*</span></b>
                                     <select name="bagian" class="form-control" required>
-                                        <option value=''>Pilih Bagian</option>
+                                        <option value=''>Pilih Divisi</option>
                                         @foreach ($bagians as $bagian)
                                             {{-- <option value='{{ $bagian->id }}'>{{ $bagian->bagian }}</option> --}}
                                             <option value='{{ $bagian->id }}'
@@ -292,9 +291,9 @@
                             </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
-                                    <b>Tempat (jika ada peserta dari Kandir)</b>
+                                    <b>Tempat <span class="text-danger">*</span></b>
                                     <select name="ruangan" id="ruangan2" onchange="showhidejawaban()"
-                                        class="form-control">
+                                        class="form-control" required>
                                         <option value=''>Pilih Tempat</option>
                                         @foreach ($ruangans as $ruangan)
                                             <option value='{{ $ruangan->id }}'>{{ $ruangan->nama }}</option>
@@ -405,7 +404,7 @@
                             </div> --}}
                             <div class="row">
                                 <div class="form-group col-md-6">
-                                    <b>Personel yang dapat dihubungi(nama dan no handphone) *</b>
+                                    <b>Personel yang dapat dihubungi<br>(Nama dan Nomor WA)<span class="text-danger">*</span></b>
                                     <input type="text" class="form-control" name="nopersonel"
                                         placeholder="Isikan Contact Person" required>
                                     <span class="text-danger">
@@ -479,7 +478,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="myModalLabel">Detail Ruang Rapat Dan Video Converence</h4>
+                    <h4 class="modal-title" id="myModalLabel">Detail Jadwal Agenda</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                 </div>
                 <div class="modal-body">
@@ -489,7 +488,7 @@
                             <div class="col-sm-12">
                                 <table width="100%">
                                     <tr>
-                                        <td style="width: 45%">Bagian</td>
+                                        <td style="width: 45%">Divisi</td>
                                         <td style="width: 5%"> : </td>
                                         <td style="width: 50%" id="det_bagian"></td>
                                     </tr>
@@ -514,12 +513,12 @@
                                         <td id="det_peserta"></td>
                                     </tr>
                                     <tr>
-                                        <td>Estimasi Jumlah Peserta di Kandir (jika ada)</td>
+                                        <td>Estimasi Jumlah Peserta</td>
                                         <td> : </td>
                                         <td id="det_jumlahpeserta"></td>
                                     </tr>
                                     <tr>
-                                        <td>Tempat (jika ada peserta dari Kandir)</td>
+                                        <td>Tempat</td>
                                         <td> : </td>
                                         <td id="det_tempat"></td>
                                     </tr>
@@ -603,7 +602,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="myModalLabel">Invitation Video Converence</h4>
+                    <h4 class="modal-title" id="myModalLabel">Undangan Jadwal Agenda</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                 </div>
                 <div class="modal-body">
@@ -614,7 +613,7 @@
                                 <div class="col-sm-12">
                                     <table width="100%">
                                         <tr>
-                                            <td style="width: 40%">Bagian</td>
+                                            <td style="width: 40%">Divisi</td>
                                             <td style="width: 5%"> : </td>
                                             <td style="width: 50%" id="invit_bagian"></td>
                                         </tr>
@@ -662,7 +661,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="myModalLabel">Update Video Conference</h4>
+                    <h4 class="modal-title" id="myModalLabel">Update Jadwal Agenda</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
                 </div>
                 <div class="modal-body">
@@ -685,19 +684,6 @@
                                         <strong id="ubah_acara_error"></strong>
                                     </span>
                                 </div>
-                                {{-- <div class="form-group col-md-6">
-                                    <b>Privat <span class="text-danger">*</span></b>
-                                    <select name="privat" class="form-control" id="update_privat" required>
-                                        <option value=''>Pilihan</option>
-                                        <option value='Ya'>Ya</option>
-                                        <option value='Tidak'>Tidak</option>
-                                    </select>
-                                    <span class="text-danger">
-                                        <strong id="ubah_privat_error"></strong>
-                                    </span>
-                                </div> --}}
-                            </div>
-                            <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Jenis Rapat <span class="text-danger">*</span></b>
                                     <select name="jenisrapat" id="update_jenisrapat" class="form-control" required>
@@ -710,24 +696,12 @@
                                         <strong id="ubah_jenisrapat_error"></strong>
                                     </span>
                                 </div>
-                                {{-- <div class="form-group col-md-6">
-                                    <b>Agenda Direksi <span class="text-danger">*</span></b>
-                                    <select name="agenda_direksi" id="update_agendadireksi" class="form-control"
-                                        required>
-                                        <option value=''>Pilih Agenda Direksi</option>
-                                        <option value="Ya">Ya</option>
-                                        <option value="Tidak">Tidak</option>
-                                    </select>
-                                    <span class="text-danger">
-                                        <strong id="ubah_agenda_direksi_error"></strong>
-                                    </span>
-                                </div> --}}
                             </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
-                                    <b>Bagian <span class="text-danger">*</span></b>
+                                    <b>Divisi <span class="text-danger">*</span></b>
                                     <select name="bagian" id="update_bagian" class="form-control" required>
-                                        <option value="">Pilih Bagian</option>
+                                        <option value="">Pilih Divisi</option>
                                         @foreach ($bagians as $bagian)
                                             <option value='{{ $bagian->id }}'>{{ $bagian->bagian }}</option>
                                         @endforeach
@@ -769,9 +743,9 @@
                             </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
-                                    <b>Tempat (jika ada peserta dari Kandir)</b>
+                                    <b>Tempat <span class="text-danger">*</span></b>
                                     <select name="ruangan" id="update_ruangan" onchange="showhidejawabanedit()"
-                                        class="form-control">
+                                        class="form-control" required>
                                         <option value=''>Pilih Tempat</option>
                                         @foreach ($ruangans as $ruangan)
                                             <option value='{{ $ruangan->id }}'>{{ $ruangan->nama }}</option>
@@ -828,7 +802,7 @@
                                     </span>
                                 </div>
                                 <div class="form-group col-md-6">
-                                    <b>Estimasi Jumlah Peserta di Kandir (jika ada)</b>
+                                    <b>Estimasi Jumlah Peserta</b>
                                     <input type="text" class="form-control" name="jumlahpeserta"
                                         id="update_jumlahpeserta" placeholder="Isikan Estimasi Jumlah Peserta">
                                     <span class="text-danger">
@@ -838,14 +812,6 @@
                             </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
-                                    <b>Keterangan</b>
-                                    <input type="text" class="form-control" name="keterangan"
-                                        id="update_keterangan" placeholder="Contoh : Permintaan Teh dan Makan Siang">
-                                    <span class="text-danger">
-                                        <strong id="ubah_keterangan_error"></strong>
-                                    </span>
-                                </div>
-                                <div class="form-group col-md-6">
                                     <b>Upload Surat/Memo Undangan</b>
                                     <input type="file" name="sk" class="form-control" id="update_sk">
                                     <label id="label_sk"></label>
@@ -853,49 +819,20 @@
                                         <strong id="ubah_sk_error"></strong>
                                     </span>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="form-group col-md-12">
-                                    <b>Status</b>
-                                    <select name="status" id="update_status" class="form-control">
-                                        <option value="">Pilih Status</option>
-                                        <option value="Cancel">Cancel</option>
-                                        <option value="Booked">Booked</option>
-                                        <option value="Confirm">Confirm</option>
-                                        <option value="Expired">Expired</option>
-                                    </select>
+                                <div class="form-group col-md-6">
+                                    <b>Keterangan</b>
+                                    <input type="text" class="form-control" name="keterangan"
+                                        id="update_keterangan" placeholder="Contoh : Permintaan Teh dan Makan Siang">
                                     <span class="text-danger">
-                                        <strong id="ubah_status_error"></strong>
+                                        <strong id="ubah_keterangan_error"></strong>
                                     </span>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
-                                    <b>Link</b>
-                                    <select name="link" class="form-control" id='update_link'>
-                                        <option value="">Pilih Link</option>
-                                        @foreach ($masterlink as $link)
-                                            <option value='{{ $link->namalink }}'>{{ $link->namalink }}</option>
-                                        @endforeach
-                                    </select>
-                                    <span class="text-danger">
-                                        <strong id="ubah_link_error"></strong>
-                                    </span>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <b>Password</b>
-                                    <input type="text" class="form-control" name="password" id="update_password"
-                                        placeholder="Isikan Password">
-                                    <span class="text-danger">
-                                        <strong id="ubah_password_error"></strong>
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="form-group col-md-6">
-                                    <b>Personel yang dapat dihubungi(nama dan no handphone) *</b>
+                                    <b>Personel yang dapat dihubungi<br>(Nama dan Nomor WA) <span class="text-danger">*</span></b>
                                     <input type="text" class="form-control" name="nopersonel"
-                                        id="update_personil" placeholder="Isikan Contact Person">
+                                        id="update_personil" placeholder="Isikan Contact Person" required>
                                     <span class="text-danger">
                                         <strong id="ubah_nopersonel_error"></strong>
                                     </span>
@@ -966,7 +903,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title" id="myModalLabel">Approve Video Conference</h4>
+                        <h4 class="modal-title" id="myModalLabel">Approve Jadwal Agenda</h4>
                         <button type="button" class="close" id="xButtonApprove" data-dismiss="modal"
                             aria-hidden="true">×</button>
                     </div>

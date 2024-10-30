@@ -923,7 +923,7 @@
                                 placeholder="Pencarian Agenda">
                         </div>
                         <div class="form-group">
-                            <b>Bagian</b><br />
+                            <b>Divisi</b><br />
                             <select name="bagian[]" id="selectFilterBagian" class="form-control"
                                 style="width: 100% !important;" multiple>
                                 @foreach ($bagians as $bagian)

@@ -69,22 +69,153 @@ class SendViconController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSendviconRequest $request)
-    {
-        $validated = $request->validated();
+public function store(StoreSendviconRequest $request)
+{
+    $validated = $request->validated();
+    $user = 'Bagian';
 
-        $user = 'Bagian';
+    $bagian = Bagian::find($validated['bagian']);
+    if (!$bagian) {
+        return redirect()->back()->with('bagian', 'Bagian tidak valid')->withInput($validated);
+    }
 
+    if ($bagian->kode_pin != $validated['passwordVerif']) {
+        return redirect()->back()->with('passwordVerif', 'Kode tidak sesuai')->withInput($validated);
+    }
 
-        $bagian = Bagian::find($validated['bagian']);
-        if (!$bagian) {
-            return redirect()->back()->with('bagian', 'Bagian tidak valid')->withInput($validated);
+    $setTanggal = explode(' - ', $validated['tanggal']);
+    $tanggalAwal = Carbon::parse($setTanggal[0])->format('Y-m-d');
+    $tanggalAkhir = Carbon::parse($setTanggal[1])->format('Y-m-d');
+
+    $ruangan = null;
+    $ruangan_lain = null;
+    $id_ruangan = null;
+
+    if ($validated['ruangan'] != 'lain') {
+        $id_ruangan = $validated['ruangan'];
+        $ruanganObj = Ruangan::find($validated['ruangan']);
+        if ($ruanganObj) {
+            $ruangan = $ruanganObj->nama;
+        }
+    } else {
+        $ruangan_lain = $validated['ruangan2'] ?? '';
+    }
+
+    // Check if id_ruangan is 99, then skip further checks and save immediately
+    if ($id_ruangan == 99) {
+        $sendvicon = new SendVicon();
+        $sendvicon->user = $user;
+        $sendvicon->privat = $validated['privat'];
+        $sendvicon->bagian_id = $validated['bagian'];
+        $sendvicon->acara = $validated['acara'];
+        $sendvicon->dokumentasi = $validated['dokumentasi'];
+        $sendvicon->tanggal = $tanggalAwal;
+        $sendvicon->waktu = $validated['waktu1'];
+        $sendvicon->waktu2 = $validated['waktu2'];
+        $sendvicon->peserta = $validated['peserta'];
+        $sendvicon->jumlahpeserta = $validated['jumlahpeserta'];
+        $sendvicon->id_ruangan = $id_ruangan;
+        $sendvicon->ruangan = $ruangan;
+        $sendvicon->ruangan_lain = $ruangan_lain;
+        $sendvicon->vicon = $validated['vicon'];
+        $sendvicon->jenis_link = $validated['jenis_link'];
+        $sendvicon->personil = $validated['nopersonel'];
+        $sendvicon->keterangan = $validated['keterangan'];
+        $sendvicon->agenda_direksi = 'Tidak';
+        $sendvicon->jenisrapat_id = 8;
+        $sendvicon->persiapanrapat = '';
+        $sendvicon->persiapanvicon = '';
+        $sendvicon->is_reminded = 0;
+        $sendvicon->token = Str::random(8);
+
+        // Save SK if exists
+        $sk = $request->file('sk');
+        if ($sk) {
+            $name = $sk->getClientOriginalName();
+            $namefile = time() . '_' . $name;
+            $sk->move(public_path() . '/uploads/sk', $namefile);
+            $sendvicon->sk = 'uploads/sk/' . $namefile;
         }
 
-        if ($bagian->kode_pin != $validated['passwordVerif']) {
-            return redirect()->back()->with('passwordVerif', 'Kode tidak sesuai')->withInput($validated);
+        $sendvicon->save();
+        Session::flash('success', 'Pemesanan berhasil dilakukan');
+        return redirect('/#tabel_pemesanan');
+    }
+
+    for ($i = $tanggalAwal; $i <= $tanggalAkhir; $i++) {
+        $eventDate = Carbon::parse($i)->format('Y-m-d');
+        $token = Str::random(8);
+
+        // Save SK if exists
+        $sk = $request->file('sk');
+        if ($sk) {
+            $name = $sk->getClientOriginalName();
+            $namefile = time() . '_' . $name;
+            $url = $sk->move(public_path() . '/uploads/sk', $namefile);
         }
 
+        $sendvicon = new SendVicon();
+        // ... [Store other fields for SendVicon here]
+
+        if ($sk) {
+            $sendvicon->sk = 'uploads/sk/' . $namefile;
+        }
+
+        $sendvicon->save();
+        // Store consumption
+        $konsumsi = new Konsumsi();
+        $konsumsi->id_sendvicon = $sendvicon->id;
+        $konsumsi->m_pagi = $request->input('makan.pagi', 0);
+        $konsumsi->m_siang = $request->input('makan.siang', 0);
+        $konsumsi->m_malam = $request->input('makan.malam', 0);
+        $konsumsi->s_pagi = $request->input('snack.pagi', 0);
+        $konsumsi->s_siang = $request->input('snack.siang', 0);
+        $konsumsi->s_sore = $request->input('snack.sore', 0);
+        $konsumsi->save();
+
+        // Room availability check
+        $waktu1 = $validated['waktu1'];
+        $waktu2 = $validated['waktu2'];
+        $ruangan_tersedia = Ruangan::whereNotIn('id', function ($query) use ($eventDate, $waktu1, $waktu2) {
+            $query->select('id_ruangan')
+                ->from('sendvicon')
+                ->where('tanggal', $eventDate)
+                ->where('waktu', '>=', $waktu1)
+                ->where('waktu2', '<=', $waktu2)
+                ->whereNotNull('id_ruangan');
+        })->where('status', 'Aktif')
+            ->where('id', '!=', 5)
+            ->get();
+
+        $array_ruangan = [];
+        foreach ($ruangan_tersedia as $rt) {
+            $array_ruangan[] = $rt->nama;
+        }
+
+        $daftar_ruangan = "<h5><b><span style='color:red'>Maaf, tidak ada rekomendasi tempat kosong.<span><b></h5>";
+        if (count($array_ruangan) > 0) {
+            $daftar_ruangan = "<h5>Daftar ruangan yang tersedia pada tanggal dan waktu tersebut :</h5><h5><b><span style='color:green'>" . implode(", ", $array_ruangan) . "<span></b></h5>";
+        }
+
+        $checkJadwal = SendVicon::cekctr($eventDate, $validated['ruangan'], $waktu1, $waktu2);
+        $cekvicon_nama_waktu = SendVicon::cekvicon_nama_waktu($validated['acara'], $eventDate, $waktu1, $waktu2);
+        if ($checkJadwal > 3) {
+            Session::flash('gglindex_ruangan', '<h4><b>Ruang rapat tersebut sudah dipesan untuk rapat lain pada waktu bersamaan</b></h4>' . $daftar_ruangan);
+        } else if ($cekvicon_nama_waktu > 1) {
+            Session::flash('gglindex_nama', 'Nama acara pada waktu dan tanggal tersebut telah ada pada Tabel Pemesanan');
+        } else {
+            Session::flash('success', 'Pemesanan berhasil dilakukan');
+        }
+    }
+    return redirect('/#tabel_pemesanan');
+}
+
+public function storeAdmin(StoreViconAdminRequest $request)
+{
+    $validated = $request->validated();
+
+    try {
+        $user = Auth::user()->master_user_nama;
         $setTanggal = explode(' - ', $validated['tanggal']);
         $tanggalAwal = Carbon::parse($setTanggal[0])->format('Y-m-d');
         $tanggalAkhir = Carbon::parse($setTanggal[1])->format('Y-m-d');
@@ -94,46 +225,45 @@ class SendViconController extends Controller
         $id_ruangan = null;
         if ($validated['ruangan'] != 'lain') {
             $id_ruangan = $validated['ruangan'];
-            $ruanganObj = Ruangan::find($validated['ruangan']);
-            if ($ruanganObj) {
-                $ruangan = $ruanganObj->nama;
+            $ruanganobj = Ruangan::find($validated['ruangan']);
+            if ($ruanganobj) {
+                $ruangan = $ruanganobj->nama;
             }
         } else {
             $ruangan_lain = $validated['ruangan2'] ?? '';
         }
 
+        $sk = $request->file('sk');
+        if ($sk) {
+            $name = $sk->getClientOriginalName();
+            $namefile = time() . '_' . $name;
+            $url = $sk->move(public_path() . '/uploads/sk', $namefile);
+        }
+
+        $dataSession = [];
+
         for ($i = $tanggalAwal; $i <= $tanggalAkhir; $i++) {
             $eventDate = Carbon::parse($i)->format('Y-m-d');
-
             $token = Str::random(8);
-
-            $sk = $request->file('sk');
-            if ($sk) {
-                $name = $sk->getClientOriginalName();
-                $namefile = time() . '_' . $name;
-                $url = $sk->move(public_path() . '/uploads/sk', $namefile);
-            }
 
             $sendvicon = new SendVicon();
             $sendvicon->user = $user;
-            $sendvicon->privat = $validated['privat'];
             $sendvicon->bagian_id = $validated['bagian'];
             $sendvicon->acara = $validated['acara'];
-            $sendvicon->dokumentasi = $validated['dokumentasi'];
             $sendvicon->tanggal = $eventDate;
-            $sendvicon->waktu = $validated['waktu1'];
+            $sendvicon->jenisrapat_id = $validated['jenisrapat'];
+            $sendvicon->waktu = $validated['waktu'];
             $sendvicon->waktu2 = $validated['waktu2'];
             $sendvicon->peserta = $validated['peserta'];
             $sendvicon->jumlahpeserta = $validated['jumlahpeserta'];
-            $sendvicon->id_ruangan = $id_ruangan;
+            $sendvicon->id_ruangan = $id_ruangan ?? null;
             $sendvicon->ruangan = $ruangan;
             $sendvicon->ruangan_lain = $ruangan_lain;
             $sendvicon->vicon = $validated['vicon'];
             $sendvicon->jenis_link = $validated['jenis_link'];
             $sendvicon->personil = $validated['nopersonel'];
             $sendvicon->keterangan = $validated['keterangan'];
-            $sendvicon->agenda_direksi = 'Tidak';
-            $sendvicon->jenisrapat_id = 8;
+            $sendvicon->dokumentasi = null;
             $sendvicon->persiapanrapat = '';
             $sendvicon->persiapanvicon = '';
             $sendvicon->is_reminded = 0;
@@ -144,23 +274,16 @@ class SendViconController extends Controller
             }
 
             $sendvicon->save();
-
-            // firebase must be send here
-
             $dataSession[] = $sendvicon->id;
-            Session::put('id_sendvicon', $dataSession);
 
-            $konsumsi = new Konsumsi();
-            $konsumsi->id_sendvicon = $sendvicon->id;
-            $konsumsi->m_pagi = $request->input('makan.pagi', 0);
-            $konsumsi->m_siang = $request->input('makan.siang', 0);
-            $konsumsi->m_malam = $request->input('makan.malam', 0);
-            $konsumsi->s_pagi = $request->input('snack.pagi', 0);
-            $konsumsi->s_siang = $request->input('snack.siang', 0);
-            $konsumsi->s_sore = $request->input('snack.sore', 0);
-            $konsumsi->save();
+            if ($id_ruangan == 99) {
+                // Directly flash a success message and skip availability checks
+                Session::flash('success', 'Pemesanan berhasil dilakukan');
+                continue;
+            }
 
-            $waktu1 = $validated['waktu1'];
+            // Availability check for other rooms
+            $waktu1 = $validated['waktu'];
             $waktu2 = $validated['waktu2'];
 
             $ruangan_tersedia = Ruangan::whereNotIn('id', function ($query) use ($eventDate, $waktu1, $waktu2) {
@@ -171,14 +294,10 @@ class SendViconController extends Controller
                     ->where('waktu2', '<=', $waktu2)
                     ->whereNotNull('id_ruangan');
             })->where('status', 'Aktif')
-                ->where('id', '!=', 5)
-                ->get();
+              ->where('id', '!=', 5)
+              ->get();
 
-            $array_ruangan = [];
-
-            foreach ($ruangan_tersedia as $rt) {
-                $array_ruangan[] = $rt->nama;
-            }
+            $array_ruangan = $ruangan_tersedia->pluck('nama')->toArray();
 
             $daftar_ruangan = "<h5><b><span style='color:red'>Maaf, tidak ada rekomendasi tempat kosong.<span><b></h5>";
             if (count($array_ruangan) > 0) {
@@ -187,159 +306,36 @@ class SendViconController extends Controller
 
             $checkJadwal = SendVicon::cekctr($eventDate, $validated['ruangan'], $waktu1, $waktu2);
             $cekvicon_nama_waktu = SendVicon::cekvicon_nama_waktu($validated['acara'], $eventDate, $waktu1, $waktu2);
-            if ($checkJadwal > 3) {
-                Session::flash('gglindex_ruangan', '<h4><b>Ruang rapat tersebut sudah dipesan untuk rapat lain pada waktu bersamaan, tetap ingin melakukan pemesanan?</b></h4>' . $daftar_ruangan);
+            if ($checkJadwal > 1) {
+                Session::flash('ggl_ruangan', '<h4><b>Ruang rapat tersebut sudah dipesan untuk rapat lain pada waktu bersamaan</b></h4>' . $daftar_ruangan);
             } else if ($cekvicon_nama_waktu > 1) {
-                Session::flash('gglindex_nama', 'Nama acara pada waktu dan tanggal tersebut telah ada pada Tabel Pemesanan, apakah Anda tetap ingin melakukan pemesanan dengan jadwal tersebut?');
+                Session::flash('ggl_nama', 'Nama acara pada waktu dan tanggal tersebut telah ada pada Tabel Pemesanan');
             } else {
                 Session::flash('success', 'Pemesanan berhasil dilakukan');
             }
         }
-        return redirect('/#tabel_pemesanan');
+
+        Session::put('id_sendvicon', $dataSession);
+
+        $flashMessages = [
+            'success' => Session::get('success'),
+            'ggl_ruangan' => Session::get('ggl_ruangan'),
+            'ggl_nama' => Session::get('ggl_nama'),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data saved successfully',
+            'data' => $dataSession,
+            'flashMessages' => $flashMessages
+        ], 201);
+    } catch (\Throwable $th) {
+        return response()->json([
+            'success' => false,
+            'message' => $th->getMessage(),
+        ], $th->getCode() ? 400 : 500);
     }
-
-    public function storeAdmin(StoreViconAdminRequest $request)
-    {
-        $validated = $request->validated();
-
-        try {
-            $user = Auth::user()->master_user_nama;
-            $setTanggal = explode(' - ', $validated['tanggal']);
-            $tanggalAwal = Carbon::parse($setTanggal[0])->format('Y-m-d');
-            $tanggalAkhir = Carbon::parse($setTanggal[1])->format('Y-m-d');
-
-            $ruangan = null;
-            $ruangan_lain = null;
-            $id_ruangan = null;
-            if ($validated['ruangan'] != 'lain') {
-                $id_ruangan = $validated['ruangan'];
-                $ruanganobj = Ruangan::find($validated['ruangan']);
-                if ($ruanganobj) {
-                    $ruangan = $ruanganobj->nama;
-                }
-            } else {
-                $ruangan_lain = $validated['ruangan2'] ?? '';
-            }
-
-            $sk = $request->file('sk');
-            if ($sk) {
-                $name = $sk->getClientOriginalName();
-                $namefile = time() . '_' . $name;
-                $url = $sk->move(public_path() . '/uploads/sk', $namefile);
-            }
-
-            $dataSession = [];
-
-            for ($i = $tanggalAwal; $i <= $tanggalAkhir; $i++) {
-                $eventDate = Carbon::parse($i)->format('Y-m-d');
-
-                $token = Str::random(8);
-
-                $sendvicon = new SendVicon();
-                $sendvicon->user = $user;
-                $sendvicon->bagian_id = $validated['bagian'];
-                $sendvicon->acara = $validated['acara'];
-                $sendvicon->tanggal = $eventDate;
-                //$sendvicon->agenda_direksi = $validated['agenda_direksi'];
-                $sendvicon->jenisrapat_id = $validated['jenisrapat'];
-                $sendvicon->waktu = $validated['waktu'];
-                $sendvicon->waktu2 = $validated['waktu2'];
-                $sendvicon->peserta = $validated['peserta'];
-                $sendvicon->jumlahpeserta = $validated['jumlahpeserta'];
-                $sendvicon->id_ruangan = $id_ruangan ?? null;
-                $sendvicon->ruangan = $ruangan;
-                $sendvicon->ruangan_lain = $ruangan_lain;
-                //$sendvicon->privat = $validated['privat'];
-                $sendvicon->vicon = $validated['vicon'];
-                $sendvicon->jenis_link = $validated['jenis_link'];
-                $sendvicon->personil = $validated['nopersonel'];
-                $sendvicon->keterangan = $validated['keterangan'];
-                //$sendvicon->link = $validated['link'];
-                //$sendvicon->password = $validated['password'];
-                $sendvicon->dokumentasi = null;
-                $sendvicon->persiapanrapat = '';
-                $sendvicon->persiapanvicon = '';
-                $sendvicon->is_reminded = 0;
-                $sendvicon->token = $token;
-
-                if ($sk) {
-                    $sendvicon->sk = 'uploads/sk/' . $namefile;
-                }
-
-                $sendvicon->save();
-
-                $jam = $validated['waktu'] . " - " . $validated['waktu2'];
-                // send Notification token topics/sendvicon must be here
-
-                $dataSession[] = $sendvicon->id;
-
-                $konsumsi = new Konsumsi();
-                $konsumsi->id_sendvicon = $sendvicon->id;
-                $konsumsi->m_pagi = $request->input('makan.pagi', 0);
-                $konsumsi->m_siang = $request->input('makan.siang', 0);
-                $konsumsi->m_malam = $request->input('makan.malam', 0);
-                $konsumsi->s_pagi = $request->input('snack.pagi', 0);
-                $konsumsi->s_siang = $request->input('snack.siang', 0);
-                $konsumsi->s_sore = $request->input('snack.sore', 0);
-                $konsumsi->save();
-
-                $waktu1 = $validated['waktu'];
-                $waktu2 = $validated['waktu2'];
-
-                $ruangan_tersedia = Ruangan::whereNotIn('id', function ($query) use ($eventDate, $waktu1, $waktu2) {
-                    $query->select('id_ruangan')
-                        ->from('sendvicon')
-                        ->where('tanggal', $eventDate)
-                        ->where('waktu', '>=', $waktu1)
-                        ->where('waktu2', '<=', $waktu2)
-                        ->whereNotNull('id_ruangan');
-                })->where('status', 'Aktif')
-                    ->where('id', '!=', 5)
-                    ->get();
-
-                $array_ruangan = [];
-
-                foreach ($ruangan_tersedia as $rt) {
-                    $array_ruangan[] = $rt->nama;
-                }
-
-                $daftar_ruangan = "<h5><b><span style='color:red'>Maaf, tidak ada rekomendasi tempat kosong.<span><b></h5>";
-                if (count($array_ruangan) > 0) {
-                    $daftar_ruangan = "<h5>Daftar ruangan yang tersedia pada tanggal dan waktu tersebut :</h5><h5><b><span style='color:green'>" . implode(", ", $array_ruangan) . "<span></b></h5>";
-                }
-
-                $checkJadwal = SendVicon::cekctr($eventDate, $validated['ruangan'], $waktu1, $waktu2);
-                $cekvicon_nama_waktu = SendVicon::cekvicon_nama_waktu($validated['acara'], $eventDate, $waktu1, $waktu2);
-                if ($checkJadwal > 1) {
-                    Session::flash('ggl_ruangan', '<h4><b>Ruang rapat tersebut sudah dipesan untuk rapat lain pada waktu bersamaan, tetap ingin melakukan pemesanan?</b></h4>' . $daftar_ruangan);
-                } else if ($cekvicon_nama_waktu > 1) {
-                    Session::flash('ggl_nama', 'Nama acara pada waktu dan tanggal tersebut telah ada pada Tabel Pemesanan, apakah Anda tetap ingin melakukan pemesanan dengan jadwal tersebut?');
-                } else {
-                    Session::flash('success', 'Pemesanan berhasil dilakukan');
-                }
-            }
-
-            Session::put('id_sendvicon', $dataSession);
-
-            $flashMessages = [
-                'success' => Session::get('success'),
-                'ggl_ruangan' => Session::get('ggl_ruangan'),
-                'ggl_nama' => Session::get('ggl_nama'),
-            ];
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Data saved successfully',
-                'data' => $dataSession,
-                'flashMessages' => $flashMessages
-            ], 201);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'success' => false,
-                'message' => $th->getMessage(),
-            ], $th->getCode() ? 400 : 500);
-        }
-    }
+}
 
     /**
      * Display the specified resource.
