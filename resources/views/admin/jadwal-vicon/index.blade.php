@@ -247,7 +247,7 @@
                                 <div class="form-group col-md-6">
                                     <b>Bagian <span class="text-danger">*</span></b>
                                     <select name="bagian" class="form-control" required>
-                                        <option value=''>Pilih Bagian</option>
+                                        {{-- <option value=''>Pilih Bagian</option> --}}
                                         @foreach ($bagians as $bagian)
                                             {{-- <option value='{{ $bagian->id }}'>{{ $bagian->bagian }}</option> --}}
                                             <option value='{{ $bagian->id }}'
@@ -739,7 +739,7 @@
                                 <div class="form-group col-md-6">
                                     <b>Bagian <span class="text-danger">*</span></b>
                                     <select name="bagian" id="update_bagian" class="form-control" required>
-                                        <option value="">Pilih Bagian</option>
+                                        {{-- <option value="">Pilih Bagian</option> --}}
                                         @foreach ($bagians as $bagian)
                                             <option value='{{ $bagian->id }}'>{{ $bagian->bagian }}</option>
                                         @endforeach
@@ -1407,18 +1407,18 @@
 
                         $(row).find('td:eq(1)').html(acara);
 
-                        if (kode_ruangan == "1") {
-                            $(row).find('td:eq(4)').css({
-                                'color': 'red',
-                                'font-weight': 'bold'
-                            });
-                        }
-                        if (kode_acara == "1") {
-                            $(row).find('td:eq(1)').css({
-                                'color': 'red',
-                                'font-weight': 'bold'
-                            });
-                        }
+                        // if (kode_ruangan == "1") {
+                        //     $(row).find('td:eq(4)').css({
+                        //         'color': 'red',
+                        //         'font-weight': 'bold'
+                        //     });
+                        // }
+                        // if (kode_acara == "1") {
+                        //     $(row).find('td:eq(1)').css({
+                        //         'color': 'red',
+                        //         'font-weight': 'bold'
+                        //     });
+                        // }
                     },
                     // validasi warna untuk mode responsive
                     "responsive": {
@@ -1586,18 +1586,18 @@
                                             // focusCancel: true,
                                             closeOnConfirm: false,
                                             // closeOnCancel: false
-                                        }, function(isConfirm) {
-                                            if (isConfirm) {
-                                                let sessionData = JSON.stringify(response
-                                                    .data);
-                                                $('#postForm').val(sessionData);
-                                                $('#postForm').submit();
-                                            } else {
-                                                let sessionData = JSON.stringify(response
-                                                    .data);
-                                                $('#postCheckNama').val(sessionData);
-                                                $('#postCheckNama').submit();
-                                            }
+                                        // }, function(isConfirm) {
+                                            // if (isConfirm) {
+                                            //     let sessionData = JSON.stringify(response
+                                            //         .data);
+                                            //     $('#postForm').val(sessionData);
+                                            //     $('#postForm').submit();
+                                            // } else {
+                                            //     let sessionData = JSON.stringify(response
+                                            //         .data);
+                                            //     $('#postCheckNama').val(sessionData);
+                                            //     $('#postCheckNama').submit();
+                                            // }
                                         });
                                     }
                                     if (response.flashMessages.ggl_nama) {
@@ -1655,9 +1655,9 @@
                                     text: response.message,
                                 });
                             } else {
-                                Swal({
+                                swal({
                                     icon: 'error',
-                                    title: 'Error',
+                                    title: 'Failed',
                                     text: response.message,
                                 });
                             }
