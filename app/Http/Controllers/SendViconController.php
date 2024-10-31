@@ -105,7 +105,7 @@ public function store(StoreSendviconRequest $request)
     if ($id_ruangan == 99) {
         $sendvicon = new SendVicon();
         $sendvicon->user = $user;
-        $sendvicon->privat = $validated['privat'];
+        //$sendvicon->privat = $validated['privat'];
         $sendvicon->bagian_id = $validated['bagian'];
         $sendvicon->acara = $validated['acara'];
         $sendvicon->dokumentasi = $validated['dokumentasi'];
@@ -121,7 +121,7 @@ public function store(StoreSendviconRequest $request)
         $sendvicon->jenis_link = $validated['jenis_link'];
         $sendvicon->personil = $validated['nopersonel'];
         $sendvicon->keterangan = $validated['keterangan'];
-        $sendvicon->agenda_direksi = 'Tidak';
+        //$sendvicon->agenda_direksi = 'Tidak';
         $sendvicon->jenisrapat_id = 8;
         $sendvicon->persiapanrapat = '';
         $sendvicon->persiapanvicon = '';
@@ -429,14 +429,14 @@ public function storeAdmin(StoreViconAdminRequest $request)
                 $sendvicon->tanggal = $tanggal;
                 $sendvicon->waktu = $validated['waktu'];
                 $sendvicon->waktu2 = $validated['waktu2'];
-                $sendvicon->agenda_direksi = $validated['agenda_direksi'];
+                //$sendvicon->agenda_direksi = $validated['agenda_direksi'];
                 $sendvicon->peserta = $validated['peserta'];
                 $sendvicon->jumlahpeserta = $validated['jumlahpeserta'];
                 $sendvicon->id_ruangan = $id_ruangan ?? null;
                 $sendvicon->ruangan = $ruangan;
                 $sendvicon->ruangan_lain = $ruangan_lain;
                 $sendvicon->personil = $validated['nopersonel'];
-                $sendvicon->privat = $validated['privat'];
+                //$sendvicon->privat = $validated['privat'];
                 $sendvicon->vicon = $validated['vicon'];
                 $sendvicon->jenis_link = $validated['jenis_link'];
                 $sendvicon->status = $validated['status'];
