@@ -443,8 +443,8 @@ class SendViconController extends Controller
                 //$sendvicon->privat = $validated['privat'];
                 $sendvicon->vicon = $validated['vicon'];
                 $sendvicon->jenis_link = $validated['jenis_link'];
-                $sendvicon->status = $validated['status'];
-                $sendvicon->link = $validated['link'];
+                //$sendvicon->status = $validated['status'];
+                //$sendvicon->link = $validated['link'];
                 $sendvicon->keterangan = $validated['keterangan'];
                 $sendvicon->password = $validated['password'];
 
