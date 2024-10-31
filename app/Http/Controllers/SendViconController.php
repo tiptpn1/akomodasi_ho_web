@@ -435,14 +435,14 @@ public function storeAdmin(StoreViconAdminRequest $request)
                 $sendvicon->id_ruangan = $id_ruangan ?? null;
                 $sendvicon->ruangan = $ruangan;
                 $sendvicon->ruangan_lain = $ruangan_lain;
-                $sendvicon->personil = $validated['nopersonel'];
+                //$sendvicon->personil = $validated['nopersonel'];
                 //$sendvicon->privat = $validated['privat'];
                 $sendvicon->vicon = $validated['vicon'];
                 $sendvicon->jenis_link = $validated['jenis_link'];
-                $sendvicon->status = $validated['status'];
-                $sendvicon->link = $validated['link'];
+                //$sendvicon->status = $validated['status'];
+                //$sendvicon->link = $validated['link'];
                 $sendvicon->keterangan = $validated['keterangan'];
-                $sendvicon->password = $validated['password'];
+                //$sendvicon->password = $validated['password'];
 
                 if ($sk) {
                     $sendvicon->sk = 'uploads/sk/' . $namefile;

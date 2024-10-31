@@ -819,6 +819,23 @@
                                         <strong id="ubah_sk_error"></strong>
                                     </span>
                                 </div>
+                            </div>
+                            <div class="row">
+                                <div class="form-group col-md-12">
+                                    <b>Status</b>
+                                    <select name="status" id="update_status" class="form-control">
+                                        <option value="">Pilih Status</option>
+                                        <option value="Cancel">Cancel</option>
+                                        <option value="Booked">Booked</option>
+                                        <option value="Confirm">Confirm</option>
+                                        <option value="Expired">Expired</option>
+                                    </select>
+                                    <span class="text-danger">
+                                        <strong id="ubah_status_error"></strong>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Keterangan</b>
                                     <input type="text" class="form-control" name="keterangan"
