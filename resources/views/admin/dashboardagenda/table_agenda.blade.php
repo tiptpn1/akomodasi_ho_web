@@ -10,6 +10,8 @@
 </div>
 
 @php
+    $end_time_vicon = [];
+
     $all_jam = [
         '07.00',
         '08.00',
@@ -54,7 +56,7 @@
 
             $result = [...$search];
 
-            return $result[0];
+            return count($result) > 0? $result[0] : $allJam[0];
         } else {
             $search = array_filter($allJam, function ($time) use ($timeVicon, $carbon) {
                 $time_data = $carbon->parse(implode(':', explode('.', $time)));
@@ -65,7 +67,7 @@
 
             $result = [...$search];
 
-            return array_reverse($result)[0];
+            return array_reverse(count($result) > 0? $result : $allJam)[0];
         }
     }
 @endphp
@@ -76,6 +78,9 @@
             <tr>
                 <th scope="col" rowspan="2" class="align-middle">Jam</th>
                 @foreach ($ruangan as $r)
+                    @php
+                        $end_time_vicon[$r->nama] = null;
+                    @endphp
                     <th scope="col">{{ $r->nama }}</th>
                 @endforeach
             </tr>
@@ -95,19 +100,54 @@
                         @php
                             $acara = '';
                             $rowspan = 1;
+                            $vicon = '';
                             if ($r->sendVicons != null && count($r->sendVicons)) {
                                 $timeCon = implode(':', explode('.', $waktu)) . ':00';
                                 $vicon = $r->sendVicons
-                                    ->filter(function ($vicon) use ($date, $timeCon, $carbon) {
-                                        $startVicon = $carbon->parse($vicon->waktu);
-                                        $endVicon = $carbon->parse($vicon->waktu2);
-                                        $timeCon = $carbon->parse($timeCon);
+                                ->filter(function ($vicon) use ($timeCon, $end_time_vicon, $r, $carbon) {
+                                    $startVicon = $carbon->parse($vicon->waktu);
+                                    $endVicon = $carbon->parse($vicon->waktu2);
+                                    $timeCon = $carbon->parse($timeCon);
 
-                                        return $vicon->tanggal == $date &&
-                                            $startVicon->diffInMinutes($timeCon, false) >= 0 &&
+                                    if ($end_time_vicon[$r->nama]) {
+                                        $endTimeVicon = $carbon->parse($end_time_vicon[$r->nama]);
+
+                                        return $startVicon->diffInMinutes($timeCon, false) >= 0 &&
+                                            $timeCon->diffInMinutes($endVicon, false) >= 0 &&
+                                            $endTimeVicon->diffInMinutes($startVicon, false) >= 0; // memastikan bahwa vicon tidak berada pada durasi $vicon lain
+                                    } else {
+                                        return $startVicon->diffInMinutes($timeCon, false) >= 0 &&
                                             $timeCon->diffInMinutes($endVicon, false) >= 0;
-                                    })
-                                    ->first();
+                                    }
+                                })
+                                ->first();
+
+                                $check_approve = null;
+
+                                /***
+                                 * Cek, apabila $vicon memiliki status approval 0, apakah terdapat agenda lain yang sudah di approve
+                                 * Jika ada maka $vicon akan diubah jadi null sehingga akan di skip untuk ditampilkan
+                                 * **/
+                                if ($vicon) {
+                                    if ($vicon->status_approval != 1) {
+                                        $check_approve = $r->sendVicons->filter(function ($sendvicon) use ($vicon, $r, $carbon) {
+                                            $startSendVicon = $carbon->parse($sendvicon->waktu);
+                                            $startVicon = $carbon->parse($vicon->waktu);
+                                            $endVicon = $carbon->parse($vicon->waktu2);
+
+                                            return $sendvicon->status_approval == 1 &&
+                                                $startSendVicon->diffInMinutes($endVicon, false) >= 0 &&
+                                                $startVicon->diffInMinutes($startSendVicon, false) >= 0 &&
+                                                $sendvicon->id != $vicon->id &&
+                                                $r->id == $sendvicon->id_ruangan;
+                                        })
+                                        ->first();
+
+                                        if ($check_approve) {
+                                            $vicon = null;
+                                        }
+                                    }
+                                }
 
                                 $acara = $vicon != null ? $vicon->acara : '';
                                 if ($vicon) {
@@ -117,14 +157,17 @@
                                         array_search($endTime, $all_jam_with_minutes) -
                                         array_search($startTime, $all_jam_with_minutes) +
                                         1;
+
+                                    // mencatat history waktu selesai $vicon
+                                    $end_time_vicon[$r->nama] = $vicon->waktu2;
                                 }
                             }
                         @endphp
                         @if ($acara)
                             @if ($rowspan == 1 || ($rowspan > 1 && $waktu == $startTime))
-                                <td rowspan="{{ $rowspan }}" class="align-middle"
-                                    style="background-color: {{ $vicon->jenisrapat->kode_warna }}; font-size: 14px; font-weight: bold; border: 0px solid black;">
-                                    <div style="display: flex; flex-direction: column; justify-content: space-between;" onclick="detail('{{ $vicon->id }}')">
+                                <td rowspan="{{ $rowspan }}" class="align-middle hover-pointer"
+                                    style="background-color: {{ $vicon->jenisrapat->kode_warna }}; font-size: 14px; font-weight: bold; border: 0px solid black;" onclick="detail('{{ $vicon->id }}')">
+                                    <div style="display: flex; flex-direction: column; justify-content: space-between;">
                                         <div>
                                             <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; ">{{ $acara }}</div>
                                             {{ explode(':', $vicon->waktu)[0] . '.' . explode(':', $vicon->waktu)[1]  }} - {{ explode(':', $vicon->waktu2)[0] . '.' . explode(':', $vicon->waktu2)[1] }}<br />
@@ -139,7 +182,9 @@
                                 </td>
                             @endif
                         @else
-                            <td class="grey"></td>
+                            @if (($loop->parent->iteration - 1) > array_search(calculateMinute($carbon, $all_jam_with_minutes, $end_time_vicon[$r->nama], 'end'), $all_jam_with_minutes) || !$end_time_vicon[$r->nama])
+                                <td class="grey"></td>
+                            @endif
                         @endif
                     @endforeach
                 </tr>

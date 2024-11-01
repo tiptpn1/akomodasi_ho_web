@@ -253,6 +253,12 @@ class SendVicon extends Model
             }
         }
 
+        // Filter berdasarkan status approval
+        if ($request->input('status_approval') != '') {
+            $status_approval = $request->input('status_approval');
+            $query->where('status_approval', $status_approval);
+        }
+
         // Searching
         if ($request->input('search.value')) {
             $search = $request->input('search.value');

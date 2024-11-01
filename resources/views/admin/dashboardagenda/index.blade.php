@@ -62,7 +62,7 @@
                 background: transparent;
             }
 
-            td>div:hover {
+            .hover-pointer:hover {
                 cursor: pointer;
             }
         </style>

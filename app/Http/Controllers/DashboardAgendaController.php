@@ -40,11 +40,10 @@ class DashboardAgendaController extends Controller
         $jenis_rapat = JenisRapat::all();
 
         try {
-            $ruangan = $this->model->getSpesificData(array('lantai' => $lantai));
+            $ruangan = $this->model->getSpesificData(array('lantai' => $lantai), $date);
 
             $data = [
                 'ruangan' => $ruangan,
-                'date' => $date,
                 'jenis_rapat' => $jenis_rapat,
                 'carbon' => new Carbon(),
             ];
@@ -75,7 +74,7 @@ class DashboardAgendaController extends Controller
             $all_lantai = $this->model->getDataDistinct('lantai')->pluck('lantai');
 
             foreach($all_lantai as $lantai) {
-                $all_ruangan[] = $this->model->getSpesificData(array('lantai' => $lantai));
+                $all_ruangan[] = $this->model->getSpesificData(array('lantai' => $lantai), $date);
             }
 
             $data = [

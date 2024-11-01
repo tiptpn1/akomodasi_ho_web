@@ -109,11 +109,19 @@
                                         readonly="true" value="">
                                 </div>
                             </div>
-                            {{-- <div class="row"> --}}
-                                <div class="form-group">
+                            <div class="row">
+                                <div class="form-group col-md-6">
                                     <b>Agenda</b>
                                     <input type="text" class="form-control" name="acara" id="acara"
                                         placeholder="Pencarian Agenda">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <b>Status Approval</b>
+                                    <select name="status_approval" id="statusApproval" class="form-control">
+                                        <option value="" selected>Semua Status</option>
+                                        <option value="1" >Approved</option>
+                                        <option value="0" >Waiting for Approve</option>
+                                    </select>
                                 </div>
                                 {{-- <div class="form-group col-md-6">
                                     <b>Agenda Direksi</b>
@@ -124,7 +132,7 @@
                                         <option value="Tidak">Tidak</option>
                                     </select>
                                 </div> --}}
-                            {{-- </div> --}}
+                            </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Rapat Vicon</b>
@@ -1366,6 +1374,7 @@
                             data.bagian = $('#bagian').val();
                             data.vicon = $('#vicon').val();
                             data.jenisrapat = $('#jenisrapat').val();
+                            data.status_approval = $('#statusApproval').val();
                         },
                         dataFilter: function(reps) {
                             return reps;
