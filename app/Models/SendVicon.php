@@ -138,10 +138,52 @@ class SendVicon extends Model
         return $cekfin;
     }
 
+    // mirip dengan function cekctr namun menambahkan kondisi vicon sudah di approve
+    public static function cekctr_approve($tanggal, $ruangan, $waktu1, $waktu2)
+    {
+        $cekfin = 0;
+
+        // Cek jika ruangan tidak null dan bukan 'Tidak Membutuhkan Ruangan'
+        if (!is_null($ruangan) and $ruangan != 99) {
+            $cekfin =self::where('id_ruangan', $ruangan)
+                    ->where('tanggal', $tanggal)
+                    ->where(function ($q) use ($waktu1, $waktu2) {
+                        return $q->where(function ($q2) use ($waktu1, $waktu2) {
+                            return $q2->where('waktu', '<=', $waktu1)
+                            ->where('waktu2', '>=', $waktu2);
+                        })
+                        ->orWhere(function ($q2) use ($waktu1, $waktu2) {
+                            return  $q2->where('waktu', '>=', $waktu1)
+                                ->where('waktu', '<=', $waktu2);
+                        })
+                        ->orWhere(function ($q2) use ($waktu1, $waktu2) {
+                            return  $q2->where('waktu2', '>=', $waktu1)
+                                ->where('waktu2', '<=', $waktu2);
+                        });
+                    })
+                    ->where('status_approval', 1)
+                    ->count();
+        }
+
+        return $cekfin;
+    }
+
     public static function cekvicon_nama_waktu($acara, $tanggal, $waktu1, $waktu2)
     {
         $acara_v = str_replace("'", "", $acara);
         return self::where('acara', '=', DB::raw("BINARY '$acara_v'"))
+            ->where('tanggal', $tanggal)
+            ->where('waktu', '<=', $waktu2)
+            ->where('waktu2', '>=', $waktu1)
+            ->count();
+    }
+
+    //  Cek apakah ada pengajuan vicon yang sama pada tanggal, ruangan, dan waktu yang sama
+    public static function cekvicon_nama_waktu_ruangan($acara, $tanggal, $waktu1, $waktu2, $ruangan)
+    {
+        $acara_v = str_replace("'", "", $acara);
+        return self::where('acara', '=', DB::raw("BINARY '$acara_v'"))
+            ->where('id_ruangan', $ruangan)
             ->where('tanggal', $tanggal)
             ->where('waktu', '<=', $waktu2)
             ->where('waktu2', '>=', $waktu1)
@@ -165,8 +207,7 @@ class SendVicon extends Model
 
     public static function dataTables(Request $request)
     {
-        $query = SendVicon::with(['ruangan', 'bagian', 'jenisrapat'])->orderBy('tanggal', 'desc')
-            ->orderBy('waktu');
+        $query = SendVicon::with(['ruangan', 'bagian', 'jenisrapat'])->orderBy('id', 'desc');
 
         // Filter berdasarkan tanggal awal
         if ($request->has('tanggal_awal') && $request->get('tanggal_awal')) {
@@ -210,6 +251,12 @@ class SendVicon extends Model
             if (!in_array("", $bagian)) {
                 $query->whereIn('bagian_id', $bagian);
             }
+        }
+
+        // Filter berdasarkan status approval
+        if ($request->input('status_approval') != '') {
+            $status_approval = $request->input('status_approval');
+            $query->where('status_approval', $status_approval);
         }
 
         // Searching

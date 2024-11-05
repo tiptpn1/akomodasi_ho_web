@@ -40,9 +40,14 @@ class Ruangan extends Model
         return $query->distinct()->get();
     }
 
-    public function getSpesificData($where)
+    public function getSpesificData($where, $date = null)
     {
-        return self::with(['sendVicons', 'sendVicons.jenisrapat', 'sendVicons.bagian'])->where($where)->get();
+        return self::with(['sendVicons' => function ($q) use ($date) {
+            $q->orderBy('status_approval', 'desc');
+            if ($date) {
+                $q->where('tanggal', $date);
+            }
+        }, 'sendVicons.jenisrapat', 'sendVicons.bagian'])->where($where)->get();
     }
 
     public static function cekviconRuanganWaktu($tanggal, $waktu1, $waktu2)

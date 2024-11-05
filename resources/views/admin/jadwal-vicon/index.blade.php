@@ -36,7 +36,7 @@
                 </button>
                 <button type="button" class="btn btn-info"
                     onclick="window.location='{{ route('admin.vicon.resetfilter') }}'">
-                    Reset Filter
+                    Reload/Reset Filter
                 </button>
 
                 <div class="card mb-4 mt-3">
@@ -109,11 +109,19 @@
                                         readonly="true" value="">
                                 </div>
                             </div>
-                            {{-- <div class="row"> --}}
-                                <div class="form-group">
+                            <div class="row">
+                                <div class="form-group col-md-6">
                                     <b>Agenda</b>
                                     <input type="text" class="form-control" name="acara" id="acara"
                                         placeholder="Pencarian Agenda">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <b>Status Approval</b>
+                                    <select name="status_approval" id="statusApproval" class="form-control">
+                                        <option value="" selected>Semua Status</option>
+                                        <option value="1" >Approved</option>
+                                        <option value="0" >Waiting for Approve</option>
+                                    </select>
                                 </div>
                                 {{-- <div class="form-group col-md-6">
                                     <b>Agenda Direksi</b>
@@ -124,7 +132,7 @@
                                         <option value="Tidak">Tidak</option>
                                     </select>
                                 </div> --}}
-                            {{-- </div> --}}
+                            </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Rapat Vicon</b>
@@ -819,23 +827,6 @@
                                         <strong id="ubah_sk_error"></strong>
                                     </span>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="form-group col-md-12">
-                                    <b>Status</b>
-                                    <select name="status" id="update_status" class="form-control">
-                                        <option value="">Pilih Status</option>
-                                        <option value="Cancel">Cancel</option>
-                                        <option value="Booked">Booked</option>
-                                        <option value="Confirm">Confirm</option>
-                                        <option value="Expired">Expired</option>
-                                    </select>
-                                    <span class="text-danger">
-                                        <strong id="ubah_status_error"></strong>
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Keterangan</b>
                                     <input type="text" class="form-control" name="keterangan"
@@ -1308,6 +1299,7 @@
                             data.bagian = $('#bagian').val();
                             data.vicon = $('#vicon').val();
                             data.jenisrapat = $('#jenisrapat').val();
+                            data.status_approval = $('#statusApproval').val();
                         },
                         dataFilter: function(reps) {
                             return reps;
@@ -1349,18 +1341,18 @@
 
                         $(row).find('td:eq(1)').html(acara);
 
-                        if (kode_ruangan == "1") {
-                            $(row).find('td:eq(4)').css({
-                                'color': 'red',
-                                'font-weight': 'bold'
-                            });
-                        }
-                        if (kode_acara == "1") {
-                            $(row).find('td:eq(1)').css({
-                                'color': 'red',
-                                'font-weight': 'bold'
-                            });
-                        }
+                        // if (kode_ruangan == "1") {
+                        //     $(row).find('td:eq(4)').css({
+                        //         'color': 'red',
+                        //         'font-weight': 'bold'
+                        //     });
+                        // }
+                        // if (kode_acara == "1") {
+                        //     $(row).find('td:eq(1)').css({
+                        //         'color': 'red',
+                        //         'font-weight': 'bold'
+                        //     });
+                        // }
                     },
                     // validasi warna untuk mode responsive
                     "responsive": {
@@ -1528,18 +1520,18 @@
                                             // focusCancel: true,
                                             closeOnConfirm: false,
                                             // closeOnCancel: false
-                                        }, function(isConfirm) {
-                                            if (isConfirm) {
-                                                let sessionData = JSON.stringify(response
-                                                    .data);
-                                                $('#postForm').val(sessionData);
-                                                $('#postForm').submit();
-                                            } else {
-                                                let sessionData = JSON.stringify(response
-                                                    .data);
-                                                $('#postCheckNama').val(sessionData);
-                                                $('#postCheckNama').submit();
-                                            }
+                                        // }, function(isConfirm) {
+                                            // if (isConfirm) {
+                                            //     let sessionData = JSON.stringify(response
+                                            //         .data);
+                                            //     $('#postForm').val(sessionData);
+                                            //     $('#postForm').submit();
+                                            // } else {
+                                            //     let sessionData = JSON.stringify(response
+                                            //         .data);
+                                            //     $('#postCheckNama').val(sessionData);
+                                            //     $('#postCheckNama').submit();
+                                            // }
                                         });
                                     }
                                     if (response.flashMessages.ggl_nama) {
@@ -1597,9 +1589,9 @@
                                     text: response.message,
                                 });
                             } else {
-                                Swal({
+                                swal({
                                     icon: 'error',
-                                    title: 'Error',
+                                    title: 'Failed',
                                     text: response.message,
                                 });
                             }
