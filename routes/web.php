@@ -13,6 +13,7 @@ use App\Http\Controllers\MasterPenggunaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\HakAksesController;
+use App\Http\Controllers\KasKecilController;
 use App\Http\Controllers\SendViconController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\KonsumsiController;
@@ -58,6 +59,35 @@ Route::group(['prefix' => 'konsumsi', 'as' => 'konsumsi.'], function () {
     Route::get('/data', [KonsumsiController::class, 'data'])->name('data');
 });
 
+Route::group(['prefix' => 'kaskecil', 'as' => 'kaskecil.', 'middleware' => 'role:admin,GA,read'], function () {
+    Route::get('/', [KasKecilController::class, 'index'])->name('index');
+    Route::get('/data', [KasKecilController::class, 'data'])->name('data');
+    Route::post('/store', [KasKecilController::class, 'store'])->name('store');
+    Route::get('/edit/{id}', [KasKecilController::class, 'edit'])->name('edit');  // Add this route
+    Route::post('/update/{id}', [KasKecilController::class, 'update'])->name('update');  // Add this route
+    Route::delete('/{id}', [KasKecilController::class, 'destroy'])->name('destroy');  // Update this line
+
+    // Route untuk mengakses bukti_kaskecil
+    Route::get('/bukti/{filename}', function ($filename) {
+        // Cek di folder bukti_nota
+        $filePath = storage_path('app/public/bukti_nota/' . $filename);
+
+        // Jika ditemukan file, kembalikan sebagai response
+        if (file_exists($filePath)) {
+            return response()->file($filePath);
+        }
+
+        // Jika tidak ditemukan di bukti_nota, cek di bukti_bayar
+        $filePath = storage_path('app/public/bukti_bayar/' . $filename);
+
+        if (file_exists($filePath)) {
+            return response()->file($filePath);
+        }
+
+        // Jika tidak ditemukan, tampilkan error 404
+        abort(404);
+    })->name('bukti');
+});
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     route::get('logout', [UserController::class, 'logout'])->name('logout');

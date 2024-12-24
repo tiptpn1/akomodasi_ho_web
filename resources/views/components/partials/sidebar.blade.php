@@ -26,6 +26,10 @@
                         <div class="sb-nav-link-icon"></div>
                         Konsumsi
                     </a>
+                    <a class="nav-link" href="{{ route('kaskecil.index') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Kas Kecil
+                    </a>
                     @if (Auth::user()->hakAkses->hak_akses_id != 4)
                         {{-- <a class="nav-link" href="{{ route('admin.dashboard.kendaraan.show') }}">
                             <div class="sb-nav-link-icon"></div>
