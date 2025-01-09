@@ -17,6 +17,7 @@ use App\Http\Controllers\KasKecilController;
 use App\Http\Controllers\SendViconController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\KonsumsiController;
+use App\Models\KasKecil;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -66,6 +67,8 @@ Route::group(['prefix' => 'kaskecil', 'as' => 'kaskecil.', 'middleware' => 'role
     Route::get('/edit/{id}', [KasKecilController::class, 'edit'])->name('edit');  // Add this route
     Route::post('/update/{id}', [KasKecilController::class, 'update'])->name('update');  // Add this route
     Route::delete('/{id}', [KasKecilController::class, 'destroy'])->name('destroy');  // Update this line
+    Route::get('/export', [KasKecilController::class, 'export'])->name('export');
+
 
     // Route untuk mengakses bukti_kaskecil
     Route::get('/bukti/{filename}', function ($filename) {

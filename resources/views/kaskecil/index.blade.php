@@ -24,6 +24,7 @@
                 <h3 class="mt-4">Kas Kecil</h3>
                 @if (!in_array(Auth::user()->master_hak_akses_id, [5, 6]))
                 <button id="btnTambah" type="button" data-toggle="modal" data-target="#tambah" class="btn btn-primary">Tambah Data</button>
+                <button id="btnExport" type="button" data-toggle="modal" data-target="#exportModal" class="btn btn-warning">Export Data</button>
                 @endif
                 @if(session('success'))
                 <div class="alert alert-success alert-sm alert-dismissible fade show" role="alert" style="max-width: 400px; margin:">
@@ -281,7 +282,7 @@
                                             </div>
                                             <div class="form-group col-md-6">
                                                 <b>BBM </b>
-                                                <select class="form-control" name="id_bbm" required>
+                                                <select class="form-control" name="id_bbm">
                                                     <option value="" disabled selected>Pilih BBM</option>
                                                     @foreach ($bbm as $bbmdata)
                                                     <option value='{{ $bbmdata->id_bbm }}'>{{ $bbmdata->nama_bbm }}</option>
@@ -382,6 +383,74 @@
                                         </div>
                                     </form>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Export -->
+                <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exportModalLabel">Export Kaskecil Data</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="exportForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="tgl_pengajuan_awal">Tanggal Pengajuan Awal</label>
+                                                <input type="date" class="form-control" id="tgl_pengajuan_awal" name="tgl_pengajuan_awal">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="nama_group">Group</label>
+                                                <!-- <input type="text" class="form-control" id="nama_group" name="nama_group"> -->
+                                                <select class="form-control" name="id_group">
+                                                    <option value="" disabled selected>Pilih Group</option>
+                                                    @foreach ($group as $groupdata)
+                                                    <option value='{{ $groupdata->id_group }}'>{{ $groupdata->nama_group }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="nomor_cc">Nomor CC - Nama CC</label>
+                                                <!-- <input type="text" class="form-control" id="nomor_cc" name="nomor_cc"> -->
+                                                <select class="form-control" name="nomor_cc">
+                                                    <option value="" disabled selected>Pilih CC</option>
+                                                    @foreach ($cc as $ccdata)
+                                                    <option value='{{ $ccdata->nomor_cc }}'>{{ $ccdata->nomor_cc }} - {{ $ccdata->nama_cc }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="tgl_pengajuan_akhir">Tanggal Pengajuan Akhir</label>
+                                                <input type="date" class="form-control" id="tgl_pengajuan_akhir" name="tgl_pengajuan_akhir">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="nomor_gl">Nomor GL - Nama GL</label>
+                                                <!-- <input type="text" class="form-control" id="nomor_gl" name="nomor_gl"> -->
+                                                <select class="form-control" name="nomor_gl2">
+                                                    <option value="" disabled selected>Pilih GL</option>
+                                                    @foreach ($gl as $gldata)
+                                                    <option value='{{ $gldata->nomor_gl }}'>{{ $gldata->nomor_gl }} - {{ $gldata->nama_gl }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="tgl_dibayarkan">Tanggal Dibayarkan</label>
+                                                <input type="date" class="form-control" id="tgl_dibayarkan" name="tgl_dibayarkan">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" id="exportBtn">Export to Excel</button>
+                                    <button type="reset" class="btn btn-secondary mr-2" id="resetBtn">Reset Filter</button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -663,6 +732,16 @@
                         $('.hidden-section input, .hidden-section select').removeAttr('required'); // Hapus validasi required
                     }
                 });
+            });
+        </script>
+        <script>
+            $('#exportBtn').on('click', function() {
+                var formData = $('#exportForm').serialize(); // Get the form data
+
+                // Trigger the Excel export request with the selected filters
+                window.location.href = "{{ route('kaskecil.export') }}?" + formData;
+
+                $('#exportModal').modal('hide'); // Close the modal after export
             });
         </script>
     </x-slot>

@@ -11,6 +11,7 @@ use App\Models\KasKecilGroup;
 use App\Models\KasKecilKendaraan;
 use App\Models\KasKecilVendor;
 use App\Models\KasKecilGlGroup;
+use App\Exports\KaskecilExport; 
 use Carbon\Carbon;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -239,5 +240,64 @@ class KasKecilController extends Controller
             'redirect_url' => route('kaskecil.index'),
             'message' => 'Data berhasil diperbarui.'
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        // Get the filter parameters from the request
+        $tgl_pengajuan_awal = $request->input('tgl_pengajuan_awal');
+        $tgl_pengajuan_akhir = $request->input('tgl_pengajuan_akhir');
+        $id_group = $request->input('id_group');
+        $nomor_gl = $request->input('nomor_gl2');
+        $nomor_cc = $request->input('nomor_cc');
+        $tgl_dibayarkan = $request->input('tgl_dibayarkan');
+
+        // dd($id_group);
+
+        // Query the data based on filters
+        $kaskecil = KasKecil::with(['group', 'gl', 'cc', 'bbm', 'kendaraan']);
+
+        // $kaskecil = Kaskecil::query();
+
+        if ($tgl_pengajuan_awal) {
+            $kaskecil->where('tgl_pengajuan', '>=', $tgl_pengajuan_awal);
+        }
+
+        if ($tgl_pengajuan_akhir) {
+            $kaskecil->where('tgl_pengajuan', '<=', $tgl_pengajuan_akhir);
+        }
+
+        if ($id_group) {
+            $kaskecil->whereHas('group', function ($query) use ($id_group) {
+                $query->where('id_group', '=', $id_group);
+            });
+        }
+
+        if ($nomor_gl) {
+            $kaskecil->whereHas('gl', function ($query) use ($nomor_gl) {
+                $query->where('nomor_gl', 'like', "%$nomor_gl%")
+                    ->orWhere('nama_gl', 'like', "%$nomor_gl%");
+            });
+        }
+
+        if ($nomor_cc) {
+            $kaskecil->whereHas('cc', function ($query) use ($nomor_cc) {
+                $query->where('nomor_cc', 'like', "%$nomor_cc%")
+                    ->orWhere('nama_cc', 'like', "%$nomor_cc%");
+            });
+        }
+
+        if ($tgl_dibayarkan) {
+            $kaskecil->where('tgl_dibayarkan', '=', $tgl_dibayarkan);
+        }
+
+        // Fetch the data
+        $data = $kaskecil->get();
+        // dd($data);
+        // dd($data->first()->group, $data->first()->gl, $data->first()->cc);
+
+
+        // Export logic (using Laravel Excel)
+        return Excel::download(new KaskecilExport($data), 'kaskecil_export.xlsx');
     }
 }
