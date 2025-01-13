@@ -26,10 +26,12 @@
                         <div class="sb-nav-link-icon"></div>
                         Konsumsi
                     </a>
+                    @if (Auth::user()->hakAkses->hak_akses_id == 2)
                     <a class="nav-link" href="{{ route('kaskecil.index') }}">
                         <div class="sb-nav-link-icon"></div>
                         Kas Kecil
                     </a>
+                    @endif
                     @if (Auth::user()->hakAkses->hak_akses_id != 4)
                         {{-- <a class="nav-link" href="{{ route('admin.dashboard.kendaraan.show') }}">
                             <div class="sb-nav-link-icon"></div>

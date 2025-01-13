@@ -26,6 +26,7 @@ class KaskecilExport implements FromCollection, WithHeadings, WithStyles, WithEv
                 $item->nama_pengaju ?? '-',
                 $item->tgl_pengajuan ?? '-',
                 $item->group->nama_group ?? '-',
+                $item->keterangan ?? '-',
                 ($item->gl->nomor_gl ?? '-') . ' - ' . ($item->gl->nama_gl ?? '-'),
                 ($item->cc->nomor_cc ?? '-') . ' - ' . ($item->cc->nama_cc ?? '-'),            
                 'Rp. ' . ($item->nominal !== null ? number_format($item->nominal, 2, ',', '.') : '-'),
@@ -46,8 +47,7 @@ class KaskecilExport implements FromCollection, WithHeadings, WithStyles, WithEv
                 $item->tgl_dibayarkan ?? '-',
                 // $item->bukti_nota ? 'Lihat Bukti Nota' : '-',
                 // $item->bukti_bayar ? 'Lihat Bukti Bayar' : '-',
-                'Rp. ' . number_format(($item->nominal + $item->ppn + $item->pph + $item->tol + $item->parkir + $item->lain_lain + $item->harga_bensin),2,',','.'),
-                $item->keterangan ?? '-',
+                'Rp. ' . number_format(($item->nominal + $item->ppn + $item->pph + $item->tol + $item->parkir + $item->lain_lain + $item->harga_bensin),2,',','.')
             ];
         });
     
@@ -58,10 +58,10 @@ class KaskecilExport implements FromCollection, WithHeadings, WithStyles, WithEv
     public function headings(): array
     {
         return [
-            'No', 'Nama Pengaju', 'Tanggal Pengajuan', 'Group', 'GL', 'CC', 'Nominal',
+            'No', 'Nama Pengaju', 'Tanggal Pengajuan', 'Group', 'Keterangan', 'GL', 'CC', 'Nominal',
             'Kendaraan', 'KM Awal', 'KM Akhir', 'Jumlah KM', 'BBM', 'Liter Bensin', 'Harga Bensin',
             'Biaya Tol', 'Parkir', 'PPN', 'PPH', 'Biaya Aplikasi', 'Biaya Lain-lain', 'Dibayarkan Oleh',
-            'Tanggal Dibayarkan','Total Biaya', 'Keterangan'
+            'Tanggal Dibayarkan','Total Biaya'
         ];
     }
 

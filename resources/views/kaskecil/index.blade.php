@@ -467,6 +467,7 @@
                                         <th>Nama Pengaju</th>
                                         <th>Tanggal Pengajuan</th>
                                         <th>Group</th>
+                                        <th>Keterangan</th>
                                         <th>GL</th>
                                         <th>CC</th>
                                         <th>Nominal</th>
@@ -488,7 +489,6 @@
                                         <th>Bukti Nota</th>
                                         <th>Bukti Bayar</th>
                                         <th>Total Biaya</th>
-                                        <th>Keterangan</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -510,6 +510,7 @@
                                         <td>{{ $item->nama_pengaju ?? '-' }}</td>
                                         <td>{{ $item->tgl_pengajuan ?? '-' }}</td>
                                         <td>{{ $item->group->nama_group ?? '-' }}</td>
+                                        <td>{{ $item->keterangan ?? '-' }}</td>
                                         <td>{{ $item->gl->nomor_gl ?? '-' }} - {{ $item->gl->nama_gl ?? '-' }}</td>
                                         <td>{{ $item->cc->nomor_cc ?? '-' }} - {{ $item->cc->nama_cc ?? '-' }}</td>
                                         <td>Rp. {{ $item->nominal !== null ? number_format($item->nominal, 2, ',', '.') : '-' }}</td>
@@ -550,7 +551,6 @@
                 ? number_format($item->nominal + $item->ppn + $item->pph + $item->tol + $item->parkir + $item->lain_lain + $item->harga_bensin, 2, ',', '.')
                 : '-' }}
                                         </td>
-                                        <td>{{ $item->keterangan ?? '-' }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -720,13 +720,12 @@
                     $('.hidden-section').show(); // Tampilkan elemen
                     $('.hidden-section input, .hidden-section select').attr('required', true); // Tambahkan validasi required
                 }
-
                 // Event listener untuk dropdown id_group
                 $('select[name="id_group"]').on('change', function() {
                     const selectedGroupId = parseInt($(this).val());
                     if (groupIdsToShow.includes(selectedGroupId)) {
                         $('.hidden-section').show(); // Tampilkan elemen
-                        $('.hidden-section input, .hidden-section select').attr('required', true); // Tambahkan validasi required
+                        //$('.hidden-section input, .hidden-section select').attr('required', true); // Tambahkan validasi required
                     } else {
                         $('.hidden-section').hide(); // Sembunyikan elemen
                         $('.hidden-section input, .hidden-section select').removeAttr('required'); // Hapus validasi required
