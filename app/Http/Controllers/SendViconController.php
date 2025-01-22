@@ -316,7 +316,7 @@ class SendViconController extends Controller
                     $sendvicon->jenis_link = $validated['jenis_link'];
                     $sendvicon->personil = $validated['nopersonel'];
                     $sendvicon->keterangan = $validated['keterangan'];
-                    //$sendvicon->link = $validated['link'];
+                    $sendvicon->link = $request->input('link', '-');
                     //$sendvicon->password = $validated['password'];
                     $sendvicon->dokumentasi = null;
                     $sendvicon->persiapanrapat = '';
@@ -484,6 +484,7 @@ class SendViconController extends Controller
                 //$sendvicon->privat = $validated['privat'];
                 $sendvicon->vicon = $validated['vicon'];
                 $sendvicon->jenis_link = $validated['jenis_link'];
+                $sendvicon->link = $request->input('update_link', null);    
                 //$sendvicon->status = $validated['status'];
                 //$sendvicon->link = $validated['link'];
                 $sendvicon->keterangan = $validated['keterangan'];

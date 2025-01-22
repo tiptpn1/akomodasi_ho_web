@@ -354,6 +354,17 @@
                                 </div>
                             </div>
                             <div class="row">
+                                <div class="col-md-12" id='linkmeeting_add' style="display: none;">
+                                    <div class="form-group">
+                                        <label class="label">
+                                            Link Vicon (Jika Ada)
+                                        </label>
+                                    <input type="text" class="form-control" name="link" id="link"
+                                        placeholder="Isikan Link Vicon Jika Ada">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Peserta</b>
                                     <input type="text" class="form-control" name="peserta"
@@ -546,6 +557,11 @@
                                         <td id="det_jenislink"></td>
                                     </tr>
                                     <tr>
+                                        <td>Link Vicon</td>
+                                        <td> : </td>
+                                        <td id="det_link"></td>
+                                    </tr>
+                                    <tr>
                                         <td>Jenis Rapat</td>
                                         <td> : </td>
                                         <td id="det_jenisrapat"></td>
@@ -560,12 +576,12 @@
                                         <td> : </td>
                                         <td id="det_personil"></td>
                                     </tr>
-                                    <tr>
+                                    <!-- <tr>
                                         <td>Memo/Surat Undangan</td>
                                         <td> : </td>
                                         <td id="det_sk">
                                         </td>
-                                    </tr>
+                                    </tr> -->
                                     <tr>
                                         <td>Status</td>
                                         <td> : </td>
@@ -801,6 +817,13 @@
                                 </div>
                             </div>
                             <div class="row">
+                                <div id='linkmeeting_edit' style="display:none;" class="form-group col-md-12">
+                                    <b>Link Vicon (Jika Ada)</b>
+                                    <input type="text" class="form-control" name="update_link" id="update_link"
+                                        placeholder="Isikan Link Vicon">
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Peserta</b>
                                     <input type="text" class="form-control" name="peserta" id="update_peserta"
@@ -1024,9 +1047,11 @@
                 if (vicon_add == "Ya") {
                     div_jenislink_add.style.display = "block";
                     $("#select_jenislink_add").prop('required', true);
+                    linkmeeting_add.style.display = "block";
                 } else {
                     div_jenislink_add.style.display = "none";
                     $("#select_jenislink_add").prop('required', false);
+                    linkmeeting_add.style.display = "none";
                 }
             }
 
@@ -1035,9 +1060,11 @@
                 if (update_vicon == "Ya") {
                     div_jenislink_edit.style.display = "block";
                     $("#select_jenislink_edit").prop('required', true);
+                    linkmeeting_edit.style.display = "block";
                 } else {
                     div_jenislink_edit.style.display = "none";
                     $("#select_jenislink_edit").prop('required', false);
+                    linkmeeting_edit.style.display = "none";
                 }
             };
 
@@ -1064,6 +1091,13 @@
 
                         var waktu_tampil = waktu + " - " + waktu2 + " WIB";
 
+                        var statusapprove = null;
+                        if (data.status_approval == 0) {
+                            statusapprove = "Waiting for Approve";
+                        } else {
+                            statusapprove = "Approved";
+                        }
+
                         var id_ruangan = data.id_ruangan;
                         var tempat = "";
                         if (id_ruangan == null) {
@@ -1080,7 +1114,7 @@
 
                         var link = "";
                         if (data.link != null) {
-                            var link = data.master_link.link;
+                            var link = data.link;
                         }
 
                         $('#det_bagian').html(data.bagian != null ? data.bagian.bagian : '');
@@ -1097,8 +1131,9 @@
                         //$('#det_agendadireksi').html(data.agenda_direksi);
                         $('#det_personil').html(data.personil);
                         $('#det_sk').html(sk);
-                        $('#det_status').html(data.status);
-                        // $('#det_link').html(link);
+                        // $('#det_status').html(data.status_approval);
+                        $('#det_status').html(statusapprove);
+                        $('#det_link').html(link);
                         // $('#det_pass').html(data.password);
                         $('#det_keterangan').html(data.keterangan);
                         $('#det_user').html(data.user);
@@ -1191,9 +1226,11 @@
                             div_jenislink_edit.style.display = "block";
                             $("#select_jenislink_edit").val(data.jenis_link);
                             $("#select_jenislink_edit").prop('required', true);
+                            linkmeeting_edit.style.display = "block";
                         } else {
                             div_jenislink_edit.style.display = "none";
                             $("#select_jenislink_edit").prop('required', false);
+                            linkmeeting_edit.style.display = "none";
                         }
                         var konsumsi = data.konsumsi; // Ambil data konsumsi dari response
 
@@ -1235,7 +1272,7 @@
                         $('#update_agendadireksi').val(data.agenda_direksi);
                         $('#update_personil').val(data.personil);
                         $('#label_sk').html(data.sk != null ? data.sk.split('/').reverse()[0] : '');
-                        $('#update_status').val(data.status);
+                        $('#update_status').val(data.status_approval);
                         $('#update_link').val(data.link);
                         $('#update_pass').val(data.password);
                         $('#update_keterangan').val(data.keterangan);

@@ -29,25 +29,36 @@ class KaskecilExport implements FromCollection, WithHeadings, WithStyles, WithEv
                 $item->keterangan ?? '-',
                 ($item->gl->nomor_gl ?? '-') . ' - ' . ($item->gl->nama_gl ?? '-'),
                 ($item->cc->nomor_cc ?? '-') . ' - ' . ($item->cc->nama_cc ?? '-'),            
-                'Rp. ' . ($item->nominal !== null ? number_format($item->nominal, 2, ',', '.') : '-'),
+                // 'Rp. ' . ($item->nominal !== null ? number_format($item->nominal, 2, ',', '.') : '-'),
+                ($item->nominal !== null ? $item->nominal : '-'),
                 isset($item->kendaraan) ? ($item->kendaraan->nopol ?? '-' . ' - ' . $item->kendaraan->tipe_kendaraan ?? '-') : '-',
                 $item->km_awal ?? '-',
                 $item->km_akhir ?? '-',
                 ($item->km_akhir ?? 0) - ($item->km_awal ?? 0),
                 $item->bbm->nama_bbm ?? '-',
                 $item->liter_bensin ?? '-',
-                'Rp. ' . ($item->harga_bensin !== null ? number_format($item->harga_bensin, 2, ',', '.') : '-'),
-                'Rp. ' . ($item->tol !== null ? number_format($item->tol, 2, ',', '.') : '-'),
-                'Rp. ' . ($item->parkir !== null ? number_format($item->parkir, 2, ',', '.') : '-'),
-                'Rp. ' . ($item->ppn !== null ? number_format($item->ppn, 2, ',', '.') : '-'),
-                'Rp. ' . ($item->pph !== null ? number_format($item->pph, 2, ',', '.') : '-'),
-                'Rp. ' . ($item->biaya_aplikasi !== null ? number_format($item->biaya_aplikasi, 2, ',', '.') : '-'),
-                'Rp. ' . ($item->lain_lain !== null ? number_format($item->lain_lain, 2, ',', '.') : '-'),
+                // 'Rp. ' . ($item->harga_bensin !== null ? number_format($item->harga_bensin, 2, ',', '.') : '-'),
+                // 'Rp. ' . ($item->tol !== null ? number_format($item->tol, 2, ',', '.') : '-'),
+                // 'Rp. ' . ($item->parkir !== null ? number_format($item->parkir, 2, ',', '.') : '-'),
+                // 'Rp. ' . ($item->ppn !== null ? number_format($item->ppn, 2, ',', '.') : '-'),
+                // 'Rp. ' . ($item->pph !== null ? number_format($item->pph, 2, ',', '.') : '-'),
+                // 'Rp. ' . ($item->biaya_aplikasi !== null ? number_format($item->biaya_aplikasi, 2, ',', '.') : '-'),
+                // 'Rp. ' . ($item->lain_lain !== null ? number_format($item->lain_lain, 2, ',', '.') : '-'),
+                ($item->harga_bensin !== null ? $item->harga_bensin : '-'),
+                ($item->tol !== null ? $item->tol : '-'),
+                ($item->parkir !== null ? $item->parkir : '-'),
+                ($item->ppn !== null ? $item->ppn : '-'),
+                ($item->pph !== null ? $item->pph : '-'),
+                ($item->biaya_aplikasi !== null ? $item->biaya_aplikasi : '-'),
+                ($item->lain_lain !== null ? $item->lain_lain : '-'),
                 $item->dibayarkan_oleh ?? '-',
                 $item->tgl_dibayarkan ?? '-',
                 // $item->bukti_nota ? 'Lihat Bukti Nota' : '-',
                 // $item->bukti_bayar ? 'Lihat Bukti Bayar' : '-',
-                'Rp. ' . number_format(($item->nominal + $item->ppn + $item->pph + $item->tol + $item->parkir + $item->lain_lain + $item->harga_bensin),2,',','.')
+                // $item->nominal !== null && $item->ppn !== null && $item->pph !== null && $item->tol !== null && $item->parkir !== null && $item->lain_lain !== null && $item->harga_bensin !== null
+                // ? number_format($item->nominal + $item->ppn + $item->pph + $item->tol + $item->parkir + $item->lain_lain + $item->harga_bensin, 2, ',', '.')
+                // 'Rp. ' . number_format(($item->nominal + $item->ppn + $item->pph + $item->tol + $item->parkir + $item->lain_lain + $item->harga_bensin + $item->biaya_aplikasi),2,',','.')
+                ($item->nominal + $item->ppn + $item->pph + $item->tol + $item->parkir + $item->lain_lain + $item->harga_bensin + $item->biaya_aplikasi)
             ];
         });
     
