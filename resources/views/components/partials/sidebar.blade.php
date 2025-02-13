@@ -32,6 +32,14 @@
                         Kas Kecil
                     </a>
                     @endif
+                    <a class="nav-link" href="{{ route('makansiang.index') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Makan Siang
+                    </a>
+                    <a class="nav-link" href="{{ route('kartu.index') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Kartu Lift & Parkir
+                    </a>
                     @if (Auth::user()->hakAkses->hak_akses_id != 4)
                         {{-- <a class="nav-link" href="{{ route('admin.dashboard.kendaraan.show') }}">
                             <div class="sb-nav-link-icon"></div>

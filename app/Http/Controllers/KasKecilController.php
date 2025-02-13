@@ -178,7 +178,7 @@ class KasKecilController extends Controller
 
     public function update(Request $request, $id)
     {
-
+        dd($request->hasFile('bukti_bayar'));
         // Find the KasKecil record by ID
         $kaskecil = KasKecil::findOrFail($id);
 

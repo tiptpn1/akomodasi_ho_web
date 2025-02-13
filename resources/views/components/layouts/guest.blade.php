@@ -44,7 +44,9 @@
     {{ $slot }}
 
     <x-partials.guest-footer />
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
     <script src="{{ asset('dist/counselor/js/jquery.min.js') }}"></script>
     <script src="{{ asset('dist/counselor/js/jquery-migrate-3.0.1.min.js') }}"></script>
     <script src="{{ asset('dist/counselor/js/popper.min.js') }}"></script>
