@@ -33,8 +33,8 @@
             <div class="container-fluid">
                 <h3 class="mt-4">Pengajuan Makan Siang</h3>
                 @if (!in_array(Auth::user()->master_hak_akses_id, [5, 6]))
-                <button id="btnTambah" type="button" data-toggle="modal" data-target="#tambah" class="btn btn-primary">Tambah Data</button>
-                <button id="btnExport" type="button" data-toggle="modal" data-target="#exportModal" class="btn btn-warning">Export Data</button>
+                <button id="btnTambah" type="button" data-toggle="modal" data-target="#tambah" class="btn btn-primary btn-sm">Tambah Data</button>
+                <button id="btnExport" type="button" data-toggle="modal" data-target="#exportModal" class="btn btn-warning btn-sm">Export Data</button>
                 @endif
                 @if(session('success'))
                 <div class="alert alert-success alert-sm alert-dismissible fade show" role="alert" style="max-width: 400px; margin:">

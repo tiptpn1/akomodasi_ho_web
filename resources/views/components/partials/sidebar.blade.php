@@ -26,6 +26,10 @@
                         <div class="sb-nav-link-icon"></div>
                         Konsumsi
                     </a>
+                    <a class="nav-link" href="{{ route('makansiang.index') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Makan Siang
+                    </a>
                     @if (Auth::user()->hakAkses->hak_akses_id == 2)
                     <a class="nav-link" href="{{ route('kaskecil.index') }}">
                         <div class="sb-nav-link-icon"></div>
