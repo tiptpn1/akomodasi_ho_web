@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>PTPN XII | Presensi Rapat - Link Tidak Valid</title>
+    <title>PTPN I | Presensi Rapat - Link Tidak Valid</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Font Awesome -->
@@ -15,7 +15,7 @@
 
 <body class="hold-transition login-page">
     <div class="login-logo">
-        <a href="#"><b>Presensi Rapat</b> PTPN XII</a>
+        <a href="#"><b>Presensi Rapat</b> PTPN I</a>
     </div>
     <div class="card">
         <div class="card-body login-card-body">

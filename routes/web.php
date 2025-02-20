@@ -19,6 +19,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\KonsumsiController;
 use App\Models\KasKecil;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MakanSiangController;
+use App\Http\Controllers\MakanSiangControllerController;
+use App\Http\Controllers\KartuController;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,6 +61,36 @@ Route::group(['prefix' => 'konsumsi', 'as' => 'konsumsi.'], function () {
     Route::post('/export-excel', [KonsumsiController::class, 'exportExcel'])->name('exportExcel');
     Route::post('/kirim/{id}', [KonsumsiController::class, 'kirim'])->name('kirim');
     Route::get('/data', [KonsumsiController::class, 'data'])->name('data');
+});
+
+Route::group(['prefix' => 'makansiang', 'as' => 'makansiang.'], function () {
+    Route::get('/', [MakanSiangController::class, 'index'])->name('index');
+    Route::post('/store', [MakanSiangController::class, 'store'])->name('store');
+    Route::get('/edit/{id}', [MakanSiangController::class, 'edit'])->name('edit');  // Add this route
+    Route::put('/update/{id}', [MakanSiangController::class, 'update'])->name('update');
+    // Route::post('/approve/{id}', [MakanSiangController::class, 'approve'])->name('approve');
+    Route::delete('/destroy/{id}', [MakanSiangController::class, 'destroy'])->name('destroy');
+    Route::get('/export', [MakanSiangController::class, 'export'])->name('export');
+    // Route::post('/kirim/{id}', [MakanSiangController::class, 'kirim'])->name('kirim');
+    // Route::get('/data', [MakanSiangController::class, 'data'])->name('data');
+    Route::post('/approve/{id}', [MakanSiangController::class, 'approve'])->name('approve');
+    Route::post('/reject/{id}', [MakanSiangController::class, 'reject'])->name('reject');
+
+});
+
+Route::group(['prefix' => 'kartu', 'as' => 'kartu.'], function () {
+    Route::get('/', [KartuController::class, 'index'])->name('index');
+    Route::post('/store', [KartuController::class, 'store'])->name('store');
+    Route::get('/edit/{id}', [KartuController::class, 'edit'])->name('edit');  // Add this route
+    Route::put('/update/{id}', [KartuController::class, 'update'])->name('update');
+    // Route::post('/approve/{id}', [MakanSiangController::class, 'approve'])->name('approve');
+    Route::delete('/destroy/{id}', [KartuController::class, 'destroy'])->name('destroy');
+    Route::get('/export', [KartuController::class, 'export'])->name('export');
+    // Route::post('/kirim/{id}', [MakanSiangController::class, 'kirim'])->name('kirim');
+    // Route::get('/data', [MakanSiangController::class, 'data'])->name('data');
+    Route::post('/approve/{id}', [KartuController::class, 'approve'])->name('approve');
+    Route::post('/reject/{id}', [KartuController::class, 'reject'])->name('reject');
+
 });
 
 Route::group(['prefix' => 'kaskecil', 'as' => 'kaskecil.', 'middleware' => 'role:admin,GA,read'], function () {

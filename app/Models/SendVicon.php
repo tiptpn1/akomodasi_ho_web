@@ -88,7 +88,10 @@ class SendVicon extends Model
     {
         return $this->hasOne(Konsumsi::class, 'id_sendvicon', 'id');
     }
-
+    public function agenda_direksi()
+    {
+        return $this->hasOne(AgendaDireksi::class, 'agenda_direksi', 'id_agenda_dir');
+    }
     public static function countDate($date)
     {
         $dateCount = self::with(['ruangan', 'masterLink'])

@@ -26,6 +26,10 @@
                         <div class="sb-nav-link-icon"></div>
                         Konsumsi
                     </a>
+                    <a class="nav-link" href="{{ route('makansiang.index') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Makan Siang
+                    </a>
                     @if (Auth::user()->hakAkses->hak_akses_id == 2)
                     <a class="nav-link" href="{{ route('kaskecil.index') }}">
                         <div class="sb-nav-link-icon"></div>
@@ -45,10 +49,10 @@
                             <div class="sb-nav-link-icon"></div>
                             Ruangan
                         </a>
-                        <a class="nav-link" href="{{ route('admin.masterlink.index') }}">
+                        <!-- <a class="nav-link" href="{{ route('admin.masterlink.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Link
-                        </a>
+                        </a> -->
                         <a class="nav-link" href="{{ route('admin.bagian.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Bagian
@@ -57,10 +61,10 @@
                             <div class="sb-nav-link-icon"></div>
                             Jenis Rapat
                         </a>
-                        <a class="nav-link" href="{{ route('admin.dashboard.master.kendaraan.index') }}">
+                        <!-- <a class="nav-link" href="{{ route('admin.dashboard.master.kendaraan.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Kendaraan
-                        </a>
+                        </a> -->
                         <a class="nav-link" href="{{ route('admin.dashboard.master.pengguna.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Pengguna

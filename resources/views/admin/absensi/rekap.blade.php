@@ -84,14 +84,14 @@
                                                 <button style="margin-right: 6px; margin-bottom: 3px;" type="button"
                                                     data-toggle="modal" data-target="#editStatusModal"
                                                     class="btn btn-warning btn-sm">
-                                                    Edit Status
+                                                    <b>Edit Status</b>
                                                 </button>
                                             </center>
                                         </td>
                                     @endif
                                 </tr>
                                 <tr>
-                                    <th>Link Presensi</th>
+                                    <th>Presensi Online</th>
                                     <td>
                                         <b>:</b>
                                     </td>
@@ -99,8 +99,26 @@
                                         <b>
                                             <a href="{{ route('absensi.create', ['token' => $sendVicon->token, 'id' => $sendVicon->id]) }}"
                                                 target="_blank">
-                                                {{ route('absensi.create', ['token' => $sendVicon->token, 'id' => $sendVicon->id]) }}
+                                                    <i class="fas fa-external-link-alt"></i> Presensi Online</button>
                                             </a>
+                                        </b>
+                                    </td>
+
+                                </tr>
+                                
+                                <tr>
+                                    <th>Presensi Offline</th>
+                                    <td>
+                                        <b>:</b>
+                                    </td>
+                                    <td>
+                                        <b>
+                                        <a class="btn btn-sm btn-default mb-1" href="/file-sekper/Template-Daftar-Hadir.docx" download>
+                                            <i class="fas fa-download"></i> Template Daftar Hadir
+                                        </a><br>
+                                        <a class="btn btn-sm btn-default" href="/file-sekper/Template-Risalah-Rapat.docx" download>
+                                            <i class="fas fa-download"></i> Template Risalah Rapat
+                                        </a>
                                         </b>
                                     </td>
 

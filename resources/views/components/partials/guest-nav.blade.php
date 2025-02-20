@@ -1,6 +1,6 @@
-<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
+<!-- <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
     <div class="container">
-        <a class="navbar-brand" href="#">Portal Akomodasi PTPN 1 Head Office</a>
+        <a class="navbar-brand" href="/">ARHAN (APLIKASI RAPAT PERUSAHAAN) PTPN I</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav" aria-controls="ftco-nav"
             aria-expanded="false" aria-label="Toggle navigation">
             <span class="oi oi-menu"></span> Menu
@@ -35,4 +35,4 @@
             </ul>
         </div>
     </div>
-</nav>
+</nav> -->

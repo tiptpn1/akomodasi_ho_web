@@ -17,11 +17,16 @@ class KonsumsiController extends Controller
 {
     public function index(Request $request)
     {
+        $bagian_reg = Bagian::where('master_bagian_id', Auth::user()->master_nama_bagian_id)
+        ->orderBy('master_bagian_id', 'desc')
+        ->first();
+        
         if (Auth::user()->master_user_nama == 'kasubdiv_ga') {
             $query = DB::table('konsumsi')
                 ->join('sendvicon', 'konsumsi.id_sendvicon', '=', 'sendvicon.id')
                 ->join('master_bagian', 'sendvicon.bagian_id', '=', 'master_bagian.master_bagian_id')
                 ->whereIn('konsumsi.status', [1, 2])
+                ->where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id)
                 ->select(
                     'konsumsi.id as konsumsi_id',
                     'konsumsi.keterangan as konsumsi_keterangan',
@@ -40,6 +45,7 @@ class KonsumsiController extends Controller
                 ->join('master_bagian', 'sendvicon.bagian_id', '=', 'master_bagian.master_bagian_id')
                 ->where('konsumsi.konsumsi_kirim', 2)
                 ->whereIn('konsumsi.status', [2, 3])
+                ->where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id)
                 ->select(
                     'konsumsi.id as konsumsi_id',
                     'konsumsi.keterangan as konsumsi_keterangan',
@@ -54,6 +60,7 @@ class KonsumsiController extends Controller
             $query = DB::table('konsumsi')
                 ->join('sendvicon', 'konsumsi.id_sendvicon', '=', 'sendvicon.id')
                 ->join('master_bagian', 'sendvicon.bagian_id', '=', 'master_bagian.master_bagian_id')
+                ->where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id)
                 ->select(
                     'konsumsi.id as konsumsi_id',
                     'konsumsi.keterangan as konsumsi_keterangan',
@@ -181,7 +188,8 @@ class KonsumsiController extends Controller
         $start = isset($_GET['page']) ? ($_GET['page'] - 1) * 10 : 0;
 
 
-        $bagians = Bagian::all();
+        $bagians = Bagian::where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id)->get();
+
         // $konsumsi = Konsumsi::with(['sendVicon.bagian'])->get();
         return view('konsumsi.index', compact('konsumsi', 'start', 'bagians', 'request_status'));
     }

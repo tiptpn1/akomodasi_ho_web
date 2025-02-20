@@ -121,10 +121,17 @@
         @php
             $end_time_vicon = [];
         @endphp
-
-        <div class="mb-4" style="page-break-inside: avoid;">
-            <div class="mb-2"><b>Ruang Rapat pada Lantai {{ $lantai }}</b></div>
-
+       
+        <!-- <div class="mb-4" style="page-break-before: always; page-break-inside: avoid;"><div class="mb-2"> -->
+        <div class="mb-4" style="page-break-inside: avoid;"><div class="mb-2">
+            <b>Ruang Rapat 
+                @if($lantai == 99)
+                    Eksternal
+                @else
+                    pada Lantai {{ $lantai }}
+                @endif
+            </b>
+        </div>
             <table class="mb-2" style="border-collapse: 1px !important;">
                 @for ($i = 0; $i < intval(ceil((count($jenis_rapat) + 1) / 5)); $i++)
                     <tr>

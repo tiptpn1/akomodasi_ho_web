@@ -24,7 +24,7 @@ class MasterPenggunaController extends Controller
         $bagian = $this->m_data->getActiveBagian();
         $hak_akses = $this->m_data->getActiveHakAkses();
         $data = array(
-            "title"     => "Portal Akomodasi PTPN 1 Head Office",
+            "title"     => "ARHAN PTPN I",
             "halaman"   => "Dashboard",
             "linkhalaman" => "",
             "view" => $view,

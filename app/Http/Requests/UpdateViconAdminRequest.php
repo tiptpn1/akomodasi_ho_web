@@ -38,7 +38,7 @@ class UpdateViconAdminRequest extends FormRequest
             'peserta' => 'nullable',
             'jumlahpeserta' => 'nullable|integer',
             'keterangan' => 'nullable',
-            'sk' => 'nullable|file|mimes:pdf,jpg|max:5120',
+            'sk' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar|max:5120',
             'status' => 'nullable',
             'petugasruangrapat' => 'nullable|array',
             'petugasruangrapat.*' => 'nullable|exists:user,username',

@@ -6,6 +6,7 @@ use App\Exports\AgendaExport;
 use App\Http\Requests\StoreSendviconRequest;
 use App\Http\Requests\StoreViconAdminRequest;
 use App\Http\Requests\UpdateViconAdminRequest;
+use App\Models\AgendaDireksi;
 use App\Models\Bagian;
 use App\Models\JenisRapat;
 use App\Models\MasterLink;
@@ -38,14 +39,24 @@ class SendViconController extends Controller
         $userBagianId = Auth::user()->master_nama_bagian_id;
         $jenisRapat = JenisRapat::orderBy('id', 'desc')->get();
         $jenisRapatWithStatus = JenisRapat::where('status', 'Aktif')->get();
-        $ruangans = Ruangan::orderBy('id', 'desc')->get();
+        $bagian_reg = Bagian::where('master_bagian_id', Auth::user()->master_nama_bagian_id)
+            ->orderBy('master_bagian_id', 'desc')
+            ->first(); // Ambil satu data saja
+        // dd($bagian_reg->bagian_regional_id);
+        $ruangans = Ruangan::where('ruangan_regional_id', $bagian_reg->bagian_regional_id ?? null)
+            ->orderBy('id', 'desc')
+            ->get();
+        $bagians_reg_list = Bagian::where('bagian_regional_id', $bagian_reg->bagian_regional_id ?? null)->get();
+        // $ruangans = Ruangan::orderBy('id', 'desc')->get();
         // $petugasRapat = User::where('petugas', 'Umum')->where('status', 'Aktif')->get();
         // $petugasTI = User::where('petugas', 'TI')->where('status', 'Aktif')->get();
         $masterlink = MasterLink::orderBy('id', 'desc')->get();
         $konsumsi = Konsumsi::orderBy('id', 'desc')->get();
+        $agenda_dir = AgendaDireksi::get();
 
         $view_data = [
             'bagians' => $bagians,
+            'bagians_reg_list' => $bagians_reg_list,
             'jenis_rapat' => $jenisRapat,
             'jenis_rapat_with_status' => $jenisRapatWithStatus,
             'ruangans' => $ruangans,
@@ -53,7 +64,8 @@ class SendViconController extends Controller
             // 'petugas_ti' => $petugasTI,
             'masterlink' => $masterlink,
             'konsumsi' => $konsumsi,
-            'bagian_id'=> $userBagianId
+            'bagian_id' => $userBagianId,
+            'agenda_dir' => $agenda_dir,
         ];
         return view('admin.jadwal-vicon.index', $view_data);
     }
@@ -131,7 +143,7 @@ class SendViconController extends Controller
             $sendvicon->jenis_link = $validated['jenis_link'];
             $sendvicon->personil = $validated['nopersonel'];
             $sendvicon->keterangan = $validated['keterangan'];
-            $sendvicon->agenda_direksi = 'Tidak';
+            // $sendvicon->agenda_direksi = 'Tidak';
             $sendvicon->jenisrapat_id = 8;
             $sendvicon->persiapanrapat = '';
             $sendvicon->persiapanvicon = '';
@@ -302,7 +314,7 @@ class SendViconController extends Controller
                     $sendvicon->bagian_id = $validated['bagian'];
                     $sendvicon->acara = $validated['acara'];
                     $sendvicon->tanggal = $eventDate;
-                    //$sendvicon->agenda_direksi = $validated['agenda_direksi'];
+                    $sendvicon->agenda_direksi = $request->agenda_direksi;
                     $sendvicon->jenisrapat_id = $validated['jenisrapat'];
                     $sendvicon->waktu = $validated['waktu'];
                     $sendvicon->waktu2 = $validated['waktu2'];
@@ -431,6 +443,7 @@ class SendViconController extends Controller
      */
     public function update(UpdateViconAdminRequest $request)
     {
+        // dd($request);
         $validated = $request->validated();
         try {
             $id = $validated['id'];
@@ -461,12 +474,12 @@ class SendViconController extends Controller
             if ($sendvicon) {
                 $check_vicon = SendVicon::cekctr_approve($tanggal, $validated['ruangan'], $validated['waktu'], $validated['waktu2']);
 
-                if ($check_vicon > 0 && ($sendvicon->tanggal != $tanggal || strpos($sendvicon, $validated['waktu']) === false || strpos($sendvicon, $validated['waktu2']) === false)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Tidak  dapat mengubah data karena sudah ada agenda yang telah diapprove',
-                    ], 200);
-                }
+                // if ($check_vicon > 0 && ($sendvicon->tanggal != $tanggal || strpos($sendvicon, $validated['waktu']) === false || strpos($sendvicon, $validated['waktu2']) === false)) {
+                //     return response()->json([
+                //         'success' => false,
+                //         'message' => 'Tidak  dapat mengubah data karena sudah ada agenda yang telah diapprove',
+                //     ], 200);
+                // }
 
                 $sendvicon->bagian_id = $validated['bagian'];
                 $sendvicon->acara = $validated['acara'];
@@ -474,7 +487,7 @@ class SendViconController extends Controller
                 $sendvicon->tanggal = $tanggal;
                 $sendvicon->waktu = $validated['waktu'];
                 $sendvicon->waktu2 = $validated['waktu2'];
-                //$sendvicon->agenda_direksi = $validated['agenda_direksi'];
+                $sendvicon->agenda_direksi = $request->agenda_direksi_update;
                 $sendvicon->peserta = $validated['peserta'];
                 $sendvicon->jumlahpeserta = $validated['jumlahpeserta'];
                 $sendvicon->id_ruangan = $id_ruangan ?? null;
@@ -484,7 +497,7 @@ class SendViconController extends Controller
                 //$sendvicon->privat = $validated['privat'];
                 $sendvicon->vicon = $validated['vicon'];
                 $sendvicon->jenis_link = $validated['jenis_link'];
-                $sendvicon->link = $request->input('update_link', null);    
+                $sendvicon->link = $request->input('update_link', null);
                 //$sendvicon->status = $validated['status'];
                 //$sendvicon->link = $validated['link'];
                 $sendvicon->keterangan = $validated['keterangan'];
@@ -650,8 +663,20 @@ class SendViconController extends Controller
 
     public function getData(Request $request)
     {
-        // return response()->json($request->all());
-        $query = SendVicon::dataTables($request);
+        $bagian_reg = Bagian::where('master_bagian_id', Auth::user()->master_nama_bagian_id)
+            ->orderBy('master_bagian_id', 'desc')
+            ->first();
+
+        if (Auth::user()->hak_akses == 7) {
+            // Jika hak akses 7, ambil semua data
+            $query = SendVicon::dataTables($request);
+        } else {
+            $query = SendVicon::dataTables($request)
+                ->join('master_bagian', 'master_bagian.master_bagian_id', '=', 'sendvicon.bagian_id') // Sesuaikan nama tabel jika berbeda
+                ->where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id);
+        }
+
+
         $recordFilter = $query->count();
         $list = $query->limit(10)->offset($request->input('start', 1))->get();
         $data = [];
@@ -742,12 +767,12 @@ class SendViconController extends Controller
 
                 $detailButton = '<button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="detail(' . "'" . $item->id . "'" . ')" class="btn btn-primary btn-sm"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-eye" aria-hidden="true"></i></div>';
                 $absensiButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="absensi(' . "'" . $item->id . "'" . ')" class="btn btn-outline-success btn-sm"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-star"></i></div>';
-               // $invitation = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="invitation(' . "'" . $item->id . "'" . ')" class="btn btn-info btn-sm"><i class="nav-icon fas fa-file"></i>';
+                // $invitation = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="invitation(' . "'" . $item->id . "'" . ')" class="btn btn-info btn-sm"><i class="nav-icon fas fa-file"></i>';
                 $editButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="update(' . "'" . $item->id . "'" . ')" class="btn btn-warning btn-sm"><i class="nav-icon fas fa-edit"></i>';
                 $hapusButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" class="btn btn-sm btn-danger" onclick="hapus(' . "'" . $item->id . "'" . '); return false"><i class="far fa-trash-alt"></i>';
 
                 if (!is_null($item->token)) {
-                    $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ? $detailButton . $absensiButton . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ? $detailButton . $absensiButton . $editButton . $hapusButton : $detailButton . $absensiButton ) : '');
+                    $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ? $detailButton . $absensiButton . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ? $detailButton . $absensiButton . $editButton . $hapusButton : $detailButton . $absensiButton) : '');
                     $row[] = '<center>' . $approval_btn . $actionButton;
                 } else {
                     $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ? $detailButton . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ? $detailButton . $editButton . $hapusButton : $detailButton) : '');

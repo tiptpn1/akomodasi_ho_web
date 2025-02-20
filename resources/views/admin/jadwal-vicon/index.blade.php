@@ -29,12 +29,12 @@
             <div class="container-fluid">
                 <h3 class="mt-4">Jadwal Agenda</h3>
                 @if (!in_array(Auth::user()->master_hak_akses_id, [5, 6]))
-                    <button type="button" data-toggle="modal" data-target="#tambah" class="btn btn-success">Tambah</button>
+                    <button type="button" data-toggle="modal" data-target="#tambah" class="btn btn-success btn-sm">Tambah</button>
                 @endif
-                <button type="submit" data-toggle="modal" data-target="#advance_filter" class="btn btn-warning">
+                <button type="submit" data-toggle="modal" data-target="#advance_filter" class="btn btn-warning btn-sm">
                     Filter
                 </button>
-                <button type="button" class="btn btn-info"
+                <button type="button" class="btn btn-info btn-sm"
                     onclick="window.location='{{ route('admin.vicon.resetfilter') }}'">
                     Reload/Reset Filter
                 </button>
@@ -123,15 +123,6 @@
                                         <option value="0" >Waiting for Approve</option>
                                     </select>
                                 </div>
-                                {{-- <div class="form-group col-md-6">
-                                    <b>Agenda Direksi</b>
-                                    <select name="agenda_direksi" id="agenda_direksi" class="form-control">
-                                        <option selected disabled>Pilih Agenda Direksi</option>
-                                        <option value="">Semua Agenda</option>
-                                        <option value="Ya">Ya</option>
-                                        <option value="Tidak">Tidak</option>
-                                    </select>
-                                </div> --}}
                             </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
@@ -158,9 +149,15 @@
                                 <b>PIC/Divisi</b><br />
                                 <select id="bagian" name="bagian[]" class="custom-select" style="width: 100% !important;" multiple>
                                     <option value="">Semua PIC/Divisi</option>
+                                    @if (in_array(auth()->user()->master_hak_akses_id, [2, 4]))
+                                    @foreach ($bagians_reg_list as $bagian)
+                                        <option value="{{ $bagian->id }}">{{ $bagian->bagian }}</option>
+                                    @endforeach
+                                    @else
                                     @foreach ($bagians as $bagian)
                                         <option value="{{ $bagian->id }}">{{ $bagian->bagian }}</option>
                                     @endforeach
+                                    @endif
                                 </select>
                             </div>
                             <div class="modal-footer">
@@ -203,7 +200,7 @@
                                 </div>
                                 <div class="form-group col-md-6">
                                     <b>Jenis Rapat <span class="text-danger">*</span></b>
-                                    <select name="jenisrapat" class="form-control" required>
+                                    <select name="jenisrapat" id="tambah_jenis_rapat" onchange="showhidejenis_direksi()" class="form-control" required>
                                         <option value="">Pilih Jenis Rapat</option>
                                         @foreach ($jenis_rapat_with_status as $jenis)
                                             <option value='{{ $jenis->id }}'>{{ $jenis->nama }}</option>
@@ -225,42 +222,34 @@
                                     </span>
                                 </div> --}}
                             </div>
-                            {{-- <div class="row">
-                                <div class="form-group col-md-6">
-                                    <b>Jenis Rapat <span class="text-danger">*</span></b>
-                                    <select name="jenisrapat" class="form-control" required>
-                                        <option value="">Pilih Jenis Rapat</option>
-                                        @foreach ($jenis_rapat_with_status as $jenis)
-                                            <option value='{{ $jenis->id }}'>{{ $jenis->nama }}</option>
+                            <div class="row" id='div_tambah_list_dir' style="display: none;">
+                                    <div class="form-group col-md-12">
+                                        <b>Pilih Agenda Direksi <span class="text-danger">*</span></b>
+                                        <select name="agenda_direksi" class="form-control">
+                                            <option value=''>Pilih Agenda Direksi</option>
+                                        @foreach ($agenda_dir as $dir)
+                                            <option value='{{ $dir->id_agenda_dir }}'>{{ $dir->nama_agenda_dir }}</option>
                                         @endforeach
-                                    </select>
-                                    <span class="text-danger">
-                                        <strong id="jenisrapat_error"></strong>
-                                    </span>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <b>Agenda Direksi <span class="text-danger">*</span></b>
-                                    <select name="agenda_direksi" class="form-control" required>
-                                        <option value=''>Pilih Agenda Direksi</option>
-                                        <option value="Ya">Ya</option>
-                                        <option value="Tidak">Tidak</option>
-                                    </select>
-                                    <span class="text-danger">
-                                        <strong id="agenda_direksi_error"></strong>
-                                    </span>
-                                </div>
-                            </div> --}}
+                                        </select>
+                                        <span class="text-danger">
+                                            <strong id="agenda_direksi_error"></strong>
+                                        </span>
+                                    </div>
+                            </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Divisi <span class="text-danger">*</span></b>
                                     <select name="bagian" class="form-control" required>
                                         <option value=''>Pilih Divisi</option>
-                                        @foreach ($bagians as $bagian)
-                                            {{-- <option value='{{ $bagian->id }}'>{{ $bagian->bagian }}</option> --}}
-                                            <option value='{{ $bagian->id }}'
-                                                {{ $bagian->id == $bagian_id ? 'selected' : '' }}>{{ $bagian->bagian }}
-                                            </option>
-                                        @endforeach
+                                        @if (in_array(auth()->user()->master_hak_akses_id, [2, 4]))
+                                            @foreach ($bagians_reg_list as $bagian)
+                                                <option value="{{ $bagian->id }}">{{ $bagian->bagian }}</option>
+                                            @endforeach
+                                            @else
+                                            @foreach ($bagians as $bagian)
+                                                <option value="{{ $bagian->id }}">{{ $bagian->bagian }}</option>
+                                            @endforeach
+                                        @endif
                                     </select>
                                     <span class="text-danger">
                                         <strong id="bagian_error"></strong>
@@ -462,12 +451,12 @@
                                                     name="snack[pagi]" id="snack_pagi">
                                                 <label class="form-check-label" for="snack_pagi">Pagi</label>
                                             </div>
-                                            <div class="form-check">
+                                            <!-- <div class="form-check">
                                                 <input type="hidden" name="snack[siang]" value="0">
                                                 <input class="form-check-input" type="checkbox" value="1"
                                                     name="snack[siang]" id="snack_siang">
                                                 <label class="form-check-label" for="snack_siang">Siang</label>
-                                            </div>
+                                            </div> -->
                                             <div class="form-check">
                                                 <input type="hidden" name="snack[sore]" value="0">
                                                 <input class="form-check-input" type="checkbox" value="1"
@@ -710,7 +699,7 @@
                                 </div>
                                 <div class="form-group col-md-6">
                                     <b>Jenis Rapat <span class="text-danger">*</span></b>
-                                    <select name="jenisrapat" id="update_jenisrapat" class="form-control" required>
+                                    <select name="jenisrapat" id="update_jenisrapat" class="form-control" onchange="showhidejenis_update_direksi()" required>
                                         <option value="">Pilih Jenis Rapat</option>
                                         @foreach ($jenis_rapat_with_status as $jenis)
                                             <option value='{{ $jenis->id }}'>{{ $jenis->nama }}</option>
@@ -721,14 +710,34 @@
                                     </span>
                                 </div>
                             </div>
+                            <div class="row" id='div_update_list_dir' style="display: none;">
+                                    <div class="form-group col-md-12">
+                                        <b>Pilih Agenda Direksi <span class="text-danger">*</span></b>
+                                        <select name="agenda_direksi_update" id="agenda_direksi_update" class="form-control">
+                                            <option value=''>Pilih Agenda Direksi</option>
+                                                @foreach ($agenda_dir as $dir)
+                                                    <option value='{{ $dir->id_agenda_dir }}'>{{ $dir->nama_agenda_dir }}</option>
+                                                @endforeach
+                                        </select>
+                                        <span class="text-danger">
+                                            <strong id="agenda_direksi_error"></strong>
+                                        </span>
+                                    </div>
+                            </div>
                             <div class="row">
                                 <div class="form-group col-md-6">
                                     <b>Divisi <span class="text-danger">*</span></b>
                                     <select name="bagian" id="update_bagian" class="form-control" required>
                                         <option value="">Pilih Divisi</option>
-                                        @foreach ($bagians as $bagian)
-                                            <option value='{{ $bagian->id }}'>{{ $bagian->bagian }}</option>
-                                        @endforeach
+                                        @if (in_array(auth()->user()->master_hak_akses_id, [2, 4]))
+                                            @foreach ($bagians_reg_list as $bagian)
+                                                <option value="{{ $bagian->id }}">{{ $bagian->bagian }}</option>
+                                            @endforeach
+                                            @else
+                                            @foreach ($bagians as $bagian)
+                                                <option value="{{ $bagian->id }}">{{ $bagian->bagian }}</option>
+                                            @endforeach
+                                        @endif
                                     </select>
                                     <span class="text-danger">
                                         <strong id="ubah_bagian_error"></strong>
@@ -900,12 +909,12 @@
                                                     name="snack[pagi]" id="update_snack_pagi">
                                                 <label class="form-check-label" for="update_snack_pagi">Pagi</label>
                                             </div>
-                                            <div class="form-check">
+                                            <!-- <div class="form-check">
                                                 <input type="hidden" name="snack[siang]" value="0">
                                                 <input class="form-check-input" type="checkbox" value="1"
                                                     name="snack[siang]" id="update_snack_siang">
                                                 <label class="form-check-label" for="update_snack_siang">Siang</label>
-                                            </div>
+                                            </div> -->
                                             <div class="form-check">
                                                 <input type="hidden" name="snack[sore]" value="0">
                                                 <input class="form-check-input" type="checkbox" value="1"
@@ -1042,6 +1051,28 @@
                 }
             }
 
+            function showhidejenis_direksi() {
+                var jenisrapatdir = document.getElementById("tambah_jenis_rapat").value;
+                if (jenisrapatdir == 4) {
+                    div_tambah_list_dir.style.display = "block";
+                    $("#agenda_direksi").prop('required', true);
+                } else {
+                    div_tambah_list_dir.style.display = "none";
+                    $("#agenda_direksi").prop('required', false);
+                }
+            }
+
+            function showhidejenis_update_direksi() {
+                var jenisrapatdir = document.getElementById("update_jenisrapat").value;
+                if (jenisrapatdir == 4) {
+                    div_update_list_dir.style.display = "block";
+                    $("#agenda_direksi_update").prop('required', true);
+                } else {
+                    div_update_list_dir.style.display = "none";
+                    $("#agenda_direksi_update").prop('required', false);
+                }
+            }
+
             function showhidejenis_link_add() {
                 var vicon_add = document.getElementById("vicon_add").value;
                 if (vicon_add == "Ya") {
@@ -1115,6 +1146,15 @@
                         var link = "";
                         if (data.link != null) {
                             var link = data.link;
+                        } else {
+                            var link = "-";
+                        }
+
+                        var agenda_direksi = "";
+                        if (data.agenda_direksi != null) {
+                            var agenda_direksi = data.agenda_direksi;
+                        } else {
+                            var agenda_direksi = "-";
                         }
 
                         $('#det_bagian').html(data.bagian != null ? data.bagian.bagian : '');
@@ -1232,6 +1272,17 @@
                             $("#select_jenislink_edit").prop('required', false);
                             linkmeeting_edit.style.display = "none";
                         }
+
+                        var agenda_dir = data.jenisrapat_id;
+                        if (agenda_dir == 4) {
+                            div_update_list_dir.style.display = "block";
+                            $('#agenda_direksi_update').val(data.agenda_direksi);
+                            $("#agenda_direksi_update").prop('required', true);
+                        } else {
+                            div_update_list_dir.style.display = "none";
+                            $("#agenda_direksi_update").prop('required', false);
+                        }
+
                         var konsumsi = data.konsumsi; // Ambil data konsumsi dari response
 
                         if (konsumsi) {
@@ -1260,6 +1311,7 @@
 
                         $('#update_id').val(data.id);
                         $('#update_bagian').val(data.bagian_id);
+                        // $('#agenda_direksi_update_id').val(data.agenda_direksi);
                         $('#update_acara').val(data.acara);
                         $('#update_tanggal').val(tgl_tampil);
                         $('#update_waktu').val(waktu);

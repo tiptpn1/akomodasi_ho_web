@@ -13,6 +13,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Jenssegers\Agent\Agent;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Http;
 
 class AbsensiController extends Controller
 {
@@ -50,7 +51,12 @@ class AbsensiController extends Controller
         // Ambil sendvicon dengan absensi dan kolom yang sama seperti di create
         $sendvicon = SendVicon::find($request->id);
 
-        $ipInfo = json_decode(file_get_contents("http://ipinfo.io/?token=918a4d948ab18e"));
+        // $ipInfo = json_decode(file_get_contents("http://ipinfo.io/?token=918a4d948ab18e"));
+        $response = Http::get('http://ipinfo.io', [
+            'token' => '918a4d948ab18e'
+        ]);
+
+        $ipInfo = $response->json();
 
         $agent = new Agent();
         $sendvicon->absensis()->create([
@@ -58,11 +64,11 @@ class AbsensiController extends Controller
             'jabatan' => $request->jabatan,
             'instansi' => $request->instansi,
             'ip' => $request->ip(),
-            'city' => $ipInfo->city,
-            'region' => $ipInfo->region,
-            'country' => $ipInfo->country,
-            'loc' => $ipInfo->loc,
-            'timezone' => $ipInfo->timezone,
+            'city'     => $ipInfo['city'],
+            'region'   => $ipInfo['region'],
+            'country'  => $ipInfo['country'],
+            'loc'      => $ipInfo['loc'],
+            'timezone' => $ipInfo['timezone'],
             'browser' => $agent->browser(),
             'os' => $agent->platform(),
         ]);

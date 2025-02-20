@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Portal Akomodasi PTPN 1 Head Office</title>
+    <title>ARHAN PTPN I</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('dist/counselor/css/animate.css') }}">
@@ -44,7 +44,9 @@
     {{ $slot }}
 
     <x-partials.guest-footer />
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
     <script src="{{ asset('dist/counselor/js/jquery.min.js') }}"></script>
     <script src="{{ asset('dist/counselor/js/jquery-migrate-3.0.1.min.js') }}"></script>
     <script src="{{ asset('dist/counselor/js/popper.min.js') }}"></script>

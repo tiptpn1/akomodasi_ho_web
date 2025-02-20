@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\JenisRapat;
+use App\Models\Bagian;
 use App\Models\Ruangan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardAgendaController extends Controller
 {
+    
     var $model;
 
     public function __construct()
@@ -17,16 +20,33 @@ class DashboardAgendaController extends Controller
         $this->model = new Ruangan();
     }
 
+
     public function index()
     {
-        $list_lantai = $this->model->getDataDistinct('lantai');
-
+        // Ambil bagian_reg berdasarkan master_bagian_id dari user yang login
+        $bagian_reg = Bagian::where('master_bagian_id', Auth::user()->master_nama_bagian_id)
+            ->orderBy('master_bagian_id', 'desc')
+            ->first();
+    
+        // Pastikan $bagian_reg tidak null sebelum lanjut
+        if (!$bagian_reg) {
+            return back()->with('error', 'Data bagian regional tidak ditemukan.');
+        }
+    
+        // Ambil daftar lantai berdasarkan ruangan_regional_id
+        $list_lantai = Ruangan::select('lantai')
+            ->where('ruangan_regional_id', $bagian_reg->bagian_regional_id)
+            ->where('lantai','!=',0)
+            ->distinct()
+            ->get(); // Gunakan get() agar hasilnya koleksi model, bukan array
+    
         $data = [
             'list_lantai' => $list_lantai,
         ];
-
+    
         return view('admin.dashboardagenda.index', $data);
     }
+    
 
     public function getContent(Request $request)
     {

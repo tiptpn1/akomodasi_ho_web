@@ -18,7 +18,7 @@ class MasterKendaraanController extends Controller
     {
         $view = $this->m_data->tampilall('kendaraan');
         $data = array(
-            "title"     => "Portal Akomodasi PTPN XII",
+            "title"     => "ARHAN PTPN I",
             "halaman"   =>  "Dashboard",
             "linkhalaman"   =>  "",
             "view" => $view

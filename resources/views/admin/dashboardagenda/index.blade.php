@@ -79,13 +79,16 @@
                             <div class="row mb-2">
                                 <b>Ruangan Rapat:</b>
                                 <div class="ml-2">
-                                    <select class="form-control" name="ruangan" id="ruanganRapat"
-                                        style="height: 100% !important;">
+                                    <select class="form-control" name="ruangan" id="ruanganRapat" style="height: 100% !important;">
                                         <option value="" disabled>--Pilih Lantai--</option>
                                         @foreach ($list_lantai as $lantai)
-                                            <option value="{{ $lantai->lantai }}"
-                                                @if ($loop->iteration == 1) selected @endif>Lantai
-                                                {{ $lantai->lantai }}</option>
+                                            <option value="{{ $lantai->lantai }}" @if ($loop->iteration == 1) selected @endif>
+                                                @if ($lantai->lantai == 99)
+                                                    Ruang Eksternal
+                                                @else
+                                                    Lantai {{ $lantai->lantai }}
+                                                @endif
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>

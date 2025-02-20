@@ -9,6 +9,7 @@ use App\Models\SendVicon;
 use App\Services\ApiResponse;
 use Illuminate\Http\Request;
 use Jenssegers\Agent\Agent;
+use Illuminate\Support\Facades\Http;
 
 class PresensiController extends Controller
 {
@@ -52,7 +53,13 @@ class PresensiController extends Controller
         try {
             $sendvicon = SendVicon::find($request->id);
 
-            $ipInfo = json_decode(file_get_contents("http://ipinfo.io/?token=918a4d948ab18e"));
+            // $ipInfo = json_decode(file_get_contents("http://ipinfo.io/?token=918a4d948ab18e"));
+
+            $response = Http::get('http://ipinfo.io', [
+                'token' => '918a4d948ab18e'
+            ]);
+            
+            $ipInfo = $response->json();
 
             $agent = new Agent();
             $absensi = $sendvicon->absensis()->create([
@@ -60,11 +67,11 @@ class PresensiController extends Controller
                 'jabatan' => $request->jabatan,
                 'instansi' => $request->instansi,
                 'ip' => $request->ip(),
-                'city' => $ipInfo->city,
-                'region' => $ipInfo->region,
-                'country' => $ipInfo->country,
-                'loc' => $ipInfo->loc,
-                'timezone' => $ipInfo->timezone,
+                'city'     => $ipInfo['city'],
+                'region'   => $ipInfo['region'],
+                'country'  => $ipInfo['country'],
+                'loc'      => $ipInfo['loc'],
+                'timezone' => $ipInfo['timezone'],
                 'browser' => $agent->browser(),
                 'os' => $agent->platform(),
             ]);
