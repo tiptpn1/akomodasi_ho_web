@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MakanSiangController;
 use App\Http\Controllers\MakanSiangControllerController;
 use App\Http\Controllers\KartuController;
+use App\Http\Controllers\MKendaraanController;
+use App\Http\Controllers\MdriverController;
+use App\Http\Controllers\PKendaraanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,7 +78,36 @@ Route::group(['prefix' => 'makansiang', 'as' => 'makansiang.'], function () {
     // Route::get('/data', [MakanSiangController::class, 'data'])->name('data');
     Route::post('/approve/{id}', [MakanSiangController::class, 'approve'])->name('approve');
     Route::post('/reject/{id}', [MakanSiangController::class, 'reject'])->name('reject');
+});
 
+Route::group(['prefix' => 'masterkendaraan', 'as' => 'masterkendaraan.'], function () {
+    Route::get('/', [MKendaraanController::class, 'index'])->name('index');
+    Route::post('/store', [MKendaraanController::class, 'store'])->name('store');
+    Route::get('/edit/{id}', [MKendaraanController::class, 'edit'])->name('edit');  // Add this route
+    Route::put('/update/{id}', [MKendaraanController::class, 'update'])->name('update');
+    Route::delete('/destroy/{id}', [MKendaraanController::class, 'destroy'])->name('destroy');
+    Route::get('/export', [MKendaraanController::class, 'export'])->name('export');
+});
+
+Route::group(['prefix' => 'masterdriver', 'as' => 'masterdriver.'], function () {
+    Route::get('/', [MdriverController::class, 'index'])->name('index');
+    Route::post('/store', [MdriverController::class, 'store'])->name('store');
+    Route::get('/edit/{id}', [MdriverController::class, 'edit'])->name('edit');  // Add this route
+    Route::put('/update/{id}', [MdriverController::class, 'update'])->name('update');
+    Route::delete('/destroy/{id}', [MdriverController::class, 'destroy'])->name('destroy');
+    Route::get('/export', [MdriverController::class, 'export'])->name('export');
+});
+
+
+Route::group(['prefix' => 'pkendaraan', 'as' => 'pkendaraan.'], function () {
+    Route::get('/', [PKendaraanController::class, 'index'])->name('index');
+    Route::post('/store', [PKendaraanController::class, 'store'])->name('store');
+    Route::get('/edit/{id}', [PKendaraanController::class, 'edit'])->name('edit');  // Add this route
+    Route::put('/update/{id}', [PKendaraanController::class, 'update'])->name('update');
+    Route::delete('/destroy/{id}', [PKendaraanController::class, 'destroy'])->name('destroy');
+    Route::get('/export', [PKendaraanController::class, 'export'])->name('export');
+    Route::post('/approve/{id}', [PKendaraanController::class, 'approve'])->name('approve');
+    Route::post('/reject/{id}', [PKendaraanController::class, 'reject'])->name('reject');
 });
 
 Route::group(['prefix' => 'kartu', 'as' => 'kartu.'], function () {
@@ -90,7 +122,6 @@ Route::group(['prefix' => 'kartu', 'as' => 'kartu.'], function () {
     // Route::get('/data', [MakanSiangController::class, 'data'])->name('data');
     Route::post('/approve/{id}', [KartuController::class, 'approve'])->name('approve');
     Route::post('/reject/{id}', [KartuController::class, 'reject'])->name('reject');
-
 });
 
 Route::group(['prefix' => 'kaskecil', 'as' => 'kaskecil.', 'middleware' => 'role:admin,GA,read'], function () {

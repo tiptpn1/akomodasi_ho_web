@@ -30,11 +30,29 @@
                         <div class="sb-nav-link-icon"></div>
                         Makan Siang
                     </a>
+
                     @if (Auth::user()->hakAkses->hak_akses_id == 2)
-                    <a class="nav-link" href="{{ route('kaskecil.index') }}">
+                        <a class="nav-link" href="{{ route('masterkendaraan.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Master Kendaraan
+                        </a>
+
+                        <a class="nav-link" href="{{ route('masterdriver.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Master Driver
+                        </a>
+                    @endif
+
+                    <a class="nav-link" href="{{ route('pkendaraan.index') }}">
                         <div class="sb-nav-link-icon"></div>
-                        Kas Kecil
+                        Kendaraan
                     </a>
+
+                    @if (Auth::user()->hakAkses->hak_akses_id == 2)
+                        <a class="nav-link" href="{{ route('kaskecil.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Kas Kecil
+                        </a>
                     @endif
                     @if (Auth::user()->hakAkses->hak_akses_id != 4)
                         {{-- <a class="nav-link" href="{{ route('admin.dashboard.kendaraan.show') }}">
