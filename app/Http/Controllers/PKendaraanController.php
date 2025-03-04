@@ -62,11 +62,18 @@ class PKendaraanController extends Controller
         $pkendaraan->pejemputan = $request->pejemputan;
 
         // Simpan file
+        // if ($request->hasFile('file_memo')) {
+        //     $file = $request->file('file_memo');
+        //     $fileName = time() . '_' . $file->getClientOriginalName();
+        //     $file->storeAs('public/memo', $fileName);
+        //     $pkendaraan->file_memo = 'memo/' . $fileName; // Simpan path
+        // }
         if ($request->hasFile('file_memo')) {
             $file = $request->file('file_memo');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('public/memo', $fileName);
-            $pkendaraan->file_memo = 'memo/' . $fileName; // Simpan path
+            $name = $file->getClientOriginalName();
+            $namefile = time() . '_' . $name;
+            $file->move(public_path('uploads/memo'), $namefile);
+            $pkendaraan->file_memo = 'uploads/memo/' . $namefile; // Simpan path
         }
 
         $pkendaraan->status = 1;
@@ -108,21 +115,40 @@ class PKendaraanController extends Controller
         $pkendaraan->driver = $request->driver1;
 
         // **Proses Upload File (hanya jika ada unggahan)**
+        // if ($request->hasFile('file_memo1')) {
+        //     $request->validate([
+        //         'file_memo1' => 'mimes:pdf,jpg,jpeg,png|max:2048', // Maksimal 2MB
+        //     ]);
+
+        //     // Hapus file lama jika ada
+        //     if ($pkendaraan->file_memo && Storage::exists('public/' . $pkendaraan->file_memo)) {
+        //         Storage::delete('public/' . $pkendaraan->file_memo);
+        //     }
+
+        //     // Simpan file baru
+        //     $file = $request->file('file_memo1');
+        //     $path = $file->store('public/memo'); // Simpan ke storage
+        //     $pkendaraan->file_memo = str_replace('public/', '', $path); // Simpan path relatif
+        // }
         if ($request->hasFile('file_memo1')) {
             $request->validate([
                 'file_memo1' => 'mimes:pdf,jpg,jpeg,png|max:2048', // Maksimal 2MB
             ]);
-
+        
             // Hapus file lama jika ada
-            if ($pkendaraan->file_memo && Storage::exists('public/' . $pkendaraan->file_memo)) {
-                Storage::delete('public/' . $pkendaraan->file_memo);
+            if ($pkendaraan->file_memo && file_exists(public_path('uploads/memo/' . basename($pkendaraan->file_memo)))) {
+                unlink(public_path('uploads/memo/' . basename($pkendaraan->file_memo)));
             }
-
+        
             // Simpan file baru
             $file = $request->file('file_memo1');
-            $path = $file->store('public/memo'); // Simpan ke storage
-            $pkendaraan->file_memo = str_replace('public/', '', $path); // Simpan path relatif
-        }
+            $name = $file->getClientOriginalName();
+            $namefile = time() . '_' . $name;
+            $file->move(public_path('uploads/memo'), $namefile);
+        
+            // Simpan path relatif
+            $pkendaraan->file_memo = 'uploads/memo/' . $namefile;
+        }        
 
         $pkendaraan->save();
 

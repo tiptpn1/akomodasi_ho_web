@@ -35,24 +35,25 @@
             <div class="container-fluid">
                 <h3 class="mt-4">Pengajuan Kendaraan</h3>
                 @if (!in_array(Auth::user()->master_hak_akses_id, [5, 6]))
-                    <button id="btnTambah" type="button" data-toggle="modal" data-target="#tambah"
-                        class="btn btn-primary btn-sm">Tambah Data</button>
-                    <button id="btnExport" type="button" data-toggle="modal" data-target="#exportModal"
-                        class="btn btn-warning btn-sm">Export Data</button>
+                <button id="btnTambah" type="button" data-toggle="modal" data-target="#tambah"
+                    class="btn btn-primary btn-sm">Tambah Data</button>
+                <button id="btnExport" type="button" data-toggle="modal" data-target="#exportModal"
+                    class="btn btn-warning btn-sm">Export Data</button>
                 @endif
                 @if (session('success'))
-                    <div class="alert alert-success alert-sm alert-dismissible fade show" role="alert"
-                        style="max-width: 400px;">
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                <div class="alert alert-success alert-sm alert-dismissible fade show" role="alert"
+                    style="max-width: 400px;">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
                 @elseif(session('error'))
-                    <div class="alert alert-danger alert-sm alert-dismissible fade show" role="alert"
-                        style="max-width: 400px;">
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                <div class="alert alert-danger alert-sm alert-dismissible fade show" role="alert"
+                    style="max-width: 400px;">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
                 @endif
+
                 <!-- Modal Tambah -->
                 <div id="tambah" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
                     aria-hidden="true">
@@ -76,14 +77,15 @@
                                                 <select class="form-control" name="divisi" id="divisi">
                                                     @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
 
-                                                        <option value="" disabled selected>Pilih Divisi</option>
-                                                        @foreach ($get_divisi as $data_divisi)
-                                                            <option value='{{ $data_divisi->master_bagian_nama }}'>
-                                                                {{ $data_divisi->master_bagian_nama }}</option>
-                                                        @endforeach
+                                                    <option value="" disabled selected>Pilih Divisi</option>
+                                                    @foreach ($get_divisi as $data_divisi)
+                                                    <option value='{{ $data_divisi->master_bagian_nama }}'>
+                                                        {{ $data_divisi->master_bagian_nama }}
+                                                    </option>
+                                                    @endforeach
                                                     @else
-                                                        <option value="{{ $divisi }}">{{ $divisi }}
-                                                        </option>
+                                                    <option value="{{ $divisi }}">{{ $divisi }}
+                                                    </option>
                                                     @endif
                                                 </select>
                                             </div>
@@ -250,215 +252,214 @@
                                         </div>
 
                                         @if (in_array(Auth::user()->master_user_nama, ['asisten_ga']))
-                                            <!-- Bagian yang hanya muncul jika user adalah 'asisten_ga' -->
-                                            <div class="row">
-                                                <div class="form-group col-md-6">
-                                                    <b>Driver <span class="text-danger">*</span></b>
-                                                    <select name="driver1" id="driver1" class="form-control"
-                                                        required>
-                                                        <!-- Option akan diisi dari JavaScript -->
-                                                    </select>
-                                                </div>
+                                        <!-- Bagian yang hanya muncul jika user adalah 'asisten_ga' -->
+                                        <div class="row">
+                                            <div class="form-group col-md-6">
+                                                <b>Driver <span class="text-danger">*</span></b>
+                                                <select name="driver1" id="driver1" class="form-control"
+                                                    required>
+                                                    <!-- Option akan diisi dari JavaScript -->
+                                                </select>
+                                            </div>
 
-                                                <div class="form-group col-md-6">
-                                                    <b>Kendaraan <span class="text-danger">*</span></b>
-                                                    <select name="no_polisi1" id="no_polisi1" class="form-control"
-                                                        required>
-                                                        <!-- Option akan diisi dari JavaScript -->
-                                                    </select>
-                                                </div>
+                                            <div class="form-group col-md-6">
+                                                <b>Kendaraan <span class="text-danger">*</span></b>
+                                                <select name="no_polisi1" id="no_polisi1" class="form-control"
+                                                    required>
+                                                    <!-- Option akan diisi dari JavaScript -->
+                                                </select>
+                                            </div>
+                                        </div>
                                         @endif
+                                        <!-- </div> -->
+                                        <!-- Modal Footer (buttons) -->
+                                        <div class="modal-footer d-flex justify-content-end">
+                                            <button type="button" class="btn btn-default antoclose"
+                                                data-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary antosubmit">Update
+                                                Data</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                </div>
-                                <!-- Modal Footer (buttons) -->
-                                <div class="modal-footer d-flex justify-content-end">
-                                    <button type="button" class="btn btn-default antoclose"
-                                        data-dismiss="modal">Close</button>
-                                    <button type="submit" class="btn btn-primary antosubmit">Update
-                                        Data</button>
-                                </div>
+                <!-- Modal Export -->
+                <div class="modal fade" id="exportModal" tabindex="-1" role="dialog"
+                    aria-labelledby="exportModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exportModalLabel">Export Permintaan Kendaraan</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="exportForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="tgl_berangkat_awal">Tanggal Berangkat</label>
+                                                <input type="date" class="form-control" id="tgl_awal"
+                                                    name="tgl_awal" value="{{ now()->format('Y-m-d') }}">
+
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="nama_group">Divisi</label>
+                                                <select class="form-control" name="id_divisi">
+                                                    @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
+                                                    <option value="" disabled selected>Pilih Divisi</option>
+                                                    <option value='all'>Seluruh Divisi</option>
+                                                    @foreach ($get_divisi as $data_divisi)
+                                                    <option value='{{ $data_divisi->master_bagian_nama }}'>
+                                                        {{ $data_divisi->master_bagian_nama }}
+                                                    </option>
+                                                    @endforeach
+                                                    @else
+                                                    <option value="{{ $divisi }}">{{ $divisi }}
+                                                    </option>
+                                                    @endif
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Jenis Tujuan</label>
+                                                <select class="form-control" name="jenis_tujuan">
+                                                    <option value="" disabled selected>Pilih Jenis Tujuan</option>
+                                                    <option value="Dalam Kota">Dalam Kota</option>
+                                                    <option value="Luar Kota">Luar Kota</option>
+                                                    <!-- <option value="Luar Negeri">Luar Negeri</option> -->
+
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="status">Status</label>
+                                                <!-- <input type="text" class="form-control" id="nomor_gl" name="nomor_gl"> -->
+                                                <select class="form-control" name="status">
+                                                    <option value="" disabled selected>Pilih Status</option>
+                                                    <option value='2'>Approved</option>
+                                                    <option value='3'>Rejected</option>
+                                                    <option value='0'>Canceled</option>
+                                                    <option value='1'>Pengajuan Divisi</option>
+                                                    <option value='all'>Seluruh Status</option>
+
+                                                </select>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" id="exportBtn">Export to
+                                        Excel</button>
+                                    <button type="reset" class="btn btn-secondary mr-2" id="resetBtn">Reset
+                                        Filter</button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-
-
-            <!-- Modal Export -->
-            <div class="modal fade" id="exportModal" tabindex="-1" role="dialog"
-                aria-labelledby="exportModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exportModalLabel">Export Permintaan Kendaraan</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="exportForm">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="tgl_berangkat_awal">Tanggal Berangkat</label>
-                                            <input type="date" class="form-control" id="tgl_awal"
-                                                name="tgl_awal" value="{{ now()->format('Y-m-d') }}">
-
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="nama_group">Divisi</label>
-                                            <select class="form-control" name="id_divisi">
-                                                @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
-                                                    <option value="" disabled selected>Pilih Divisi</option>
-                                                    <option value='all'>Seluruh Divisi</option>
-                                                    @foreach ($get_divisi as $data_divisi)
-                                                        <option value='{{ $data_divisi->master_bagian_nama }}'>
-                                                            {{ $data_divisi->master_bagian_nama }}</option>
-                                                    @endforeach
-                                                @else
-                                                    <option value="{{ $divisi }}">{{ $divisi }}
-                                                    </option>
-                                                @endif
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Jenis Tujuan</label>
-                                            <select class="form-control" name="jenis_tujuan">
-                                                <option value="" disabled selected>Pilih Jenis Tujuan</option>
-                                                <option value="Dalam Kota">Dalam Kota</option>
-                                                <option value="Luar Kota">Luar Kota</option>
-                                                <!-- <option value="Luar Negeri">Luar Negeri</option> -->
-
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="status">Status</label>
-                                            <!-- <input type="text" class="form-control" id="nomor_gl" name="nomor_gl"> -->
-                                            <select class="form-control" name="status">
-                                                <option value="" disabled selected>Pilih Status</option>
-                                                <option value='2'>Approved</option>
-                                                <option value='3'>Rejected</option>
-                                                <option value='0'>Canceled</option>
-                                                <option value='1'>Pengajuan Divisi</option>
-                                                <option value='all'>Seluruh Status</option>
-
-                                            </select>
-                                        </div>
-
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-primary" id="exportBtn">Export to
-                                    Excel</button>
-                                <button type="reset" class="btn btn-secondary mr-2" id="resetBtn">Reset
-                                    Filter</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="box box-primary mt-3">
-                <div class="box-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped" id="dataTables-kaskecil">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Aksi</th>
-                                    <th>Status</th>
-                                    <th>Divisi</th>
-                                    <th>Nama PIC</th>
-                                    <th>Jenis Tujuan</th>
-                                    <th>Tanggal Berangkat</th>
-                                    <th>Jam Berangkat</th>
-                                    <th>Tujuan</th>
-                                    <th>Penjemputan</th>
-                                    <th>File Memo</th>
-                                    <th>Driver</th>
-                                    <th>Plat Nomor</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($pkendaraan as $index => $item)
+                <div class="box box-primary mt-3">
+                    <div class="box-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped" id="dataTables-kaskecil">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Aksi</th>
+                                        <th>Status</th>
+                                        <th>Divisi</th>
+                                        <th>Nama PIC</th>
+                                        <th>Jenis Tujuan</th>
+                                        <th>Tanggal Berangkat</th>
+                                        <th>Jam Berangkat</th>
+                                        <th>Tujuan</th>
+                                        <th>Penjemputan</th>
+                                        <th>File Memo</th>
+                                        <th>Driver</th>
+                                        <th>Plat Nomor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($pkendaraan as $index => $item)
                                     <tr align="center">
                                         <td>{{ $index + 1 }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
                                                 @php
-                                                    $today = \Carbon\Carbon::today();
-                                                    $requestDate = \Carbon\Carbon::parse($item->tgl_permintaan);
-                                                    $isDisabled =
-                                                        $requestDate->lte($today) ||
-                                                        $item->status == 0 ||
-                                                        $item->status == 3 ||
-                                                        $item->status == 2; // Disabled jika tgl_permintaan <= hari ini atau status = 0 (Canceled) atau status = 2 (Approved)
-                                                    $isPending = $item->status == 1; // Hanya aktif jika status = 1
-                                                @endphp
-                                                <!-- Edit Button -->
-                                                <button type="button" class="btn btn-sm btn-info"
-                                                    data-toggle="modal" data-target="#edit"
-                                                    data-id="{{ $item->id ?? '-' }}" id="btnEdit"
-                                                    @if ($isDisabled && !in_array(Auth::user()->master_user_nama, ['asisten_ga'])) disabled @endif>
-                                                    <i class="fa fa-pencil" style="color: white;"></i>
-                                                </button>
-
-                                                <!-- Delete Button -->
-                                                <form action="{{ route('pkendaraan.destroy', $item->id ?? '-') }}"
-                                                    method="POST"
-                                                    onsubmit="return confirm('Apakah yakin cancel data ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger"
-                                                        @if ($isDisabled) disabled @endif>
-                                                        <i class="fa fa-trash"></i>
+                                                $today = \Carbon\Carbon::today();
+                                                $requestDate = \Carbon\Carbon::parse($item->tgl_permintaan);
+                                                $isDisabled =
+                                                $requestDate->lte($today) ||
+                                                $item->status == 0 ||
+                                                $item->status == 3 ||
+                                                $item->status == 2; // Disabled jika tgl_permintaan <= hari ini atau status=0 (Canceled) atau status=2 (Approved)
+                                                    $isPending=$item->status == 1; // Hanya aktif jika status = 1
+                                                    @endphp
+                                                    <!-- Edit Button -->
+                                                    <button type="button" class="btn btn-sm btn-info"
+                                                        data-toggle="modal" data-target="#edit"
+                                                        data-id="{{ $item->id ?? '-' }}" id="btnEdit"
+                                                        @if ($isDisabled && !in_array(Auth::user()->master_user_nama, ['asisten_ga'])) disabled @endif>
+                                                        <i class="fa fa-pencil" style="color: white;"></i>
                                                     </button>
-                                                </form>
+
+                                                    <!-- Delete Button -->
+                                                    <form action="{{ route('pkendaraan.destroy', $item->id ?? '-') }}"
+                                                        method="POST"
+                                                        onsubmit="return confirm('Apakah yakin cancel data ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                            @if ($isDisabled) disabled @endif>
+                                                            <i class="fa fa-trash"></i>
+                                                        </button>
+                                                    </form>
                                             </div>
                                             <div class="btn-group" role="group">
                                                 <!-- Approve and Reject Buttons -->
                                                 @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
-                                                    <!-- Approve Button -->
-                                                    <form action="{{ route('pkendaraan.approve', $item->id ?? '-') }}"
-                                                        method="POST"
-                                                        onsubmit="return confirm('Apakah yakin menyetujui data ini?')">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-sm btn-success"
-                                                            @if (!$isPending) disabled @endif>
-                                                            <i class="fa fa-check"></i> <!-- Icon centang -->
-                                                        </button>
-                                                    </form>
+                                                <!-- Approve Button -->
+                                                <form action="{{ route('pkendaraan.approve', $item->id ?? '-') }}"
+                                                    method="POST"
+                                                    onsubmit="return confirm('Apakah yakin menyetujui data ini?')">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-success"
+                                                        @if (!$isPending) disabled @endif>
+                                                        <i class="fa fa-check"></i> <!-- Icon centang -->
+                                                    </button>
+                                                </form>
 
-                                                    <!-- Reject Button -->
-                                                    <form action="{{ route('pkendaraan.reject', $item->id ?? '-') }}"
-                                                        method="POST"
-                                                        onsubmit="return confirm('Apakah yakin menolak data ini?')">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-sm btn-danger"
-                                                            @if (!$isPending) disabled @endif>
-                                                            <i class="fa fa-times"></i> <!-- Icon silang -->
-                                                        </button>
-                                                    </form>
+                                                <!-- Reject Button -->
+                                                <form action="{{ route('pkendaraan.reject', $item->id ?? '-') }}"
+                                                    method="POST"
+                                                    onsubmit="return confirm('Apakah yakin menolak data ini?')">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-danger"
+                                                        @if (!$isPending) disabled @endif>
+                                                        <i class="fa fa-times"></i> <!-- Icon silang -->
+                                                    </button>
+                                                </form>
                                                 @endif
 
                                             </div>
                                         </td>
                                         <td align="center">
                                             @if ($item->status == 0)
-                                                <span class="text-warning">Canceled</span> <!-- Warna orange -->
+                                            <span class="text-warning">Canceled</span> <!-- Warna orange -->
                                             @elseif ($item->status == 1)
-                                                <span class="text-primary">Pengajuan Divisi</span>
-                                                <!-- Warna biru -->
+                                            <span class="text-primary">Pengajuan Divisi</span>
+                                            <!-- Warna biru -->
                                             @elseif ($item->status == 2)
-                                                <span class="text-success">Approved</span> <!-- Warna hijau -->
+                                            <span class="text-success">Approved</span> <!-- Warna hijau -->
                                             @elseif ($item->status == 3)
-                                                <span class="text-danger">Rejected</span> <!-- Warna merah -->
+                                            <span class="text-danger">Rejected</span> <!-- Warna merah -->
                                             @else
-                                                <span class="text-muted">-</span>
-                                                <!-- Warna abu-abu untuk status tidak terdefinisi -->
+                                            <span class="text-muted">-</span>
+                                            <!-- Warna abu-abu untuk status tidak terdefinisi -->
                                             @endif
                                         </td>
                                         <td align="center">{{ $item->divisi ?? '-' }}</td>
@@ -475,10 +476,11 @@
                                         <td align="center">{{ $item->pejemputan ?? '-' }}</td>
                                         <td align="center">
                                             @if ($item->file_memo)
-                                                <a href="{{ asset('storage/' . str_replace('storage/', '', $item->file_memo)) }}"
-                                                    target="_blank">Lihat File</a>
+                                            <a href="{{ asset($item->file_memo) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                View
+                                            </a>
                                             @else
-                                                -
+                                            -
                                             @endif
                                         </td>
 
@@ -489,17 +491,17 @@
                                             {{ $item->kendaraanDetail ? $item->kendaraanDetail->nopol . ' - ' . $item->kendaraanDetail->tipe_kendaraan : '-' }}
                                         </td>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+
+
+
             </div>
-
-
-
-    </div>
-    </main>
+        </main>
     </div>
 
     <x-slot name="scripts">
