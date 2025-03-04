@@ -42,7 +42,7 @@
                 @endif
                 @if (session('success'))
                     <div class="alert alert-success alert-sm alert-dismissible fade show" role="alert"
-                        style="max-width: 400px; margin:">
+                        style="max-width: 400px;">
                         {{ session('success') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
@@ -122,7 +122,7 @@
                                                     required>
                                                     <option value="Dalam Kota">Dalam Kota</option>
                                                     <option value="Luar Kota">Luar Kota</option>
-                                                    <option value="Luar Negeri">Luar Negeri</option>
+                                                    <!-- <option value="Luar Negeri">Luar Negeri</option> -->
                                                 </select>
                                             </div>
 
@@ -222,7 +222,7 @@
                                                     required>
                                                     <option value="Dalam Kota">Dalam Kota</option>
                                                     <option value="Luar Kota">Luar Kota</option>
-                                                    <option value="Luar Negeri">Luar Negeri</option>
+                                                    <!-- <option value="Luar Negeri">Luar Negeri</option> -->
                                                 </select>
                                             </div>
 
@@ -331,7 +331,7 @@
                                                 <option value="" disabled selected>Pilih Jenis Tujuan</option>
                                                 <option value="Dalam Kota">Dalam Kota</option>
                                                 <option value="Luar Kota">Luar Kota</option>
-                                                <option value="Luar Negeri">Luar Negeri</option>
+                                                <!-- <option value="Luar Negeri">Luar Negeri</option> -->
 
                                             </select>
                                         </div>
