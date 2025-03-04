@@ -30,7 +30,7 @@ class PKendaraanController extends Controller
         } else {
             // Jika bukan, tampilkan hanya data sesuai bagian user
             $pkendaraan = PKendaraan::with(['driverDetail', 'kendaraanDetail'])
-                ->where('divisi', $divisi->master_bagian_nama)
+                ->where($divisi, $divisi->master_bagian_nama)
                 ->get();
         }
 
