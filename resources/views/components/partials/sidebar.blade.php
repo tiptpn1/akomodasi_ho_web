@@ -49,6 +49,20 @@
 
                     @if (Auth::user()->hakAkses->hak_akses_id == 2)
                         <div class="sb-sidenav-menu-heading">Manajemen Master Data</div>
+                        <a class="nav-link" href="{{ route('masterkendaraan.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Master Kendaraan
+                        </a>
+                        <a class="nav-link" href="{{ route('masterdriver.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Master Driver
+                        </a>
+                        <!-- <a class="nav-link" href="{{ route('admin.dashboard.master.kendaraan.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Kendaraan
+                        </a> -->
+                    @endif
+                    @if (Auth::user()->hakAkses->hak_akses_id == 1)
                         <a class="nav-link" href="{{ route('admin.ruangan.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Master Ruangan
@@ -65,20 +79,6 @@
                             <div class="sb-nav-link-icon"></div>
                             Master Jenis Rapat
                         </a>
-                        <a class="nav-link" href="{{ route('masterkendaraan.index') }}">
-                            <div class="sb-nav-link-icon"></div>
-                            Master Kendaraan
-                        </a>
-                        <a class="nav-link" href="{{ route('masterdriver.index') }}">
-                            <div class="sb-nav-link-icon"></div>
-                            Master Driver
-                        </a>
-                        <!-- <a class="nav-link" href="{{ route('admin.dashboard.master.kendaraan.index') }}">
-                            <div class="sb-nav-link-icon"></div>
-                            Kendaraan
-                        </a> -->
-                    @endif
-                    @if (Auth::user()->hakAkses->hak_akses_id == 1)
                         <a class="nav-link" href="{{ route('admin.dashboard.master.pengguna.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Pengguna
