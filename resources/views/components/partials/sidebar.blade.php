@@ -24,11 +24,15 @@
                     </a>
                     <a class="nav-link" href="{{ route('konsumsi.index') }}">
                         <div class="sb-nav-link-icon"></div>
-                        Konsumsi
+                        Konsumsi Rapat
                     </a>
                     <a class="nav-link" href="{{ route('makansiang.index') }}">
                         <div class="sb-nav-link-icon"></div>
-                        Makan Siang
+                        Pengajuan Makan Siang
+                    </a>
+                    <a class="nav-link" href="{{ route('pkendaraan.index') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Permintaan Kendaraan
                     </a>
                     @if (Auth::user()->hakAkses->hak_akses_id == 2)
                     <a class="nav-link" href="{{ route('kaskecil.index') }}">
@@ -43,11 +47,25 @@
                         </a> --}}
                     @endif
 
+                    @if (Auth::user()->hakAkses->hak_akses_id == 2)
+                        <div class="sb-sidenav-menu-heading">Manajemen Master Data</div>
+                        <a class="nav-link" href="{{ route('masterkendaraan.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Master Kendaraan
+                        </a>
+                        <a class="nav-link" href="{{ route('masterdriver.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Master Driver
+                        </a>
+                        <!-- <a class="nav-link" href="{{ route('admin.dashboard.master.kendaraan.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Kendaraan
+                        </a> -->
+                    @endif
                     @if (Auth::user()->hakAkses->hak_akses_id == 1)
-                        <div class="sb-sidenav-menu-heading">Manajemen Data</div>
                         <a class="nav-link" href="{{ route('admin.ruangan.index') }}">
                             <div class="sb-nav-link-icon"></div>
-                            Ruangan
+                            Master Ruangan
                         </a>
                         <!-- <a class="nav-link" href="{{ route('admin.masterlink.index') }}">
                             <div class="sb-nav-link-icon"></div>
@@ -55,16 +73,12 @@
                         </a> -->
                         <a class="nav-link" href="{{ route('admin.bagian.index') }}">
                             <div class="sb-nav-link-icon"></div>
-                            Bagian
+                            Master Divisi/Bagian
                         </a>
                         <a class="nav-link" href="{{ route('admin.dashboard.master.jenis.index') }}">
                             <div class="sb-nav-link-icon"></div>
-                            Jenis Rapat
+                            Master Jenis Rapat
                         </a>
-                        <!-- <a class="nav-link" href="{{ route('admin.dashboard.master.kendaraan.index') }}">
-                            <div class="sb-nav-link-icon"></div>
-                            Kendaraan
-                        </a> -->
                         <a class="nav-link" href="{{ route('admin.dashboard.master.pengguna.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Pengguna
