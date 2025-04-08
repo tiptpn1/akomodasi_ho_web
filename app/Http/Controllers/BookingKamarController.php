@@ -266,78 +266,79 @@ public function store(Request $request)
     }
 
     // Proses approve booking (Admin)
+    // public function approve($id)
+    // {
+    //     // $booking = BookingKamar::findOrFail($id);
+    //     // $booking->update(['status' => 'approved']);
+
+    //     // return back()->with('success', 'Booking telah disetujui!');
+    //     $booking = BookingKamar::findOrFail($id);
+    //     $booking->status = 'approved';
+    //     $booking->save();
+
+    //     // Buat token review jika belum ada
+    //     if (!$booking->review) {
+    //         $token = Str::random(32);
+    //         ReviewModel::create([
+    //             'booking_id' => $booking->id,
+    //             'token' => $token,
+    //         ]);
+    //     } else {
+    //         $token = $booking->review->token;
+    //     }
+
+    //     // Kirim WhatsApp ke pelanggan
+    //     $whatsappMessage = "Halo, " . $booking->nama_pemesan . " 😊.\n\n"
+    //         . "Booking Anda di *" . $booking->kamar->mess->nama_mess . "* - *" . $booking->kamar->nama_kamar . "* telah disetujui! 🎉\n\n"
+    //         . "Kami sangat menghargai jika Anda bisa memberikan review setelah menginap.\n\n"
+    //         . "Klik link berikut untuk memberikan review: " . route('review.show', ['token' => $token]);
+
+    //     // Format URL WhatsApp
+    //     $whatsappUrl = "https://wa.me/" . $booking->no_hp . "?text=" . urlencode($whatsappMessage);
+
+    //     return redirect()->away($whatsappUrl);
+    // }
+
     public function approve($id)
-    {
-        // $booking = BookingKamar::findOrFail($id);
-        // $booking->update(['status' => 'approved']);
+{
+    $booking = BookingKamar::findOrFail($id);
+    $booking->status = 'approved';
+    $booking->save();
 
-        // return back()->with('success', 'Booking telah disetujui!');
-        $booking = BookingKamar::findOrFail($id);
-        $booking->status = 'approved';
-        $booking->save();
-
-        // Buat token review jika belum ada
-        if (!$booking->review) {
-            $token = Str::random(32);
-            ReviewModel::create([
-                'booking_id' => $booking->id,
-                'token' => $token,
-            ]);
-        } else {
-            $token = $booking->review->token;
-        }
-
-        // Kirim WhatsApp ke pelanggan
-        $whatsappMessage = "Halo, " . $booking->nama_pemesan . " 😊.\n\n"
-            . "Booking Anda di *" . $booking->kamar->mess->nama_mess . "* - *" . $booking->kamar->nama_kamar . "* telah disetujui! 🎉\n\n"
-            . "Kami sangat menghargai jika Anda bisa memberikan review setelah menginap.\n\n"
-            . "Klik link berikut untuk memberikan review: " . route('review.show', ['token' => $token]);
-
-        // Format URL WhatsApp
-        $whatsappUrl = "https://wa.me/" . $booking->no_hp . "?text=" . urlencode($whatsappMessage);
-
-        return redirect()->away($whatsappUrl);
+    // Buat token review jika belum ada
+    if (!$booking->review) {
+        $token = Str::random(32);
+        ReviewModel::create([
+            'booking_id' => $booking->id,
+            'token' => $token,
+        ]);
+    } else {
+        $token = $booking->review->token;
     }
 
-//     public function approve($id)
-// {
-//     $booking = BookingKamar::findOrFail($id);
-//     $booking->status = 'approved';
-//     $booking->save();
+    // Pesan WhatsApp
+    $message = "Halo, {$booking->nama_pemesan} 😊.\n\n"
+        . "Booking Anda di *{$booking->kamar->mess->nama_mess}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
+        . "Kami sangat menghargai jika Anda bisa memberikan review setelah menginap.\n\n"
+        . "Klik link berikut untuk memberikan review:\n"
+        . route('review.show', ['token' => $token]);
 
-//     // Buat token review jika belum ada
-//     if (!$booking->review) {
-//         $token = Str::random(32);
-//         ReviewModel::create([
-//             'booking_id' => $booking->id,
-//             'token' => $token,
-//         ]);
-//     } else {
-//         $token = $booking->review->token;
-//     }
+    // Kirim via Fonnte
+    $response = Http::withHeaders([
+        'Authorization' => 'iEYu7vFuH665Ed8TiNge',
+    ])->asForm()->post('https://api.fonnte.com/send', [
+        'target' => $booking->no_hp,
+        // 'target' => '085275104312',
+        'message' => $message,
+        'countryCode' => '62', // opsional
+    ]);
 
-//     // Pesan WhatsApp
-//     $message = "Halo, {$booking->nama_pemesan} 😊.\n\n"
-//         . "Booking Anda di *{$booking->kamar->mess->nama_mess}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
-//         . "Kami sangat menghargai jika Anda bisa memberikan review setelah menginap.\n\n"
-//         . "Klik link berikut untuk memberikan review:\n"
-//         . route('review.show', ['token' => $token]);
-
-//     // Kirim via Fonnte
-//     $response = Http::withHeaders([
-//         'Authorization' => env('FONNTE_API_KEY'),
-//     ])->asForm()->post('https://api.fonnte.com/send', [
-//         'target' => $booking->no_hp,
-//         'message' => $message,
-//         'countryCode' => '62', // opsional
-//     ]);
-
-//     if ($response->successful()) {
-//         return back()->with('success', 'Booking disetujui dan pesan WhatsApp terkirim.');
-//     } else {
-//         return back()->with('error', 'Booking disetujui tapi gagal mengirim WhatsApp.');
-//     }
-// }
+    if ($response->successful()) {
+        return back()->with('success', 'Booking disetujui dan pesan WhatsApp terkirim.');
+    } else {
+        return back()->with('error', 'Booking disetujui tapi gagal mengirim WhatsApp.');
+    }
+}
 
 
 
