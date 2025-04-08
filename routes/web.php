@@ -25,6 +25,7 @@ use App\Http\Controllers\KartuController;
 use App\Http\Controllers\MKendaraanController;
 use App\Http\Controllers\MdriverController;
 use App\Http\Controllers\PKendaraanController;
+use App\Http\Controllers\DashboardDriverController;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,7 +79,6 @@ Route::group(['prefix' => 'makansiang', 'as' => 'makansiang.'], function () {
     // Route::get('/data', [MakanSiangController::class, 'data'])->name('data');
     Route::post('/approve/{id}', [MakanSiangController::class, 'approve'])->name('approve');
     Route::post('/reject/{id}', [MakanSiangController::class, 'reject'])->name('reject');
-
 });
 
 Route::group(['prefix' => 'masterkendaraan', 'as' => 'masterkendaraan.'], function () {
@@ -109,6 +109,11 @@ Route::group(['prefix' => 'pkendaraan', 'as' => 'pkendaraan.'], function () {
     Route::get('/export', [PKendaraanController::class, 'export'])->name('export');
     Route::post('/approve/{id}', [PKendaraanController::class, 'approve'])->name('approve');
     Route::post('/reject/{id}', [PKendaraanController::class, 'reject'])->name('reject');
+
+    Route::get('/get-available-drivers', [PKendaraanController::class, 'getAvailableDrivers'])
+        ->name('getAvailableDrivers');
+    Route::get('/get-available-drivers-admin', [PKendaraanController::class, 'getAvailableDriversAdmin'])
+        ->name('getAvailableDrivers');
 });
 
 Route::group(['prefix' => 'kartu', 'as' => 'kartu.'], function () {
@@ -123,7 +128,6 @@ Route::group(['prefix' => 'kartu', 'as' => 'kartu.'], function () {
     // Route::get('/data', [MakanSiangController::class, 'data'])->name('data');
     Route::post('/approve/{id}', [KartuController::class, 'approve'])->name('approve');
     Route::post('/reject/{id}', [KartuController::class, 'reject'])->name('reject');
-
 });
 
 Route::group(['prefix' => 'kaskecil', 'as' => 'kaskecil.', 'middleware' => 'role:admin,GA,read'], function () {
@@ -272,5 +276,13 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('/', [DashboardAgendaController::class, 'index'])->name('index');
         Route::post('/get-content', [DashboardAgendaController::class, 'getContent'])->name('content');
         Route::post('/export-pdf', [DashboardAgendaController::class, 'export_pdf'])->name('exportPdf');
+    });
+
+    Route::group(['prefix' => 'driver', 'as' => 'driver.', 'middleware' => 'role:admin,GA,divisi,sekper,read'], function () {
+        Route::get('/', [DashboardDriverController::class, 'index'])->name('index');
+        Route::get('/get-driver-schedule', [DashboardDriverController::class, 'getDriverSchedule']);
+
+        Route::post('/get-content', [DashboardDriverController::class, 'getContent'])->name('content');
+        Route::post('/export-pdf', [DashboardDriverController::class, 'export_pdf'])->name('exportPdf');
     });
 });
