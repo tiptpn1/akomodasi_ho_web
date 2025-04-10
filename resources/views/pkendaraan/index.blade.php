@@ -161,7 +161,7 @@
                                         </div>
 
 
-                                        {{-- <div class="row">
+                                        <div class="row">
                                             <div class="form-group col-md-12">
                                                 <b>Driver <span class="text-danger">*</span></b>
                                                 <select name="driver" id="driver" class="form-control" required>
@@ -175,9 +175,9 @@
                                                 </select>
                                             </div>
 
-                                        </div> --}}
+                                        </div>
 
-                                        <div class="row">
+                                        <!-- <div class="row">
                                             <div class="form-group col-md-12">
                                                 <b>Driver <span class="text-danger">*</span></b>
                                                 <select name="driver" id="driver" class="form-control" required>
@@ -185,7 +185,7 @@
                                                     <option value="rental">Rental</option>
                                                 </select>
                                             </div>
-                                        </div>
+                                        </div> -->
 
 
 
