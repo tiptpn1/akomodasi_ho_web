@@ -9,6 +9,7 @@ use App\Models\MessModel;
 use App\Models\Jabatan;
 use App\Models\KamarPhoto;
 use App\Models\ReviewModel;
+use Illuminate\Support\Facades\File;
 
 class KamarController extends Controller
 {
@@ -53,23 +54,46 @@ class KamarController extends Controller
         $kamar = KamarModel::create($data);
         
         // Simpan Foto Utama
+        // if ($request->hasFile('foto_utama')) {
+        //     $path = $request->file('foto_utama')->store('uploads/kamar', 'public');
+        //     KamarPhoto::create([
+        //         'kamar_id' => $kamar->id,
+        //         'foto' => $path,
+        //         'is_utama' => true  // Tandai sebagai foto utama
+        //     ]);
+        // }
         if ($request->hasFile('foto_utama')) {
-            $path = $request->file('foto_utama')->store('uploads/kamar', 'public');
+            $file = $request->file('foto_utama');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/kamar'), $filename);
+        
             KamarPhoto::create([
                 'kamar_id' => $kamar->id,
-                'foto' => $path,
-                'is_utama' => true  // Tandai sebagai foto utama
+                'foto' => 'uploads/kamar/' . $filename,
+                'is_utama' => true
             ]);
         }
 
         // Simpan Foto Pendukung (jika ada)
+        // if ($request->hasFile('foto_pendukung')) {
+        //     foreach ($request->file('foto_pendukung') as $file) {
+        //         $path = $file->store('uploads/kamar', 'public');
+        //         KamarPhoto::create([
+        //             'kamar_id' => $kamar->id,
+        //             'foto' => $path,
+        //             'is_utama' => false  // Foto pendukung
+        //         ]);
+        //     }
+        // }
         if ($request->hasFile('foto_pendukung')) {
             foreach ($request->file('foto_pendukung') as $file) {
-                $path = $file->store('uploads/kamar', 'public');
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('uploads/kamar'), $filename);
+        
                 KamarPhoto::create([
                     'kamar_id' => $kamar->id,
-                    'foto' => $path,
-                    'is_utama' => false  // Foto pendukung
+                    'foto' => 'uploads/kamar/' . $filename,
+                    'is_utama' => false
                 ]);
             }
         }
@@ -135,30 +159,67 @@ class KamarController extends Controller
         $kamar->update($request->only('mess_id', 'nama_kamar', 'kapasitas', 'peruntukan', 'fasilitas'));
 
         // Update Foto Utama
+        // if ($request->hasFile('foto_utama')) {
+        //     // Hapus foto lama
+        //     $fotoUtama = KamarPhoto::where('kamar_id', $kamar->id)->where('is_utama', true)->first();
+        //     if ($fotoUtama) {
+        //         Storage::disk('public')->delete($fotoUtama->foto);
+        //         $fotoUtama->delete();
+        //     }
+
+        //     // Upload foto baru
+        //     $path = $request->file('foto_utama')->store('uploads/kamar', 'public');
+        //     KamarPhoto::create([
+        //         'kamar_id' => $kamar->id,
+        //         'foto' => $path,
+        //         'is_utama' => true
+        //     ]);
+        // }
+
+        // // Update Foto Pendukung
+        // if ($request->hasFile('foto_pendukung')) {
+        //     foreach ($request->file('foto_pendukung') as $file) {
+        //         $path = $file->store('uploads/kamar', 'public');
+        //         KamarPhoto::create([
+        //             'kamar_id' => $kamar->id,
+        //             'foto' => $path,
+        //             'is_utama' => false
+        //         ]);
+        //     }
+        // }
+
         if ($request->hasFile('foto_utama')) {
             // Hapus foto lama
             $fotoUtama = KamarPhoto::where('kamar_id', $kamar->id)->where('is_utama', true)->first();
             if ($fotoUtama) {
-                Storage::disk('public')->delete($fotoUtama->foto);
+                $oldPath = public_path($fotoUtama->foto);
+                if (File::exists($oldPath)) {
+                    File::delete($oldPath);
+                }
                 $fotoUtama->delete();
             }
-
+        
             // Upload foto baru
-            $path = $request->file('foto_utama')->store('uploads/kamar', 'public');
+            $file = $request->file('foto_utama');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/kamar'), $filename);
+        
             KamarPhoto::create([
                 'kamar_id' => $kamar->id,
-                'foto' => $path,
+                'foto' => 'uploads/kamar/' . $filename,
                 'is_utama' => true
             ]);
         }
-
+        
         // Update Foto Pendukung
         if ($request->hasFile('foto_pendukung')) {
             foreach ($request->file('foto_pendukung') as $file) {
-                $path = $file->store('uploads/kamar', 'public');
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('uploads/kamar'), $filename);
+        
                 KamarPhoto::create([
                     'kamar_id' => $kamar->id,
-                    'foto' => $path,
+                    'foto' => 'uploads/kamar/' . $filename,
                     'is_utama' => false
                 ]);
             }

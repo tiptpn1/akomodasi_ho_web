@@ -131,10 +131,11 @@
                 <div class="col-md-4">
                     <div class="card mb-4">
                         <!-- Gambar Utama -->
-                        <img src="{{ asset('storage/' . optional($kamar->photos->first())->foto) }}" 
-                             class="card-img-top" 
-                             alt="Gambar Kamar" 
-                             style="height: 250px; object-fit: cover;">
+                        <img src="{{ asset($kamar->photos->firstWhere('is_utama', true)?->foto ?? 'images/default.jpg') }}" 
+                            class="card-img-top" 
+                            alt="Gambar Kamar" 
+                            style="height: 250px; object-fit: cover;">
+
         
                         <!-- Galeri Gambar Pendukung -->
                         <div class="row mt-2 px-2">
@@ -145,15 +146,16 @@
                                 
                                 <!-- Galeri Gambar -->
                                 <div class="gallery-container d-flex" data-kamar-id="{{ $kamar->id }}">
-                                    @foreach($kamar->photos->where('is_utama', '!=', '1') as $photo)
+                                    @foreach($kamar->photos->where('is_utama', '!=', true) as $photo)
                                         <div class="gallery-item" style="padding: 2px;">
-                                            <img src="{{ asset('storage/' . $photo->foto) }}" 
+                                            <img src="{{ asset($photo->foto) }}" 
                                                  class="img-fluid rounded kamar-photo"
                                                  data-kamar-id="{{ $kamar->id }}"
                                                  style="height: 60px; object-fit: cover; cursor: pointer;">
                                         </div>
                                     @endforeach
                                 </div>
+                                
                                 
                         
                                 <!-- Tombol Next -->

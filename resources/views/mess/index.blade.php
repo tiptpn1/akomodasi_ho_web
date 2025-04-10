@@ -205,7 +205,9 @@
                                             <td>{{ $mess->lokasi }}</td>
                                             <td>{{ $mess->deskripsi }}</td>
                                             <td>@foreach ($mess->photos as $photo)
-                                                <img src="{{ asset('storage/' . $photo->foto) }}" width="150">
+                                                {{-- <img src="{{ asset('storage/' . $photo->foto) }}" width="150"> --}}
+                                                <img src="{{ asset($photo->foto) }}" width="150" height="100">
+
                                             @endforeach
                                             </td>
                                         </tr>
@@ -252,22 +254,23 @@
                     $('#editno_cp').val(data.no_cp);
                     
                     // Cek apakah ada foto utama
-                    let fotoUtama = data.photos.find(photo => photo.is_utama == '1'); 
+                    let fotoUtama = data.photos.find(photo => photo.is_utama == '1');
                     if (fotoUtama) {
-                        $('#currentFotoUtama').attr('src', "/storage/" + fotoUtama.foto);
+                        $('#currentFotoUtama').attr('src', "/" + fotoUtama.foto);
                     } else {
                         $('#currentFotoUtama').attr('src', '');
                     }
-                
-                        // Kosongkan foto pendukung sebelumnya
+
+                    // Kosongkan foto pendukung sebelumnya
                     $('#currentFotoPendukung').html('');
 
                     // Tambahkan foto pendukung
                     data.photos.forEach(photo => {
                         if (photo.is_utama != '1') {
-                            $('#currentFotoPendukung').append('<img src="/storage/' + photo.foto + '" width="100" class="me-2">');
+                            $('#currentFotoPendukung').append('<img src="/' + photo.foto + '" width="100" class="me-2">');
                         }
                     });
+
                     $('#editMessForm').attr('action', "{{ url('mess/update') }}/" + id);
                     // $('#editMessModal').modal('show'); // Tampilkan modal edit
                 });

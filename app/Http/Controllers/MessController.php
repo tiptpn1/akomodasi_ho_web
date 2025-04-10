@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\Mess;
 use App\Models\MessModel;
 use App\Models\MessPhoto;
+use Illuminate\Support\Facades\File;
 
 use Illuminate\Support\Facades\Storage;
 
@@ -37,23 +38,62 @@ class MessController extends Controller
 
         $mess = MessModel::create($data);
         
-        // Simpan Foto Utama
+        // // Simpan Foto Utama
+        // if ($request->hasFile('foto_utama')) {
+        //     $path = $request->file('foto_utama')->store('uploads/mess', 'public');
+        //     MessPhoto::create([
+        //         'mess_id' => $mess->id,
+        //         'foto' => $path,
+        //         'is_utama' => true  // Tandai sebagai foto utama
+        //     ]);
+        // }
+
+        // // Simpan Foto Pendukung (jika ada)
+        // if ($request->hasFile('foto_pendukung')) {
+        //     foreach ($request->file('foto_pendukung') as $file) {
+        //         $path = $file->store('uploads/mess', 'public');
+        //         MessPhoto::create([
+        //             'mess_id' => $mess->id,
+        //             'foto' => $path,
+        //             'is_utama' => false  // Foto pendukung
+        //         ]);
+        //     }
+        // }
         if ($request->hasFile('foto_utama')) {
-            $path = $request->file('foto_utama')->store('uploads/mess', 'public');
+            $file = $request->file('foto_utama');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $destinationPath = public_path('uploads/mess');
+            
+            // Pastikan folder tujuan ada
+            if (!File::exists($destinationPath)) {
+                File::makeDirectory($destinationPath, 0755, true);
+            }
+        
+            $file->move($destinationPath, $filename);
+        
             MessPhoto::create([
                 'mess_id' => $mess->id,
-                'foto' => $path,
+                'foto' => 'uploads/mess/' . $filename,
                 'is_utama' => true  // Tandai sebagai foto utama
             ]);
         }
-
+        
         // Simpan Foto Pendukung (jika ada)
         if ($request->hasFile('foto_pendukung')) {
             foreach ($request->file('foto_pendukung') as $file) {
-                $path = $file->store('uploads/mess', 'public');
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $destinationPath = public_path('uploads/mess');
+                
+                // Pastikan folder tujuan ada
+                if (!File::exists($destinationPath)) {
+                    File::makeDirectory($destinationPath, 0755, true);
+                }
+        
+                $file->move($destinationPath, $filename);
+        
                 MessPhoto::create([
                     'mess_id' => $mess->id,
-                    'foto' => $path,
+                    'foto' => 'uploads/mess/' . $filename,
                     'is_utama' => false  // Foto pendukung
                 ]);
             }

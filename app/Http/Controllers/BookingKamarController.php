@@ -202,10 +202,24 @@ public function store(Request $request)
         }
         // dd($request->all());
         // Upload dokumen jika ada
+        // $dokumenPath = null;
+        // if ($request->hasFile('dokumen_pendukung')) {
+        //     $dokumenPath = $request->file('dokumen_pendukung')->store('dokumen_booking', 'public');
+        // }
         $dokumenPath = null;
+        // dd($request->file('dokumen_pendukung'));
         if ($request->hasFile('dokumen_pendukung')) {
-            $dokumenPath = $request->file('dokumen_pendukung')->store('dokumen_booking', 'public');
+            $file = $request->file('dokumen_pendukung');
+            $filename = time() . '_' . $file->getClientOriginalName();
+
+            // Simpan langsung ke folder public/dokumen_booking
+            $file->move(public_path('dokumen_booking'), $filename);
+
+            // Simpan path relatif ke DB
+            $dokumenPath = 'dokumen_booking/' . $filename;
         }
+        // dd($dokumenPath);
+
 
         // Simpan booking ke database
         BookingKamar::create([

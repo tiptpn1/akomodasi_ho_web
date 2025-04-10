@@ -206,7 +206,8 @@
                     document.getElementById("detailTanggalSelesai").textContent = button.getAttribute("data-tanggal_selesai");
                     document.getElementById("detailCatatan").textContent = button.getAttribute("data-catatan");
                     document.getElementById("detailStatus").textContent = button.getAttribute("data-status");
-                    document.getElementById("detailDokumen").href = "/storage/" + button.getAttribute("data-dokumen");
+                    document.getElementById("detailDokumen").href = "/" + button.getAttribute("data-dokumen");
+
                 });
             
                 let rejectModal = document.getElementById('rejectModal');

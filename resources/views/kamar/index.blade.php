@@ -247,19 +247,20 @@
                                             <td>{{ $kamar->kapasitas }}</td>
                                             <td>{{ $kamar->peruntukan }}</td>
                                             <td>{{ $kamar->fasilitas }}</td>
-                                            {{-- <td>@foreach ($kamar->mess->photos as $photo1)
-                                                <img src="{{ asset('storage/' . $photo1->foto) }}" width="150">
-                                            @endforeach
-                                            </td> --}}
                                             <td>
-                                                @if ($fotoUtama = $kamar->mess->photos->firstWhere('is_utama', '1'))
-                                                    <img src="{{ asset('storage/' . $fotoUtama->foto) }}" width="100">
+                                                @php
+                                                    $fotoUtama = $kamar->mess->photos->firstWhere('is_utama', 1);
+                                                @endphp
+                                                @if ($fotoUtama)
+                                                    <img src="{{ asset($fotoUtama->foto) }}" width="100" height="70">
                                                 @endif
                                             </td>
-                                            <td>@foreach ($kamar->photos as $photo)
-                                                <img src="{{ asset('storage/' . $photo->foto) }}" width="100">
-                                            @endforeach
+                                            <td>
+                                                @foreach ($kamar->photos as $photo)
+                                                    <img src="{{ asset($photo->foto) }}" width="100" height="70">
+                                                @endforeach
                                             </td>
+                                            
                                         </tr>
                                     @endforeach
                                 </tbody>
