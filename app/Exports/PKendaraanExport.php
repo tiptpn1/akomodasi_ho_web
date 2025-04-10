@@ -32,7 +32,7 @@ class PKendaraanExport implements FromCollection, WithHeadings, WithMapping, Sho
      */
     public function headings(): array
     {
-        return ["Status", "Divisi", "Nama PIC", "Jenis Tujuan", "Tgl Berangkat", "Jam Berangkat", "Tujuan", "Penjemputan", "Driver", "Mobil", "No Polisi"];
+        return ["Status", "Divisi", "Nama PIC", "Jenis Tujuan", "Tgl Berangkat", "Jam Berangkat", "Jam Kembali", "Tujuan", "Penjemputan", "Driver", "Mobil"];
     }
 
     /**
@@ -47,6 +47,16 @@ class PKendaraanExport implements FromCollection, WithHeadings, WithMapping, Sho
             2 => 'Approve',
             3 => 'Reject',
         ];
+
+        // Gabungkan No Polisi dan Tipe Kendaraan, hapus tanda "-" jika salah satu null
+        $kendaraan = trim(optional($row->kendaraanDetail)->nopol . ' - ' . optional($row->kendaraanDetail)->tipe_kendaraan, ' -');
+
+        // Jika driver null, gunakan rental_driver dengan label "(Rental) "
+        $driver = optional($row->driverDetail)->nama_driver ?: ($row->rental_driver ? "(Rental) " . $row->rental_driver : null);
+
+        // Jika kendaraan null, gunakan rental_kendaraan dengan label "(Rental) "
+        $kendaraan = $kendaraan ?: ($row->rental_kendaraan ? "(Rental) " . $row->rental_kendaraan : null);
+
         return [
             $statusLabels[$row->status] ?? 'Unknown', // Ubah angka status menjadi teks
             $row->divisi,
@@ -54,12 +64,11 @@ class PKendaraanExport implements FromCollection, WithHeadings, WithMapping, Sho
             $row->jenis_tujuan,
             $row->tgl_berangkat,
             $row->jam_berangkat,
+            $row->jam_kembali,
             $row->tujuan,
             $row->pejemputan,
-            optional($row->driverDetail)->nama_driver,
-            optional($row->kendaraanDetail)->tipe_kendaraan,
-            optional($row->kendaraanDetail)->nopol,
-
+            $driver,     // Driver atau Rental Driver jika driver null
+            $kendaraan,  // Kendaraan atau Rental Kendaraan jika kendaraan null
         ];
     }
 
