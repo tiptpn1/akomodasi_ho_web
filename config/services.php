@@ -35,4 +35,8 @@ return [
         'access_token' => env('IPINFO_SECRET'),
     ],
 
+    'fonnte' => [
+        'token' => env('FONNTE_TOKEN'),
+    ],
+
 ];
