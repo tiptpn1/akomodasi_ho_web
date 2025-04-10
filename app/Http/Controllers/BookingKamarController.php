@@ -197,9 +197,9 @@ public function store(Request $request)
         }
         // dd($request->jabatan_id);
         // Cek apakah jabatan sesuai dengan peruntukan kamar
-        if ($request->jabatan_id > $kamar->peruntukan) {
-            return back()->with('error', 'Jabatan Anda tidak memenuhi syarat untuk menempati kamar ini.');
-        }
+        // if ($request->jabatan_id > $kamar->peruntukan) {
+        //     return back()->with('error', 'Jabatan Anda tidak memenuhi syarat untuk menempati kamar ini.');
+        // }
         // dd($request->all());
         // Upload dokumen jika ada
         // $dokumenPath = null;
