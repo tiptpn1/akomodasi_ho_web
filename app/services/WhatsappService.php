@@ -19,7 +19,7 @@ class WhatsappService
         if (preg_match('/^0/', $target)) {
             $target = preg_replace('/^0/', '62', $target);
         }
-        dd($target,$message,$this->token );
+        // dd($target,$message,$this->token );
         return Http::withHeaders([  
             'Authorization' => $this->token,
         ])->asForm()->post('https://api.fonnte.com/send', [
