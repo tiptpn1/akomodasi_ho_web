@@ -11,6 +11,8 @@ use App\Models\KamarPhoto;
 use App\Models\ReviewModel;
 use Illuminate\Support\Facades\File;
 
+use Illuminate\Support\Facades\Validator;
+
 class KamarController extends Controller
 {
     public function index()
@@ -26,6 +28,11 @@ class KamarController extends Controller
 
         $mess = MessModel::all();
         $jabatan = Jabatan::all();
+        foreach ($rooms as $room) {
+            $peruntukanIds = explode(',', $room->peruntukan);
+            $namaPeruntukan = $jabatan->whereIn('id', $peruntukanIds)->pluck('jabatan')->toArray();
+            $room->peruntukan_teks = implode(', ', $namaPeruntukan);
+        }
 
         return view('kamar.index', compact('rooms', 'mess', 'jabatan'));
     }
@@ -38,7 +45,8 @@ class KamarController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        
+        $validator = Validator::make($request->all(), [
             'mess_id' => 'required',
             'nama_kamar' => 'required',
             'kapasitas' => 'required',
@@ -47,8 +55,14 @@ class KamarController extends Controller
             'foto_utama' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'foto_pendukung.*' => 'image|mimes:jpeg,png,jpg|max:2048',
         ]);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput(); // agar input lama tetap muncul di form
+        }
 
         $data = $request->only('mess_id', 'nama_kamar', 'kapasitas','peruntukan','fasilitas');
+        $data['peruntukan'] = implode(',', $request->peruntukan);
         $data['status'] = 1; // Tambahkan status = 1
 
         $kamar = KamarModel::create($data);
@@ -155,38 +169,15 @@ class KamarController extends Controller
             'foto_pendukung.*' => 'image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
+        // $kamar = KamarModel::findOrFail($id);
+        // $kamar->update($request->only('mess_id', 'nama_kamar', 'kapasitas',  'fasilitas'));
+        $data = $request->only('mess_id', 'nama_kamar', 'kapasitas', 'fasilitas');
+        $data['peruntukan'] = implode(',', $request->peruntukan);
+
         $kamar = KamarModel::findOrFail($id);
-        $kamar->update($request->only('mess_id', 'nama_kamar', 'kapasitas', 'peruntukan', 'fasilitas'));
+        $kamar->update($data);
 
-        // Update Foto Utama
-        // if ($request->hasFile('foto_utama')) {
-        //     // Hapus foto lama
-        //     $fotoUtama = KamarPhoto::where('kamar_id', $kamar->id)->where('is_utama', true)->first();
-        //     if ($fotoUtama) {
-        //         Storage::disk('public')->delete($fotoUtama->foto);
-        //         $fotoUtama->delete();
-        //     }
-
-        //     // Upload foto baru
-        //     $path = $request->file('foto_utama')->store('uploads/kamar', 'public');
-        //     KamarPhoto::create([
-        //         'kamar_id' => $kamar->id,
-        //         'foto' => $path,
-        //         'is_utama' => true
-        //     ]);
-        // }
-
-        // // Update Foto Pendukung
-        // if ($request->hasFile('foto_pendukung')) {
-        //     foreach ($request->file('foto_pendukung') as $file) {
-        //         $path = $file->store('uploads/kamar', 'public');
-        //         KamarPhoto::create([
-        //             'kamar_id' => $kamar->id,
-        //             'foto' => $path,
-        //             'is_utama' => false
-        //         ]);
-        //     }
-        // }
+        
 
         if ($request->hasFile('foto_utama')) {
             // Hapus foto lama

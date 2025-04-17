@@ -18,13 +18,38 @@
                 background-color: #1f6690 !important; /* Warna lebih gelap saat hover */
                 border-color: #1a5579 !important;
             }
+            .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+                background-color: #426CEAFF; /* Bootstrap primary */
+                border: none;
+                color: rgb(0, 0, 0);
+                font-size: 0.85rem;
+                padding: 2px 8px;
+                border-radius: 20px;
+            }
+
         </style>
+        <style>
+            /* Fix Select2 di dalam modal Bootstrap 5 */
+            .select2-container {
+                z-index: 999999 !important;
+            }
+            .select2-container .select2-selection--multiple {
+                min-height: 38px; /* agar sejajar dengan input lainnya */
+                border: 1px solid #ced4da;
+                border-radius: 0.375rem;
+                padding: 0.375rem 0.75rem;
+            }
+            </style>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
         <!-- CSS Bootstrap -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <!-- JavaScript Bootstrap -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Select2 Theme for Bootstrap 4 -->
+        <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+
 
     </x-slot>
 
@@ -32,6 +57,15 @@
         <main>
             <div class="container-fluid">
                 <h3 class="mt-4">Master Kamar</h3>
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <!-- Button Trigger Modal -->
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#kamarModal">
                     Tambah Kamar
@@ -70,8 +104,9 @@
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">Peruntukan:</label>
-                                        <select class="form-control" name="peruntukan" >
-                                            <option value="" disabled selected>Pilih Peruntukan</option>
+                                        <!-- {{-- <select class="form-control" name="peruntukan" > --}} -->
+                                            <select name="peruntukan[]" class="form-control select2 select2-tambah" multiple required>
+                                            <!-- {{-- <option value="" disabled selected>Pilih Peruntukan</option> --}} -->
                                             @foreach ($jabatan as $index =>$jabatan)
                                             <option value='{{ $jabatan->id }}'>{{ $jabatan->jabatan }}</option>
                                             @endforeach
@@ -138,8 +173,9 @@
                 
                                     <div class="mb-3">
                                         <label class="form-label">Peruntukan:</label>
-                                        <select class="form-control" name="peruntukan" id="edit_peruntukan">
-                                            <option value="" disabled>Pilih Peruntukan</option>
+                                        <!-- {{-- <select class="form-control" name="peruntukan" id="edit_peruntukan"> --}} -->
+                                            <select class="form-control select2 select2-edit" name="peruntukan[]" id="edit_peruntukan" multiple="multiple" required>
+                                            <!-- {{-- <option value="" disabled>Pilih Peruntukan</option> --}} -->
                                             
                                         </select>
                                     </div>
@@ -185,7 +221,7 @@
                                         <th>Nama Mess</th>
                                         <th>Nama Kamar</th>
                                         <th>Kapasitas</th>
-                                        <th>Peruntukan</th>
+                                        <th width="10%">Peruntukan</th>
                                         <th>Fasilitas</th>
                                         <th>Foto Mess</th>
                                         <th>Foto Kamar</th>
@@ -245,7 +281,7 @@
                                                 @endif
                                             </td>
                                             <td>{{ $kamar->kapasitas }}</td>
-                                            <td>{{ $kamar->peruntukan }}</td>
+                                            <td>{{ $kamar->peruntukan_teks }}</td>
                                             <td>{{ $kamar->fasilitas }}</td>
                                             <td>
                                                 @php
@@ -285,6 +321,27 @@
         <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
         <script>
             $(document).ready(function() {
+                $('.select2-tambah').select2({
+                    // dropdownParent: $('#kamarModal'),
+                    placeholder: "Pilih Peruntukan",
+                    width: '100%',
+                    theme: 'bootstrap-5'
+                });
+            });
+        </script>
+        <script>
+            $(document).ready(function() {
+                $('.select2-edit').select2({
+                    dropdownParent: $('#editKamarModal'),
+                    width: '100%',
+                    placeholder: 'Pilih Peruntukan'
+                });
+            });
+        </script>
+        
+        
+        <script>
+            $(document).ready(function() {
                 $('#dataTables-kaskecil').DataTable({
                     responsive: true
                 });
@@ -319,12 +376,20 @@
         $.each(jabatanList, function(index, jabatan) {
             $('#edit_peruntukan').append(`<option value="${jabatan.id}">${jabatan.jabatan}</option>`);
         });
-        $('#edit_peruntukan').val(kamar.peruntukan).trigger('change');
+        // $('#edit_peruntukan').val(kamar.peruntukan).trigger('change');
+        let peruntukanArray = [];
+        try {
+            peruntukanArray = JSON.parse(kamar.peruntukan);
+        } catch(e) {
+            peruntukanArray = kamar.peruntukan.split(','); // fallback ke koma
+        }
+
+        $('#edit_peruntukan').val(peruntukanArray).trigger('change');
 
         // Cek apakah ada foto utama
         let fotoUtama = kamar.photos.find(photo => photo.is_utama == '1'); 
         if (fotoUtama) {
-            $('#preview_foto_utama').attr('src', "/storage/" + fotoUtama.foto);
+            $('#preview_foto_utama').attr('src', "/" + fotoUtama.foto);
         } else {
             $('#preview_foto_utama').attr('src', '');
         }
@@ -335,7 +400,7 @@
         // Tambahkan foto pendukung
         kamar.photos.forEach(photo => {
             if (photo.is_utama != '1') {
-                $('#preview_foto_pendukung').append('<img src="/storage/' + photo.foto + '" width="100" class="me-2">');
+                $('#preview_foto_pendukung').append('<img src="/' + photo.foto + '" width="100" class="me-2">');
             }
         });
 

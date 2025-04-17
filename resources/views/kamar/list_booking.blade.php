@@ -50,6 +50,9 @@
                 @if(session('success'))
                     <div class="alert alert-success">{{ session('success') }}</div>
                 @endif
+                @if(session('error'))
+                    <div class="alert alert-warning">{{ session('error') }}</div>
+                @endif
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped" id="dataTables-kaskecil">
                         <thead>
@@ -111,6 +114,19 @@
                                                 Reject
                                             </button>
                                         @endif
+                                        @if($booking->status == 'approved')
+                                        <!-- buatkan tombol untuk memunculkan modal agar dapat mengedit/memperpanjang tanggal selesai menginap disini  -->
+                                        <button class="btn btn-primary btn-sm" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#perpanjangModal"
+                                            data-id="{{ $booking->id }}"
+                                            data-nama="{{ $booking->nama_pemesan }}"
+                                            data-kamar="{{ $booking->kamar->nama_kamar }} - {{ $booking->kamar->mess->nama ?? '-' }}"
+                                            data-tgl_awal="{{ $booking->tanggal_mulai }}"
+                                            data-tanggal_selesai="{{ $booking->tanggal_selesai }}">
+                                            Perpanjang
+                                        </button>
+                                        @endif
                                     @elseif(auth()->user()->role == 'user' && $booking->status == 'pending')
                                         <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#cancelModal"
                                             data-id="{{ $booking->id }}">
@@ -123,6 +139,37 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+            <!-- Modal Perpanjang -->
+            <div class="modal fade" id="perpanjangModal" tabindex="-1" aria-labelledby="perpanjangModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form id="perpanjangForm" method="POST">
+                            @csrf
+                            @method('PATCH')
+                <input type="hidden" name="id" id="perpanjang_id">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title">Perpanjang Masa Menginap</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                    <input type="hidden" name="booking_id" id="rejectBookingId">
+                    <p><strong>Nama Pemesan:</strong> <span id="perpanjang_nama"></span></p>
+                    <p><strong>Kamar:</strong> <span id="perpanjang_kamar"></span></p>
+                    <p><strong>Tanggal Mulai:</strong> <span id="perpanjang_awal"></span></p>
+                    <p><strong>Tanggal Selesai:</strong> <span id="perpanjang_selesai"></span></p>
+                    <div class="mb-3">
+                        <label for="tanggal_selesai_baru" class="form-label">Tanggal Selesai Baru</label>
+                        <input type="date" class="form-control" name="tanggal_selesai_baru" id="tanggal_selesai_baru" required>
+                    </div>
+                    </div>
+                    <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Simpan</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    </div>
+                </div>
+                </form>
+            </div>
             </div>
 
             <!-- Modal Detail Booking -->
@@ -220,5 +267,35 @@
                 });
             });
             </script>
+            <script>
+            $('#perpanjangModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget)
+                var id = button.data('id')
+                var nama = button.data('nama')
+                var kamar = button.data('kamar')
+                var tanggalawal = button.data('tgl_awal')
+                var tanggalSelesai = button.data('tanggal_selesai')
+
+                var modal = $(this)
+                modal.find('#perpanjang_id').val(id)
+                modal.find('#perpanjang_nama').text(nama)
+                modal.find('#perpanjang_kamar').text(kamar)
+                modal.find('#perpanjang_selesai').text(tanggalSelesai)
+                modal.find('#perpanjang_awal').text(tanggalawal)
+
+                var minDate = new Date(tanggalSelesai);
+                minDate.setDate(minDate.getDate() + 1); // Tambah 1 hari
+
+                // Format kembali ke YYYY-MM-DD
+                let day = ("0" + minDate.getDate()).slice(-2);
+                let month = ("0" + (minDate.getMonth() + 1)).slice(-2);
+                let formattedMinDate = minDate.getFullYear() + "-" + month + "-" + day;
+
+                modal.find('#tanggal_selesai_baru').attr('min', formattedMinDate);
+                modal.find('#tanggal_selesai_baru').val(formattedMinDate); // Opsional: langsung isi dengan default date
+                modal.find('#perpanjangForm').attr('action', `/bookingkamar/booking/perpanjangan/${id}`);
+            })
+            </script>
+
     </x-slot>
 </x-layouts.app>

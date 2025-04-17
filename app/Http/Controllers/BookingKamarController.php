@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BookingApprovedMail;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Carbon;
+
+use App\Models\PetugasMess;
 // use Whatsapp;
 use App\Facades\Whatsapp; // <- ini penting!
 
@@ -78,92 +81,46 @@ public function index(Request $request)
         return view('kamar.booking', compact('kamars', 'tanggal_mulai', 'tanggal_selesai', 'messes', 'jabatans','regionals'));
     }
 
-    // Query kamar dengan filter Mess dan Jabatan
-    $kamars = KamarModel::query()
-        ->when($mess_id !== 'all', function ($query) use ($mess_id) {
-            return $query->where('mess_id', $mess_id);
-        })
-        ->when($jabatan_id !== 'all', function ($query) use ($jabatan_id) {
-            return $query->where('peruntukan', $jabatan_id);
-        })
-        ->get()
-        ->map(function ($kamar) use ($tanggal_mulai, $tanggal_selesai) {
-            // Hitung jumlah orang yang sudah booking dalam rentang tanggal
-            $jumlahTerbooking = BookingKamar::where('kamar_id', $kamar->id)
-                ->where(function ($query) use ($tanggal_mulai, $tanggal_selesai) {
-                    $query->whereBetween('tanggal_mulai', [$tanggal_mulai, $tanggal_selesai])
-                          ->orWhereBetween('tanggal_selesai', [$tanggal_mulai, $tanggal_selesai])
-                          ->orWhere(function ($q) use ($tanggal_mulai, $tanggal_selesai) {
-                              $q->where('tanggal_mulai', '<=', $tanggal_mulai)
-                                ->where('tanggal_selesai', '>=', $tanggal_selesai);
-                          });
-                })
-                ->count();
 
-            // Hitung sisa kapasitas
-            $sisa_kapasitas = $kamar->kapasitas - $jumlahTerbooking;
-            $kamar->sisa_kapasitas = max($sisa_kapasitas, 0);
-            // Hitung rating rata-rata
-            $kamar->rating = round($kamar->reviews->avg('rating'), 1) ?? 0;
-            return $kamar;
-        });
+    $kamars = KamarModel::with('reviews')->when($mess_id !== 'all', function ($query) use ($mess_id) {
+        return $query->where('mess_id', $mess_id);
+    })
+    ->when($jabatan_id !== 'all', function ($query) use ($jabatan_id) {
+        return $query->whereRaw("FIND_IN_SET(?, peruntukan)", [$jabatan_id]);
+    })
+    ->get()
+    ->map(function ($kamar) use ($tanggal_mulai, $tanggal_selesai, $jabatans) {
+        // Hitung jumlah orang yang sudah booking dalam rentang tanggal
+        $jumlahTerbooking = BookingKamar::where('kamar_id', $kamar->id)
+            ->where(function ($query) use ($tanggal_mulai, $tanggal_selesai) {
+                $query->whereBetween('tanggal_mulai', [$tanggal_mulai, $tanggal_selesai])
+                      ->orWhereBetween('tanggal_selesai', [$tanggal_mulai, $tanggal_selesai])
+                      ->orWhere(function ($q) use ($tanggal_mulai, $tanggal_selesai) {
+                          $q->where('tanggal_mulai', '<=', $tanggal_mulai)
+                            ->where('tanggal_selesai', '>=', $tanggal_selesai);
+                      });
+            })
+            ->count();
+
+        // Hitung sisa kapasitas
+        $sisa_kapasitas = $kamar->kapasitas - $jumlahTerbooking;
+        $kamar->sisa_kapasitas = max($sisa_kapasitas, 0);
+
+        // Hitung rating rata-rata
+        $kamar->rating = round($kamar->reviews->avg('rating'), 1) ?? 0;
+
+        // Tambahkan peruntukan_teks
+        $peruntukanIds = explode(',', $kamar->peruntukan);
+        $namaPeruntukan = $jabatans->whereIn('id', $peruntukanIds)->pluck('jabatan')->toArray();
+        $kamar->peruntukan_teks = implode(', ', $namaPeruntukan);
+
+        return $kamar;
+    });
 
     return view('kamar.booking', compact('kamars', 'tanggal_mulai', 'tanggal_selesai', 'messes', 'jabatans','regionals'));
 }
 
 
-
-
-// public function store(Request $request)
-// {
-//     $request->validate([
-//         'kamar_id' => 'required|exists:m_kamar,id',
-//         'nama_pemesan' => 'required|string|max:255',
-//         'jabatan' => 'required|string|max:255',
-//         'regional' => 'required|string|max:255',
-//         'email' => 'required|email|max:255',
-//         'no_hp' => 'required|string|max:20',
-//         'tanggal_mulai' => 'required|date',
-//         'tanggal_selesai' => 'required|date|after:tanggal_mulai',
-//         'catatan' => 'nullable|string',
-//         'dokumen_pendukung' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
-//     ]);
-    
-//     $kamar = KamarModel::findOrFail($request->kamar_id);
-
-//     // **Cek apakah jabatan pemesan sesuai dengan jabatan yang diperbolehkan untuk kamar ini**
-//     if ($kamar->peruntukan !== $request->jabatan) {
-//         return back()->with('error', 'Anda tidak memiliki izin untuk memesan kamar ini berdasarkan jabatan Anda.');
-//     }
-
-//     // **Cek apakah kamar masih tersedia**
-//     if (!$kamar->isAvailable($request->tanggal_mulai, $request->tanggal_selesai)) {
-//         return back()->with('error', 'Kamar sudah penuh di tanggal tersebut!');
-//     }
-
-//     // **Upload dokumen jika ada**
-//     $dokumenPath = null;
-//     if ($request->hasFile('dokumen_pendukung')) {
-//         $dokumenPath = $request->file('dokumen_pendukung')->store('dokumen_booking', 'public');
-//     }
-
-//     // **Simpan booking ke database**
-//     BookingKamar::create([
-//         'kamar_id' => $request->kamar_id,
-//         'nama_pemesan' => $request->nama_pemesan,
-//         'jabatan' => $request->jabatan,
-//         'regional' => $request->regional,
-//         'email' => $request->email,
-//         'no_hp' => $request->no_hp,
-//         'tanggal_mulai' => $request->tanggal_mulai,
-//         'tanggal_selesai' => $request->tanggal_selesai,
-//         'catatan' => $request->catatan,
-//         'dokumen_pendukung' => $dokumenPath,
-//         'status' => 'pending',
-//     ]);
-
-//     return back()->with('success', 'Booking berhasil, menunggu konfirmasi!');
-// }
 public function store(Request $request)
 {
     try {
@@ -225,7 +182,7 @@ public function store(Request $request)
         BookingKamar::create([
             'kamar_id' => $request->kamar_id,
             'nama_pemesan' => $request->nama_pemesan,
-            'jabatan_id' => $request->jabatan_id, // Gunakan ID jabatan
+            'jabatan' => $request->jabatan, // Gunakan ID jabatan
             'regional' => $request->regional,
             'email' => $request->email,
             'no_hp' => $request->no_hp,
@@ -247,18 +204,6 @@ public function store(Request $request)
 }
 
 
-
-
-
-
-    public function checkout($id)
-    {
-        $booking = BookingKamar::findOrFail($id);
-        $booking->status = 'checked_out';
-        $booking->save();
-
-        return back()->with('success', 'Checkout berhasil!');
-    }
 
     public function cancelBooking(Request $request, $id)
     {
@@ -376,7 +321,39 @@ public function store(Request $request)
         $booking = BookingKamar::findOrFail($id);
         $booking->status = 'approved';
         $booking->save();
+        $id_mess =$booking->kamar->mess->id; 
+        $petugas= PetugasMess::where('mess_id', $id_mess)->get();
+        // dd($petugas);
+        foreach ($petugas as $p) {
+            $message = "Halo, {$p->nama_petugas} 😊.\n\n"
+            . "Karyawan atas nama {$booking->nama_pemesan} yang akan menginap di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
+            . "Mohon dipersiapkan untuk kamar dan perlengkapan yang dibutuhkan.\n\n";
+            Whatsapp::send($p->no_petugas, $message);
+        }
 
+        $daftarPetugas = '';
+        foreach ($petugas as $p) {
+            $daftarPetugas .= "- {$p->nama_petugas} ({$p->no_petugas})\n";
+        }
+        
+        $message1 = "Halo, {$booking->nama_pemesan} 😊.\n\n"
+            . "Pemesanan kamar di *{$booking->kamar->mess->nama_mess}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
+            . "Jika ada sesuatu yang dibutuhkan dapat berkoordinasi dengan petugas mess:\n\n"
+            . $daftarPetugas;
+
+           
+        $response = Whatsapp::send($booking->no_hp, $message1);
+
+        return $response->successful()
+            ? back()->with('success', 'Booking disetujui dan pesan WhatsApp terkirim.')
+            : back()->with('error', 'Booking disetujui tapi gagal mengirim WhatsApp.');
+    }
+
+    public function checkout($id)
+    {
+        $booking = BookingKamar::findOrFail($id);
+        $booking->status = 'checked_out';
+        $booking->save();
         $token = $booking->review->token ?? Str::random(32);
         if (!$booking->review) {
             ReviewModel::create([
@@ -386,7 +363,7 @@ public function store(Request $request)
         }
 
         $message = "Halo, {$booking->nama_pemesan} 😊.\n\n"
-            . "Booking Anda di *{$booking->kamar->mess->nama_mess}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
+            . "Anda telah berhasil Check Out dari *{$booking->kamar->mess->nama_mess}* - *{$booking->kamar->nama_kamar}* 🎉\n\n"
             . "Kami sangat menghargai jika Anda bisa memberikan review setelah menginap.\n\n"
             . "Klik link berikut untuk memberikan review:\n"
             . route('review.show', ['token' => $token]);
@@ -396,12 +373,11 @@ public function store(Request $request)
         $response = Whatsapp::send($booking->no_hp, $message);
 
         return $response->successful()
-            ? back()->with('success', 'Booking disetujui dan pesan WhatsApp terkirim.')
-            : back()->with('error', 'Booking disetujui tapi gagal mengirim WhatsApp.');
+            ? back()->with('success', 'Checkout berhasil dan pesan WhatsApp terkirim.')
+            : back()->with('error', 'Checkout berhasil tapi gagal mengirim WhatsApp.');
+
+        // return back()->with('success', 'Checkout berhasil!');
     }
-
-
-
 
 
     // Proses reject booking (Admin)
@@ -430,6 +406,106 @@ public function store(Request $request)
         }
 
         return back()->with('error', 'Booking tidak dapat dibatalkan!');
+    }
+
+    public function perpanjangan(Request $request, $id)
+    {
+        // dd('asdsad');
+        $request->validate([
+            'tanggal_selesai_baru' => 'required|date|after:today',
+        ]);
+    
+        // $booking = BookingKamar::findOrFail($id);
+        // $tanggalLama = $booking->tanggal_selesai;
+        // $tanggalBaru = $request->tanggal_selesai_baru;
+        // $idKamar = $booking->kamar_id;
+    
+        // // Cek apakah ada booking lain untuk kamar yang sama di antara tanggal tersebut
+        // $conflict = DB::table('booking_kamar')
+        //     ->where('kamar_id', $idKamar)
+        //     ->where('id', '!=', $id) // Hindari current booking
+        //     ->where(function ($query) use ($tanggalLama, $tanggalBaru) {
+        //         $query->whereBetween('tanggal_mulai', [$tanggalLama, $tanggalBaru])
+        //               ->orWhereBetween('tanggal_selesai', [$tanggalLama, $tanggalBaru])
+        //               ->orWhere(function ($query2) use ($tanggalLama, $tanggalBaru) {
+        //                   $query2->where('tanggal_mulai', '<=', $tanggalLama)
+        //                          ->where('tanggal_selesai', '>=', $tanggalBaru);
+        //               });
+        //     })
+        //     ->exists();
+    
+        // if ($conflict) {
+        //     return back()->with('error', 'Perpanjangan gagal! Tanggal tersebut sudah dibooking oleh pengguna lain.');
+        // }
+    
+        // // Jika tidak ada konflik, update tanggal_selesai
+        // $booking->update([
+        //     'tanggal_selesai' => $tanggalBaru,
+        //     'keterangan' => 'Diperpanjang sampai ' . $tanggalBaru
+        // ]);
+    
+        // return back()->with('success', 'Perpanjangan berhasil!');
+        $booking = BookingKamar::findOrFail($id);
+
+        $tanggalMulaiBaru = Carbon::parse($booking->tanggal_selesai)->addDay();
+        $tanggalSelesaiBaru = Carbon::parse($request->tanggal_selesai_baru);
+        $kapasitas = $booking->kamar->kapasitas;
+
+        $tanggalIterasi = clone $tanggalMulaiBaru;
+
+        while ($tanggalIterasi->lte($tanggalSelesaiBaru)) {
+            $jumlahBookingLain = BookingKamar::where('kamar_id', $booking->kamar_id)
+                ->where('status', 'Approved')
+                ->where('id', '!=', $booking->id)
+                ->where('tanggal_mulai', '<=', $tanggalIterasi)
+                ->where('tanggal_selesai', '>=', $tanggalIterasi)
+                ->count();
+
+            // hanya tambahkan 1 jika booking saat ini juga 'Approved'
+            $totalPenghuni = $jumlahBookingLain + ($booking->status === 'Approved' ? 1 : 0);
+
+            \Log::info("Tanggal {$tanggalIterasi->toDateString()}: Jumlah booking lain = {$jumlahBookingLain}, Total = {$totalPenghuni}/{$kapasitas}");
+
+            if ($totalPenghuni >= $kapasitas) {
+                return back()->with('error', 'Gagal perpanjang. Kamar sudah penuh pada tanggal ' . $tanggalIterasi->toDateString());
+            }
+
+            $tanggalIterasi->addDay();
+        }
+
+        // Jika aman, lakukan update
+        $booking->update([
+            'tanggal_selesai' => $tanggalSelesaiBaru,
+            'keterangan' => 'Diperpanjang sampai ' . $tanggalSelesaiBaru->toDateString(),
+        ]);
+
+        // return back()->with('success', 'Perpanjangan berhasil!');
+        $id_mess =$booking->kamar->mess->id; 
+        $petugas= PetugasMess::where('mess_id', $id_mess)->get();
+        // dd($petugas);
+        foreach ($petugas as $p) {
+            $message = "Halo, {$p->nama_petugas} 😊.\n\n"
+            . "Karyawan atas nama {$booking->nama_pemesan} yang akan menginap di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
+            . "Mohon dipersiapkan untuk kamar dan perlengkapan yang dibutuhkan.\n\n";
+            Whatsapp::send($p->no_petugas, $message);
+        }
+
+        $daftarPetugas = '';
+        foreach ($petugas as $p) {
+            $daftarPetugas .= "- {$p->nama_petugas} ({$p->no_petugas})\n";
+        }
+        
+        $message1 = "Halo, {$booking->nama_pemesan} 😊.\n\n"
+            . "Pemesanan kamar di *{$booking->kamar->mess->nama_mess}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
+            . "Jika ada sesuatu yang dibutuhkan dapat berkoordinasi dengan petugas mess:\n\n"
+            . $daftarPetugas;
+
+           
+        $response = Whatsapp::send($booking->no_hp, $message1);
+
+        return $response->successful()
+            ? back()->with('success', 'Booking disetujui dan pesan WhatsApp terkirim.')
+            : back()->with('error', 'Booking disetujui tapi gagal mengirim WhatsApp.');
     }
 
 }

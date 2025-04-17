@@ -144,6 +144,9 @@ Route::group(['prefix' => 'bookingkamar', 'as' => 'bookingkamar.'], function () 
     Route::patch('/booking/approve/{id}', [BookingKamarController::class, 'approve'])->name('approve');
     Route::patch('/booking/reject/{id}', [BookingKamarController::class, 'reject'])->name('reject');
     Route::patch('/booking/cancel/{id}', [BookingKamarController::class, 'cancel'])->name('cancel');
+    Route::patch('/booking/perpanjangan/{id}', [BookingKamarController::class, 'perpanjangan'])->name('perpanjangan');
+    // Route::patch('/booking/perpanjangan', [BookingKamarController::class, 'perpanjangan'])->name('perpanjangan');
+
 
 });
 

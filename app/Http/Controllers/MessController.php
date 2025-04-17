@@ -5,7 +5,12 @@ use Illuminate\Http\Request;
 use App\Models\Mess;
 use App\Models\MessModel;
 use App\Models\MessPhoto;
+use App\Models\PetugasMess;
 use Illuminate\Support\Facades\File;
+use App\Services\OpenRouteService;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Carbon;
 
 use Illuminate\Support\Facades\Storage;
 
@@ -20,45 +25,55 @@ class MessController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->all());
-        $request->validate([
+        
+        
+        $validator = Validator::make($request->all(), [
             'nama' => 'required',
             'lokasi' => 'required',
-            'cp' => 'required',
-            'no_cp' => 'required',
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+            'cp' => 'required|array',
+            'cp.*' => 'required|string',
+            'no_cp' => 'required|array',
+            'no_cp.*' => 'required|string',
             'deskripsi' => 'nullable',
             'foto_utama' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'foto_pendukung.*' => 'image|mimes:jpeg,png,jpg|max:2048',
         ]);
-        // dd('foto');
-
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput(); // agar input lama tetap muncul di form
+        }
+        // dd($request->all());
+        $kantorLat = env('KANTOR_LAT');
+        $kantorLng = env('KANTOR_LNG');
+        $result = OpenRouteService::getDistanceAndDuration(
+            $request->lat,
+            $request->lng,
+            $kantorLat,
+            $kantorLng
+        );
+        // dd($result['duration_min']);
+        // dd($request->all());
         // $mess = MessModel::create($request->only('nama', 'lokasi', 'deskripsi'));
         $data = $request->only('nama', 'lokasi', 'deskripsi');
         $data['status'] = 1; // Tambahkan status = 1
-
+        $data['jarak']=$result['distance_km'];
+        $data['waktu']=$result['duration_min'];
+        $data['last_distance_sync']= Carbon::now();
+        $data['lat']=$request->lat;
+        $data['lng']=$request->lng;
         $mess = MessModel::create($data);
+        // Simpan data petugas
+        foreach ($request->cp as $index => $namaPetugas) {
+            \App\Models\PetugasMess::create([
+                'mess_id' => $mess->id,
+                'nama_petugas' => $namaPetugas,
+                'no_petugas' => $request->no_cp[$index]
+            ]);
+        }
         
-        // // Simpan Foto Utama
-        // if ($request->hasFile('foto_utama')) {
-        //     $path = $request->file('foto_utama')->store('uploads/mess', 'public');
-        //     MessPhoto::create([
-        //         'mess_id' => $mess->id,
-        //         'foto' => $path,
-        //         'is_utama' => true  // Tandai sebagai foto utama
-        //     ]);
-        // }
-
-        // // Simpan Foto Pendukung (jika ada)
-        // if ($request->hasFile('foto_pendukung')) {
-        //     foreach ($request->file('foto_pendukung') as $file) {
-        //         $path = $file->store('uploads/mess', 'public');
-        //         MessPhoto::create([
-        //             'mess_id' => $mess->id,
-        //             'foto' => $path,
-        //             'is_utama' => false  // Foto pendukung
-        //         ]);
-        //     }
-        // }
         if ($request->hasFile('foto_utama')) {
             $file = $request->file('foto_utama');
             $filename = time() . '_' . $file->getClientOriginalName();
@@ -104,30 +119,62 @@ class MessController extends Controller
 
     public function edit($id)
     {
-        $mess = MessModel::with('photos')->findOrFail($id);
+        $mess = MessModel::with(['photos', 'petugas'])->findOrFail($id);
         return response()->json($mess);
     }
 
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'nama' => 'required|string|max:255',
             'lokasi' => 'required|string',
-            'cp' => 'required|string',
-            'no_cp' => 'required|string',
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+            'cp' => 'required|array',
+            'cp.*' => 'required|string',
+            'no_cp' => 'required|array',
+            'no_cp.*' => 'required|string',
             'deskripsi' => 'nullable|string',
             'foto_utama' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'foto_pendukung.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
-
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput(); // agar input lama tetap muncul di form
+        }
+        $kantorLat = env('KANTOR_LAT');
+        $kantorLng = env('KANTOR_LNG');
+        $result = OpenRouteService::getDistanceAndDuration(
+            $request->lat,
+            $request->lng,
+            $kantorLat,
+            $kantorLng
+        );
+        $data['jarak']=$result['distance_km'];
+        $data['waktu']=$result['duration_min'];
         $mess = MessModel::findOrFail($id);
         $mess->update([
             'nama' => $request->nama,
             'lokasi' => $request->lokasi,
             'deskripsi' => $request->deskripsi,
-            'cp' => $request->cp,
-            'no_cp' => $request->no_cp
+            'jarak' => $result['distance_km'],
+            'waktu' => $result['duration_min'],
+            'last_distance_sync'=> Carbon::now(),
+            'lat'=>$request->lat,
+            'lng'=>$request->lng,
         ]);
+
+        PetugasMess::where('mess_id', $mess->id)->delete();
+        // Simpan ulang petugas baru
+        foreach ($request->cp as $i => $nama) {
+            PetugasMess::create([
+                'mess_id' => $mess->id,
+                'nama_petugas' => $nama,
+                'no_petugas' => $request->no_cp[$i]
+            ]);
+        }
+
 
         // Update Foto Utama jika ada file baru
         if ($request->hasFile('foto_utama')) {
@@ -166,14 +213,7 @@ class MessController extends Controller
     {
         $mess = MessModel::findOrFail($id);
 
-        // Hapus semua foto yang terkait
-        // foreach ($mess->photos as $photo) {
-        //     Storage::delete('public/' . $photo->foto);
-        //     $photo->delete();
-        // }
-
-        // Hapus mess
-        // $mess->delete();
+        
         $mess->update([
             'status' => 0,
         ]);
@@ -192,6 +232,32 @@ class MessController extends Controller
 
         return redirect()->route('mess.index')->with('success', 'Mess berhasil diaktifkan.');
     }
+
+    public function updateJarak()
+{
+    $kantorLat = env('KANTOR_LAT');
+    $kantorLng = env('KANTOR_LNG');
+
+    $messList = MessModel::all();
+
+    foreach ($messList as $mess) {
+        $result = OpenRouteService::getDistanceAndDuration(
+            $mess->lat,
+            $mess->lng,
+            $kantorLat,
+            $kantorLng
+        );
+
+        if ($result) {
+            $mess->jarak = $result['distance_km'];
+            $mess->waktu = $result['duration_min'];
+            $mess->last_distance_sync = now();
+            $mess->save();
+        }
+    }
+
+    return Redirect::back()->with('success', 'Estimasi jarak mess berhasil diperbarui.');
+}
 
 
 

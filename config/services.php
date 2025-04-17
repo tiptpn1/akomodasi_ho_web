@@ -38,5 +38,8 @@ return [
     'fonnte' => [
         'token' => env('FONNTE_TOKEN'),
     ],
+    'openrouteservice' => [
+        'key' => env('ORS_API_KEY'),
+    ],
 
 ];

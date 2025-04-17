@@ -168,10 +168,11 @@
                         <div class="card-body">
                             <h4 class="card-title"><strong>{{ $kamar->nama_kamar }}</strong></h4>
                             <p class="card-text"><strong>Mess:</strong> {{ $kamar->mess->nama }} - {{ $kamar->mess->lokasi }}</p>
+                            <p class="card-text"><strong>Ke HO :</strong> ± {{ $kamar->mess->jarak ?? '-'}} km ({{ $kamar->mess->waktu ?? '-'}} menit)</p>
                             <p class="card-text"><strong>Contact Person:</strong> {{ $kamar->mess->cp ?? '' }} - {{ $kamar->mess->no_cp ?? ''}}</p>
-                            <p class="card-text"><strong>Kapasitas:</strong> {{ $kamar->kapasitas }} orang</p>
-                            <p class="card-text"><strong>Sisa Kapasitas:</strong> {{ $kamar->sisa_kapasitas }} orang</p>
-                            <p class="card-text"><strong>Peruntukan:</strong> {{ $kamar->jabatan->jabatan }}</p>
+                            <p class="card-text"><strong>Kapasitas:</strong> {{ $kamar->kapasitas }} bed</p>
+                            <p class="card-text"><strong>Sisa Kapasitas:</strong> {{ $kamar->sisa_kapasitas }} bed</p>
+                            <p class="card-text"><strong>Peruntukan:</strong> {{ $kamar->peruntukan_teks  }}</p>
                             <p class="card-text"><strong>Fasilitas:</strong> {{ $kamar->fasilitas }}</p>
                             {{-- <p class="card-text"><strong>
                                 Rating: </strong>

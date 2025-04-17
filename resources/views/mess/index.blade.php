@@ -32,6 +32,16 @@
         <main>
             <div class="container-fluid">
                 <h3 class="mt-4">Master Mess</h3>
+
+                @if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
                 <!-- Button Trigger Modal -->
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#messModal">
                     Tambah Mess
@@ -57,19 +67,45 @@
                                         <label class="form-label">Lokasi:</label>
                                         <textarea name="lokasi" class="form-control" required></textarea>
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Latitude:</label>
+                                        <input type="text" name="lat" step="0.0000001" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Longitude:</label>
+                                        <input type="text" name="lng" step="0.0000001" class="form-control" required>
+                                    </div>
 
                                     <div class="mb-3">
                                         <label class="form-label">Deskripsi:</label>
                                         <textarea name="deskripsi" class="form-control"></textarea>
                                     </div>
-                                    <div class="mb-3">
+                                    <!-- <div class="mb-3">
                                         <label class="form-label">Petugas:</label>
                                         <input type="text" name="cp" class="form-control" required>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">No. Petugas:</label>
                                         <input type="text" name="no_cp" class="form-control" required>
+                                    </div> -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Petugas & No. Petugas:</label>
+                                        <div id="petugas-wrapper">
+                                            <div class="row mb-2 align-items-center">
+                                                <div class="col-5">
+                                                    <input type="text" name="cp[]" class="form-control" placeholder="Nama Petugas" required>
+                                                </div>
+                                                <div class="col-5">
+                                                    <input type="text" name="no_cp[]" class="form-control" placeholder="No. Petugas" required>
+                                                </div>
+                                                <div class="col-2">
+                                                    <button type="button" class="btn btn-danger btn-sm remove-petugas">×</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-primary" id="add-petugas">+ Tambah Petugas</button>
                                     </div>
+
 
                                     <!-- Input Foto Utama (Hanya 1 file) -->
                                     <div class="mb-3">
@@ -117,18 +153,42 @@
                                         <label class="form-label">Lokasi:</label>
                                         <textarea name="lokasi" id="editLokasi" class="form-control" required></textarea>
                                     </div>
-                
+                                    <div class="mb-3">
+                                        <label class="form-label">Latitude:</label>
+                                        <input type="text" name="lat" id="editlat" step="0.0000001" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Longitude:</label>
+                                        <input type="text" name="lng" id="editlng" step="0.0000001" class="form-control" required>
+                                    </div>
                                     <div class="mb-3">
                                         <label class="form-label">Deskripsi:</label>
                                         <textarea name="deskripsi" id="editDeskripsi" class="form-control"></textarea>
                                     </div>
-                                    <div class="mb-3">
+                                    <!-- <div class="mb-3">
                                         <label class="form-label">Petugas:</label>
                                         <input type="text" name="cp" id="editcp" class="form-control" required>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label">No. Petugas:</label>
                                         <input type="text" name="no_cp" id="editno_cp" class="form-control" required>
+                                    </div> -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Petugas & No. Petugas:</label>
+                                        <div id="petugas-wrapper1">
+                                            <div class="row mb-2 align-items-center">
+                                                <div class="col-5">
+                                                    <input type="text" name="cp[]" class="form-control" placeholder="Nama Petugas" required>
+                                                </div>
+                                                <div class="col-5">
+                                                    <input type="text" name="no_cp[]" class="form-control" placeholder="No. Petugas" required>
+                                                </div>
+                                                <div class="col-2">
+                                                    <button type="button" class="btn btn-danger btn-sm remove-petugas1">×</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-primary" id="add-petugas1">+ Tambah Petugas</button>
                                     </div>
                 
                                     <div class="mb-3">
@@ -244,14 +304,37 @@
             $(document).on('click', '#btnEdit', function() {
                 let id = $(this).data('id');
                 let url = "{{ url('mess/edit') }}/" + id ;
-        
                 $.get(url, function(data) {
+                    // console.log(data.petugas); 
+                    // console.log('Data Petugas:', data.petugas);
+                    // console.log('Isi Petugas:', Array.isArray(data.petugas));
+
                     $('#editMessId').val(data.id);
                     $('#editNama').val(data.nama);
                     $('#editLokasi').val(data.lokasi);
+                    $('#editlat').val(data.lat);
+                    $('#editlng').val(data.lng);
                     $('#editDeskripsi').val(data.deskripsi);
-                    $('#editcp').val(data.cp);
-                    $('#editno_cp').val(data.no_cp);
+                    // console.log('Sebelum append, petugas-wrapper:', $('#petugas-wrapper').html());
+                    $('#petugas-wrapper1').html('');
+                    // console.log('Sesudah clear petugas-wrapper:', $('#petugas-wrapper').html());
+
+                    data.petugas.forEach(function(p, index) {
+                        let row = `
+                            <div class="row mb-2 align-items-center">
+                                <div class="col-5">
+                                    <input type="text" name="cp[]" class="form-control" placeholder="Nama Petugas" value="${p.nama_petugas}" required>
+                                </div>
+                                <div class="col-5">
+                                    <input type="text" name="no_cp[]" class="form-control" placeholder="No. Petugas" value="${p.no_petugas}" required>
+                                </div>
+                                <div class="col-2">
+                                    <button type="button" class="btn btn-danger btn-sm remove-petugas1">×</button>
+                                </div>
+                            </div>`;
+                        // console.log('Row to append:', row);
+                        $('#petugas-wrapper1').append(row);
+                    });
                     
                     // Cek apakah ada foto utama
                     let fotoUtama = data.photos.find(photo => photo.is_utama == '1');
@@ -320,5 +403,58 @@
 
         </script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.getElementById('add-petugas').addEventListener('click', function () {
+                const wrapper = document.getElementById('petugas-wrapper');
+                const row = document.createElement('div');
+                row.classList.add('row', 'mb-2', 'align-items-center');
+                row.innerHTML = `
+                    <div class="col-5">
+                        <input type="text" name="cp[]" class="form-control" placeholder="Nama Petugas" required>
+                    </div>
+                    <div class="col-5">
+                        <input type="text" name="no_cp[]" class="form-control" placeholder="No. Petugas" required>
+                    </div>
+                    <div class="col-2">
+                        <button type="button" class="btn btn-danger btn-sm remove-petugas">×</button>
+                    </div>
+                `;
+                wrapper.appendChild(row);
+            });
+
+            // Event delegation untuk tombol hapus
+            document.getElementById('petugas-wrapper').addEventListener('click', function (e) {
+                if (e.target.classList.contains('remove-petugas')) {
+                    e.target.closest('.row').remove();
+                }
+            });
+            </script>
+            <script>
+            document.getElementById('add-petugas1').addEventListener('click', function () {
+                const wrapper = document.getElementById('petugas-wrapper1');
+                const row = document.createElement('div');
+                row.classList.add('row', 'mb-2', 'align-items-center');
+                row.innerHTML = `
+                    <div class="col-5">
+                        <input type="text" name="cp[]" class="form-control" placeholder="Nama Petugas" required>
+                    </div>
+                    <div class="col-5">
+                        <input type="text" name="no_cp[]" class="form-control" placeholder="No. Petugas" required>
+                    </div>
+                    <div class="col-2">
+                        <button type="button" class="btn btn-danger btn-sm remove-petugas1">×</button>
+                    </div>
+                `;
+                wrapper.appendChild(row);
+            });
+
+            // Event delegation untuk tombol hapus
+            document.getElementById('petugas-wrapper1').addEventListener('click', function (e) {
+                if (e.target.classList.contains('remove-petugas1')) {
+                    e.target.closest('.row').remove();
+                }
+            });
+            </script>
+
     </x-slot>
 </x-layouts.app>
