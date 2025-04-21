@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\BookingApprovedMail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
-
+use Illuminate\Support\Facades\Validator;
 use App\Models\PetugasMess;
 // use Whatsapp;
 use App\Facades\Whatsapp; // <- ini penting!
@@ -134,7 +134,7 @@ public function store(Request $request)
         // Lakukan validasi dengan ID jabatan yang ditemukan
         $request->merge(['jabatan_id' => $jabatan->id]); // Menambahkan jabatan_id ke request
         // dd($request->merge(['jabatan_id' => $jabatan->id]));
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'kamar_id' => 'required|exists:m_kamar,id',
             'nama_pemesan' => 'required|string|max:255',
             'jabatan_id' => 'required|exists:m_jabatan,id', // Validasi menggunakan ID
@@ -146,7 +146,11 @@ public function store(Request $request)
             'catatan' => 'nullable|string',
             'dokumen_pendukung' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Maks 2MB
         ]);
-        
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput(); // agar input lama tetap muncul di form
+        }
         // Cek apakah kamar tersedia
         $kamar = KamarModel::findOrFail($request->kamar_id);
         if (!$kamar->isAvailable($request->tanggal_mulai, $request->tanggal_selesai)) {
