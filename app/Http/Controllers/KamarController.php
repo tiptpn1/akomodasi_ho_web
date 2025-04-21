@@ -219,7 +219,23 @@ class KamarController extends Controller
         return redirect()->route('kamar.index')->with('success', 'Kamar berhasil diperbarui.');
     }
 
+    public function destroyphotokamar($id)
+    {
+        // dd($id);
+        $foto = KamarPhoto::findOrFail($id);
+        // dd($foto);
 
+        // Hapus file dari storage
+        $path = public_path($foto->foto);
+        if (File::exists($path)) {
+            File::delete($path);
+        }
+
+        // Hapus record dari database
+        $foto->delete();
+
+        return response()->json(['message' => 'Foto berhasil dihapus.']);
+    }
 
     public function destroy($id)
     {

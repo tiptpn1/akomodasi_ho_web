@@ -400,11 +400,39 @@
         // Tambahkan foto pendukung
         kamar.photos.forEach(photo => {
             if (photo.is_utama != '1') {
-                $('#preview_foto_pendukung').append('<img src="/' + photo.foto + '" width="100" class="me-2">');
+                const fotoHtml = `
+                    <div class="d-inline-block position-relative me-2 mb-2">
+                        <img src="/${photo.foto}" width="100" class="border">
+                        <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-foto" data-id="${photo.id}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                $('#preview_foto_pendukung').append(fotoHtml);
             }
         });
 
         $('#editKamarForm').attr('action', "{{ url('kamar/update') }}/" + id);
+
+        $('#preview_foto_pendukung').on('click', '.delete-foto', function () {
+            const photoId = $(this).data('id');
+
+            if (confirm('Yakin ingin menghapus foto ini?')) {
+                $.ajax({
+                    url: '/kamar/destroy-photo-kamar/' + photoId,
+                    type: 'DELETE',
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function (response) {
+                        $(`button[data-id="${photoId}"]`).closest('div').remove();
+                    },
+                    error: function () {
+                        alert('Gagal menghapus foto.');
+                    }
+                });
+            }
+        });
         // $('#editKamarModal').modal('show'); // Tampilkan modal edit
     });
 });
