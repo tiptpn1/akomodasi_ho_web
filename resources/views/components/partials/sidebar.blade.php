@@ -34,6 +34,14 @@
                         <div class="sb-nav-link-icon"></div>
                         Permintaan Kendaraan
                     </a>
+                    <a class="nav-link" href="{{ route('bookingkamar.index') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Booking Kamar
+                    </a>
+                    <a class="nav-link" href="{{ route('bookingkamar.list_booking') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Daftar Booking Kamar
+                    </a>
                     @if (Auth::user()->hakAkses->hak_akses_id == 2)
                     <a class="nav-link" href="{{ route('kaskecil.index') }}">
                         <div class="sb-nav-link-icon"></div>
@@ -56,6 +64,14 @@
                         <a class="nav-link" href="{{ route('masterdriver.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Master Driver
+                        </a>
+                        <a class="nav-link" href="{{ route('mess.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Master Mess
+                        </a>
+                        <a class="nav-link" href="{{ route('kamar.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Master Kamar
                         </a>
                         <!-- <a class="nav-link" href="{{ route('admin.dashboard.master.kendaraan.index') }}">
                             <div class="sb-nav-link-icon"></div>

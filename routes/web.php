@@ -13,6 +13,7 @@ use App\Http\Controllers\MasterPenggunaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\HakAksesController;
+use App\Http\Controllers\KamarController;
 use App\Http\Controllers\KasKecilController;
 use App\Http\Controllers\SendViconController;
 use App\Http\Controllers\UserController;
@@ -25,6 +26,10 @@ use App\Http\Controllers\KartuController;
 use App\Http\Controllers\MKendaraanController;
 use App\Http\Controllers\MdriverController;
 use App\Http\Controllers\PKendaraanController;
+use App\Http\Controllers\MessController;
+use App\Http\Controllers\BookingKamarController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\DashboardDriverController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +41,11 @@ use App\Http\Controllers\PKendaraanController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+Route::get('/review/{token}', [ReviewController::class, 'show'])->name('review.show');
+Route::post('/review/{token}', [ReviewController::class, 'store'])->name('review.store');
+Route::get('/review/success', function () {
+    return view('reviews.success');
+})->name('review.success');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('refresh-captcha', [SendViconController::class, 'refreshCaptcha'])->name('refresh.captcha');
@@ -99,6 +109,48 @@ Route::group(['prefix' => 'masterdriver', 'as' => 'masterdriver.'], function () 
     Route::get('/export', [MdriverController::class, 'export'])->name('export');
 });
 
+Route::group(['prefix' => 'mess', 'as' => 'mess.'], function () {
+    Route::get('/', [MessController::class, 'index'])->name('index');
+    Route::post('/store', [MessController::class, 'store'])->name('store');
+    Route::get('/edit/{id}', [MessController::class, 'edit'])->name('mess.edit');
+    Route::put('/update/{id}', [MessController::class, 'update'])->name('mess.update');
+
+    // Route::get('/edit/{id}', [MdriverController::class, 'edit'])->name('edit');  // Add this route
+    // Route::put('/update/{id}', [MdriverController::class, 'update'])->name('update');
+    Route::delete('/destroy/{id}', [MessController::class, 'destroy'])->name('destroy');
+    Route::delete('/aktif/{id}', [MessController::class, 'aktif'])->name('aktif');
+    Route::get('/export', [MdriverController::class, 'export'])->name('export');
+});
+
+Route::group(['prefix' => 'kamar', 'as' => 'kamar.'], function () {
+    Route::get('/', [KamarController::class, 'index'])->name('index');
+    Route::post('/store', [KamarController::class, 'store'])->name('store');
+    Route::get('/edit/{id}', [KamarController::class, 'edit'])->name('kamar.edit');
+    Route::put('/update/{id}', [KamarController::class, 'update'])->name('kamar.update');
+    Route::get('/{id}/reviews', [KamarController::class, 'getReviews'])->name('review');
+
+
+    // Route::get('/edit/{id}', [MdriverController::class, 'edit'])->name('edit');  // Add this route
+    // Route::put('/update/{id}', [MdriverController::class, 'update'])->name('update');
+    Route::delete('/destroy/{id}', [KamarController::class, 'destroy'])->name('destroy');
+    Route::delete('/aktif/{id}', [KamarController::class, 'aktif'])->name('aktif');
+    Route::get('/export', [MdriverController::class, 'export'])->name('export');
+});
+
+Route::group(['prefix' => 'bookingkamar', 'as' => 'bookingkamar.'], function () {
+    Route::get('/', [BookingKamarController::class, 'index'])->name('index');
+    // Route::get('/booking', [BookingKamarController::class, 'index'])->name('booking.index');
+    Route::post('/store', [BookingKamarController::class, 'store'])->name('store');
+    Route::post('/booking/{id}/checkout', [BookingKamarController::class, 'checkout'])->name('checkout');
+    Route::get('/list_booking', [BookingKamarController::class, 'list_booking'])->name('list_booking');
+    Route::patch('/booking/approve/{id}', [BookingKamarController::class, 'approve'])->name('approve');
+    Route::patch('/booking/reject/{id}', [BookingKamarController::class, 'reject'])->name('reject');
+    Route::patch('/booking/cancel/{id}', [BookingKamarController::class, 'cancel'])->name('cancel');
+    Route::patch('/booking/perpanjangan/{id}', [BookingKamarController::class, 'perpanjangan'])->name('perpanjangan');
+    // Route::patch('/booking/perpanjangan', [BookingKamarController::class, 'perpanjangan'])->name('perpanjangan');
+
+});
+
 
 Route::group(['prefix' => 'pkendaraan', 'as' => 'pkendaraan.'], function () {
     Route::get('/', [PKendaraanController::class, 'index'])->name('index');
@@ -109,6 +161,10 @@ Route::group(['prefix' => 'pkendaraan', 'as' => 'pkendaraan.'], function () {
     Route::get('/export', [PKendaraanController::class, 'export'])->name('export');
     Route::post('/approve/{id}', [PKendaraanController::class, 'approve'])->name('approve');
     Route::post('/reject/{id}', [PKendaraanController::class, 'reject'])->name('reject');
+    Route::get('/get-available-drivers', [PKendaraanController::class, 'getAvailableDrivers'])
+        ->name('getAvailableDrivers');
+    Route::get('/get-available-drivers-admin', [PKendaraanController::class, 'getAvailableDriversAdmin'])
+        ->name('getAvailableDrivers');
 });
 
 Route::group(['prefix' => 'kartu', 'as' => 'kartu.'], function () {
@@ -272,5 +328,13 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('/', [DashboardAgendaController::class, 'index'])->name('index');
         Route::post('/get-content', [DashboardAgendaController::class, 'getContent'])->name('content');
         Route::post('/export-pdf', [DashboardAgendaController::class, 'export_pdf'])->name('exportPdf');
+    });
+
+    Route::group(['prefix' => 'driver', 'as' => 'driver.', 'middleware' => 'role:admin,GA,divisi,sekper,read'], function () {
+        Route::get('/', [DashboardDriverController::class, 'index'])->name('index');
+        Route::get('/get-driver-schedule', [DashboardDriverController::class, 'getDriverSchedule']);
+
+        Route::post('/get-content', [DashboardDriverController::class, 'getContent'])->name('content');
+        Route::post('/export-pdf', [DashboardDriverController::class, 'export_pdf'])->name('exportPdf');
     });
 });
