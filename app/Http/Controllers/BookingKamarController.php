@@ -82,7 +82,9 @@ public function index(Request $request)
         $kamars = collect();
         return view('kamar.booking', compact('kamars', 'tanggal_mulai', 'tanggal_selesai', 'messes', 'jabatans','regionals'));
     }
-    $kamars = KamarModel::with('reviews')->when($mess_id !== 'all', function ($query) use ($mess_id) {
+    $kamars = KamarModel::with('reviews')
+    ->where('status', 1)
+    ->when($mess_id !== 'all', function ($query) use ($mess_id) {
         return $query->where('mess_id', $mess_id);
     })
     ->when($jabatan_id !== 'all', function ($query) use ($jabatan_id) {
