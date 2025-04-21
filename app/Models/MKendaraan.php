@@ -9,7 +9,7 @@ class MKendaraan extends Model
 {
     use HasFactory;
 
-    protected $table = 'm_kendaraan'; // Nama tabel di database
+    protected $table = 'master_kendaraan'; // Nama tabel di database
 
     protected $primaryKey = 'id_kendaraan'; // Primary Key
 

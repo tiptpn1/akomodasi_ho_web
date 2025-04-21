@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\BookingApprovedMail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 use App\Models\PetugasMess;
 // use Whatsapp;
@@ -67,7 +68,8 @@ public function index(Request $request)
     $jabatan_id = $request->query('jabatan_id', 'all');
 
     // Ambil daftar Mess dan Jabatan untuk filter dropdown
-    $messes = MessModel::all();
+    // $messes = MessModel::all();
+    $messes = MessModel::where('status', 1)->get();
     $jabatans = Jabatan::all();
 
     $regionals = [
@@ -80,9 +82,9 @@ public function index(Request $request)
         $kamars = collect();
         return view('kamar.booking', compact('kamars', 'tanggal_mulai', 'tanggal_selesai', 'messes', 'jabatans','regionals'));
     }
-
-
-    $kamars = KamarModel::with('reviews')->when($mess_id !== 'all', function ($query) use ($mess_id) {
+    $kamars = KamarModel::with('reviews')
+    ->where('status', 1)
+    ->when($mess_id !== 'all', function ($query) use ($mess_id) {
         return $query->where('mess_id', $mess_id);
     })
     ->when($jabatan_id !== 'all', function ($query) use ($jabatan_id) {
@@ -135,7 +137,7 @@ public function store(Request $request)
         // Lakukan validasi dengan ID jabatan yang ditemukan
         $request->merge(['jabatan_id' => $jabatan->id]); // Menambahkan jabatan_id ke request
         // dd($request->merge(['jabatan_id' => $jabatan->id]));
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'kamar_id' => 'required|exists:m_kamar,id',
             'nama_pemesan' => 'required|string|max:255',
             'jabatan_id' => 'required|exists:m_jabatan,id', // Validasi menggunakan ID
@@ -147,6 +149,11 @@ public function store(Request $request)
             'catatan' => 'nullable|string',
             'dokumen_pendukung' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Maks 2MB
         ]);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput(); // agar input lama tetap muncul di form
+        }
         
         // Cek apakah kamar tersedia
         $kamar = KamarModel::findOrFail($request->kamar_id);
@@ -327,7 +334,7 @@ public function store(Request $request)
         // dd($petugas);
         foreach ($petugas as $p) {
             $message = "Halo, {$p->nama_petugas} 😊.\n\n"
-            . "Karyawan atas nama {$booking->nama_pemesan} yang akan menginap di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
+            . "Karyawan atas nama {$booking->nama_pemesan} ({$booking->regional}) yang akan menginap di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* untuk tanggal {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai} telah disetujui! 🎉\n\n"
             . "Mohon dipersiapkan untuk kamar dan perlengkapan yang dibutuhkan.\n\n";
             Whatsapp::send($p->no_petugas, $message);
         }
@@ -337,8 +344,8 @@ public function store(Request $request)
             $daftarPetugas .= "- {$p->nama_petugas} ({$p->no_petugas})\n";
         }
         
-        $message1 = "Halo, {$booking->nama_pemesan} 😊.\n\n"
-            . "Pemesanan kamar di *{$booking->kamar->mess->nama_mess}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
+        $message1 = "Halo, {$booking->nama_pemesan} dari {$booking->regional} 😊.\n\n"
+            . "Pemesanan kamar di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* untuk tanggal {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai} telah disetujui! 🎉\n\n"
             . "Jika ada sesuatu yang dibutuhkan dapat berkoordinasi dengan petugas mess:\n\n"
             . $daftarPetugas;
 
@@ -390,7 +397,23 @@ public function store(Request $request)
             'keterangan' => $request->alasan_reject
         ]);
 
-        return back()->with('success', 'Booking telah ditolak!');
+        $token = $booking->review->token ?? Str::random(32);
+        if (!$booking->review) {
+            ReviewModel::create([
+                'booking_id' => $booking->id,
+                'token' => $token,
+            ]);
+        }
+
+        $message = "Halo, {$booking->nama_pemesan} 🙏.\n\n"
+            . "Mohon maaf, pemesanan anda pada *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* untuk tanggal {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai} tidak disetujui dengan keterangan:\n{$booking->keterangan}\n\n";
+            // $no='085275104312';
+            // $response = Whatsapp::send($no, $message);
+        $response = Whatsapp::send($booking->no_hp, $message);
+
+        return $response->successful()
+        ? back()->with('success', 'Booking telah ditolak dan pesan Whatsapp ditolak terkirim!')
+        : back()->with('error', 'Booking telah ditolak!');
     }
 
     // Proses cancel booking (User)

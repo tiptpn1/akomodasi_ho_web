@@ -89,7 +89,7 @@
                                     <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal"
                                         data-id="{{ $booking->id }}"
                                         data-nama="{{ $booking->nama_pemesan }}"
-                                        data-kamar="{{ $booking->kamar->nama_kamar }}"
+                                        data-kamar="{{ $booking->kamar->nama_kamar }} - {{ $booking->kamar->mess->nama ?? '-' }}"
                                         data-jabatan="{{ $booking->jabatan }}"
                                         data-regional="{{ $booking->regional }}"
                                         data-email="{{ $booking->email }}"

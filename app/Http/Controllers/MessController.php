@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -18,22 +19,20 @@ class MessController extends Controller
 {
     public function index()
     {
-        $messes = MessModel::with('photos')->get();
+        $messes = MessModel::where('status', 1)->with('photos')->get();
         return view('mess.index', compact('messes'));
     }
 
 
     public function store(Request $request)
     {
-        
-        
+
+
         $validator = Validator::make($request->all(), [
             'nama' => 'required',
             'lokasi' => 'required',
             'lat' => 'required|numeric|between:-90,90',
             'lng' => 'required|numeric|between:-180,180',
-            'cp' => 'required|array',
-            'cp.*' => 'required|string',
             'no_cp' => 'required|array',
             'no_cp.*' => 'required|string',
             'deskripsi' => 'nullable',
@@ -60,11 +59,11 @@ class MessController extends Controller
         // $mess = MessModel::create($request->only('nama', 'lokasi', 'deskripsi'));
         $data = $request->only('nama', 'lokasi', 'deskripsi');
         $data['status'] = 1; // Tambahkan status = 1
-        $data['jarak']=$result['distance_km'];
-        $data['waktu']=$result['duration_min'];
-        $data['last_distance_sync']= Carbon::now();
-        $data['lat']=$request->lat;
-        $data['lng']=$request->lng;
+        $data['jarak'] = $result['distance_km'];
+        $data['waktu'] = $result['duration_min'];
+        $data['last_distance_sync'] = Carbon::now();
+        $data['lat'] = $request->lat;
+        $data['lng'] = $request->lng;
         $mess = MessModel::create($data);
         // Simpan data petugas
         foreach ($request->cp as $index => $namaPetugas) {
@@ -74,39 +73,39 @@ class MessController extends Controller
                 'no_petugas' => $request->no_cp[$index]
             ]);
         }
-        
+
         if ($request->hasFile('foto_utama')) {
             $file = $request->file('foto_utama');
             $filename = time() . '_' . $file->getClientOriginalName();
             $destinationPath = public_path('uploads/mess');
-            
+
             // Pastikan folder tujuan ada
             if (!File::exists($destinationPath)) {
                 File::makeDirectory($destinationPath, 0755, true);
             }
-        
+
             $file->move($destinationPath, $filename);
-        
+
             MessPhoto::create([
                 'mess_id' => $mess->id,
                 'foto' => 'uploads/mess/' . $filename,
                 'is_utama' => true  // Tandai sebagai foto utama
             ]);
         }
-        
+
         // Simpan Foto Pendukung (jika ada)
         if ($request->hasFile('foto_pendukung')) {
             foreach ($request->file('foto_pendukung') as $file) {
                 $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
                 $destinationPath = public_path('uploads/mess');
-                
+
                 // Pastikan folder tujuan ada
                 if (!File::exists($destinationPath)) {
                     File::makeDirectory($destinationPath, 0755, true);
                 }
-        
+
                 $file->move($destinationPath, $filename);
-        
+
                 MessPhoto::create([
                     'mess_id' => $mess->id,
                     'foto' => 'uploads/mess/' . $filename,
@@ -133,8 +132,6 @@ class MessController extends Controller
             'lng' => 'required|numeric|between:-180,180',
             'cp' => 'required|array',
             'cp.*' => 'required|string',
-            'no_cp' => 'required|array',
-            'no_cp.*' => 'required|string',
             'deskripsi' => 'nullable|string',
             'foto_utama' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'foto_pendukung.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
@@ -152,8 +149,8 @@ class MessController extends Controller
             $kantorLat,
             $kantorLng
         );
-        $data['jarak']=$result['distance_km'];
-        $data['waktu']=$result['duration_min'];
+        $data['jarak'] = $result['distance_km'];
+        $data['waktu'] = $result['duration_min'];
         $mess = MessModel::findOrFail($id);
         $mess->update([
             'nama' => $request->nama,
@@ -161,9 +158,9 @@ class MessController extends Controller
             'deskripsi' => $request->deskripsi,
             'jarak' => $result['distance_km'],
             'waktu' => $result['duration_min'],
-            'last_distance_sync'=> Carbon::now(),
-            'lat'=>$request->lat,
-            'lng'=>$request->lng,
+            'last_distance_sync' => Carbon::now(),
+            'lat' => $request->lat,
+            'lng' => $request->lng,
         ]);
 
         PetugasMess::where('mess_id', $mess->id)->delete();
@@ -182,15 +179,27 @@ class MessController extends Controller
             // Hapus foto utama lama dari storage & database
             $fotoUtamaLama = MessPhoto::where('mess_id', $mess->id)->where('is_utama', true)->first();
             if ($fotoUtamaLama) {
-                Storage::delete('public/' . $fotoUtamaLama->foto);
+                $oldPath = public_path($fotoUtamaLama->foto);
+                if (File::exists($oldPath)) {
+                    File::delete($oldPath);
+                }
                 $fotoUtamaLama->delete();
             }
 
             // Simpan foto utama baru
-            $fotoUtamaPath = $request->file('foto_utama')->store('uploads/mess', 'public');
+            $file = $request->file('foto_utama');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $destinationPath = public_path('uploads/mess');
+
+            if (!File::exists($destinationPath)) {
+                File::makeDirectory($destinationPath, 0755, true);
+            }
+
+            $file->move($destinationPath, $filename);
+
             MessPhoto::create([
                 'mess_id' => $mess->id,
-                'foto' => $fotoUtamaPath,
+                'foto' => 'uploads/mess/' . $filename,
                 'is_utama' => true
             ]);
         }
@@ -198,11 +207,19 @@ class MessController extends Controller
         // Tambah Foto Pendukung jika ada
         if ($request->hasFile('foto_pendukung')) {
             foreach ($request->file('foto_pendukung') as $file) {
-                $path = $file->store('uploads/mess', 'public');
+                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $destinationPath = public_path('uploads/mess');
+
+                if (!File::exists($destinationPath)) {
+                    File::makeDirectory($destinationPath, 0755, true);
+                }
+
+                $file->move($destinationPath, $filename);
+
                 MessPhoto::create([
                     'mess_id' => $mess->id,
-                    'foto' => $path,
-                    'is_utama' => false // Foto pendukung
+                    'foto' => 'uploads/mess/' . $filename,
+                    'is_utama' => false
                 ]);
             }
         }
@@ -210,11 +227,29 @@ class MessController extends Controller
         return redirect()->route('mess.index')->with('success', 'Data Mess berhasil diperbarui');
     }
 
+    public function destroyphotomess($id)
+    {
+        // dd($id);
+        $foto = MessPhoto::findOrFail($id);
+        // dd($foto);
+
+        // Hapus file dari storage
+        $path = public_path($foto->foto);
+        if (File::exists($path)) {
+            File::delete($path);
+        }
+
+        // Hapus record dari database
+        $foto->delete();
+
+        return response()->json(['message' => 'Foto berhasil dihapus.']);
+    }
+
     public function destroy($id)
     {
         $mess = MessModel::findOrFail($id);
 
-        
+
         $mess->update([
             'status' => 0,
         ]);
@@ -226,7 +261,7 @@ class MessController extends Controller
     {
         $mess = MessModel::findOrFail($id);
 
-        
+
         $mess->update([
             'status' => 1,
         ]);
@@ -235,31 +270,28 @@ class MessController extends Controller
     }
 
     public function updateJarak()
-{
-    $kantorLat = env('KANTOR_LAT');
-    $kantorLng = env('KANTOR_LNG');
+    {
+        $kantorLat = env('KANTOR_LAT');
+        $kantorLng = env('KANTOR_LNG');
 
-    $messList = MessModel::all();
+        $messList = MessModel::all();
 
-    foreach ($messList as $mess) {
-        $result = OpenRouteService::getDistanceAndDuration(
-            $mess->lat,
-            $mess->lng,
-            $kantorLat,
-            $kantorLng
-        );
+        foreach ($messList as $mess) {
+            $result = OpenRouteService::getDistanceAndDuration(
+                $mess->lat,
+                $mess->lng,
+                $kantorLat,
+                $kantorLng
+            );
 
-        if ($result) {
-            $mess->jarak = $result['distance_km'];
-            $mess->waktu = $result['duration_min'];
-            $mess->last_distance_sync = now();
-            $mess->save();
+            if ($result) {
+                $mess->jarak = $result['distance_km'];
+                $mess->waktu = $result['duration_min'];
+                $mess->last_distance_sync = now();
+                $mess->save();
+            }
         }
+
+        return Redirect::back()->with('success', 'Estimasi jarak mess berhasil diperbarui.');
     }
-
-    return Redirect::back()->with('success', 'Estimasi jarak mess berhasil diperbarui.');
-}
-
-
-
 }

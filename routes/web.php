@@ -120,6 +120,7 @@ Route::group(['prefix' => 'mess', 'as' => 'mess.'], function () {
     Route::delete('/destroy/{id}', [MessController::class, 'destroy'])->name('destroy');
     Route::delete('/aktif/{id}', [MessController::class, 'aktif'])->name('aktif');
     Route::get('/export', [MdriverController::class, 'export'])->name('export');
+    Route::delete('/destroy-photo-mess/{id}', [MessController::class, 'destroyphotomess'])->name('destroyphotomess');
 });
 
 Route::group(['prefix' => 'kamar', 'as' => 'kamar.'], function () {
@@ -128,6 +129,7 @@ Route::group(['prefix' => 'kamar', 'as' => 'kamar.'], function () {
     Route::get('/edit/{id}', [KamarController::class, 'edit'])->name('kamar.edit');
     Route::put('/update/{id}', [KamarController::class, 'update'])->name('kamar.update');
     Route::get('/{id}/reviews', [KamarController::class, 'getReviews'])->name('review');
+    Route::delete('/destroy-photo-kamar/{id}', [KamarController::class, 'destroyphotokamar'])->name('destroyphotokamar');
 
 
     // Route::get('/edit/{id}', [MdriverController::class, 'edit'])->name('edit');  // Add this route

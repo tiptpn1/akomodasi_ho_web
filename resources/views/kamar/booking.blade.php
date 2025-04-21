@@ -56,6 +56,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 @endif
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
                 {{-- <form action="{{ route('bookingkamar.index') }}" method="GET" class="mb-4">
                 <div class="row">
@@ -312,12 +321,12 @@
 
                                     <div class="mb-3">
                                         <label class="form-label bg-light">Tanggal Mulai</label>
-                                        <input type="date" name="tanggal_mulai" id="modalTanggalMulai" class="form-control" readonly disabled>
+                                        <input type="date" name="tanggal_mulai" id="modalTanggalMulai" class="form-control" readonly>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="form-label bg-light">Tanggal Selesai</label>
-                                        <input type="date" name="tanggal_selesai" id="modalTanggalSelesai" class="form-control" readonly disabled>
+                                        <input type="date" name="tanggal_selesai" id="modalTanggalSelesai" class="form-control" readonly>
                                     </div>
 
                                     <div class="mb-3">

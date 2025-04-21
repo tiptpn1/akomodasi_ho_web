@@ -22,11 +22,11 @@ class KamarController extends Controller
         // $mess=MessModel::all();
         // $jabatan=Jabatan::all();
         // return view('kamar.index', compact('rooms','mess','jabatan'));
-        $rooms = KamarModel::with(['mess', 'photos'])
+        $rooms = KamarModel::where('status', 1)->with(['mess', 'photos'])
         ->withAvg('reviews', 'rating') // Ambil rata-rata rating
         ->get();
 
-        $mess = MessModel::all();
+        $mess = MessModel::where('status', 1)->get();
         $jabatan = Jabatan::all();
         foreach ($rooms as $room) {
             $peruntukanIds = explode(',', $room->peruntukan);
@@ -125,7 +125,7 @@ class KamarController extends Controller
     public function edit($id)
     {
         $kamar = KamarModel::with('photos')->findOrFail($id);
-        $mess=MessModel::all();
+        $mess = MessModel::where('status', 1)->get();
         $jabatan=Jabatan::all();
         return response()->json([
             'kamar' => $kamar,
@@ -219,7 +219,23 @@ class KamarController extends Controller
         return redirect()->route('kamar.index')->with('success', 'Kamar berhasil diperbarui.');
     }
 
+    public function destroyphotokamar($id)
+    {
+        // dd($id);
+        $foto = KamarPhoto::findOrFail($id);
+        // dd($foto);
 
+        // Hapus file dari storage
+        $path = public_path($foto->foto);
+        if (File::exists($path)) {
+            File::delete($path);
+        }
+
+        // Hapus record dari database
+        $foto->delete();
+
+        return response()->json(['message' => 'Foto berhasil dihapus.']);
+    }
 
     public function destroy($id)
     {
