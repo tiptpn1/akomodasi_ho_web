@@ -68,7 +68,8 @@ public function index(Request $request)
     $jabatan_id = $request->query('jabatan_id', 'all');
 
     // Ambil daftar Mess dan Jabatan untuk filter dropdown
-    $messes = MessModel::all();
+    // $messes = MessModel::all();
+    $messes = MessModel::where('status', 1)->get();
     $jabatans = Jabatan::all();
 
     $regionals = [
@@ -81,8 +82,6 @@ public function index(Request $request)
         $kamars = collect();
         return view('kamar.booking', compact('kamars', 'tanggal_mulai', 'tanggal_selesai', 'messes', 'jabatans','regionals'));
     }
-
-
     $kamars = KamarModel::with('reviews')->when($mess_id !== 'all', function ($query) use ($mess_id) {
         return $query->where('mess_id', $mess_id);
     })

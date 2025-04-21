@@ -19,7 +19,7 @@ class MessController extends Controller
 {
     public function index()
     {
-        $messes = MessModel::with('photos')->get();
+        $messes = MessModel::where('status', 1)->with('photos')->get();
         return view('mess.index', compact('messes'));
     }
 

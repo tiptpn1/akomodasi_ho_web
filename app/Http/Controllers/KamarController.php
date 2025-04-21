@@ -22,11 +22,11 @@ class KamarController extends Controller
         // $mess=MessModel::all();
         // $jabatan=Jabatan::all();
         // return view('kamar.index', compact('rooms','mess','jabatan'));
-        $rooms = KamarModel::with(['mess', 'photos'])
+        $rooms = KamarModel::where('status', 1)->with(['mess', 'photos'])
         ->withAvg('reviews', 'rating') // Ambil rata-rata rating
         ->get();
 
-        $mess = MessModel::all();
+        $mess = MessModel::where('status', 1)->get();
         $jabatan = Jabatan::all();
         foreach ($rooms as $room) {
             $peruntukanIds = explode(',', $room->peruntukan);
@@ -125,7 +125,7 @@ class KamarController extends Controller
     public function edit($id)
     {
         $kamar = KamarModel::with('photos')->findOrFail($id);
-        $mess=MessModel::all();
+        $mess = MessModel::where('status', 1)->get();
         $jabatan=Jabatan::all();
         return response()->json([
             'kamar' => $kamar,
