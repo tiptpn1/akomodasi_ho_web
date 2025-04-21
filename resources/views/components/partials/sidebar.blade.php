@@ -59,11 +59,11 @@
                         <div class="sb-sidenav-menu-heading">Manajemen Master Data</div>
                         <a class="nav-link" href="{{ route('masterkendaraan.index') }}">
                             <div class="sb-nav-link-icon"></div>
-                            Master Kendaraan
+                            Master Kendaraan<br>(Permintaan Kendaraan)
                         </a>
                         <a class="nav-link" href="{{ route('masterdriver.index') }}">
                             <div class="sb-nav-link-icon"></div>
-                            Master Driver
+                            Master Driver<br>(Permintaan Kendaraan)
                         </a>
                         <a class="nav-link" href="{{ route('mess.index') }}">
                             <div class="sb-nav-link-icon"></div>
