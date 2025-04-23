@@ -69,9 +69,9 @@ class ReviewController extends Controller
     }
 
     // Pastikan hanya booking yang sudah diapprove yang bisa review
-    if ($review->booking->status !== 'approved') {
-        abort(403, 'Anda hanya bisa memberikan review jika booking telah disetujui.');
-    }
+    // if ($review->booking->status !== 'approved' || $review->booking->status !== 'checked_out') {
+    //     abort(403, 'Anda hanya bisa memberikan review jika booking telah disetujui.');
+    // }
 
     return view('reviews.form', compact('review'));
 }

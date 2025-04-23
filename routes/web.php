@@ -150,7 +150,9 @@ Route::group(['prefix' => 'bookingkamar', 'as' => 'bookingkamar.'], function () 
     Route::patch('/booking/cancel/{id}', [BookingKamarController::class, 'cancel'])->name('cancel');
     Route::patch('/booking/perpanjangan/{id}', [BookingKamarController::class, 'perpanjangan'])->name('perpanjangan');
     // Route::patch('/booking/perpanjangan', [BookingKamarController::class, 'perpanjangan'])->name('perpanjangan');
-
+    Route::patch('/booking/checkout/{id}', [BookingKamarController::class, 'checkout'])->name('checkout');
+    Route::get('/export', [BookingKamarController::class, 'export'])->name('export');
+    // Route::get('/list-booking', [BookingKamarController::class, 'list_booking'])->name('bookingkamar.list');
 });
 
 

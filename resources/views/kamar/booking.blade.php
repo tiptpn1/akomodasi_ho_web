@@ -343,7 +343,7 @@
 
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                    <button type="submit" class="btn btn-primary">Booking</button>
+                                    <button type="submit" class="btn btn-primary" id="btnBooking">Booking</button>
                                 </div>
                             </form>
 
@@ -685,11 +685,22 @@
                     .catch(error => console.error('Error:', error));
             }
         </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const bookingForm = document.querySelector('#bookingModal form');
+        const bookingBtn = document.getElementById('btnBooking');
 
+        bookingForm.addEventListener('submit', function () {
+            // Disable tombol
+            bookingBtn.disabled = true;
 
-
-
-
-
+            // Ubah isi tombol ke spinner
+            bookingBtn.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Proses...
+            `;
+        });
+    });
+</script>
     </x-slot>
 </x-layouts.app>

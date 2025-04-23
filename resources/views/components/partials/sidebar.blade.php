@@ -9,6 +9,11 @@
                     <div class="sb-nav-link-icon"></div>
                     Agenda Kendaraan
                 </a> --}}
+                @elseif (Auth::user()->hakAkses->hak_akses_id == 5)
+                    <a class="nav-link" href="{{ route('bookingkamar.list_booking') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Daftar Booking Kamar Petugas Mess
+                    </a>
                 @else
                     {{-- <a class="nav-link" href="{{ route('admin.dashboard.index') }}">
                         <div class="sb-nav-link-icon"></div>
