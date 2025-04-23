@@ -53,7 +53,7 @@ class BookingKamarController extends Controller
 
 
         $kamars = KamarModel::with('reviews')->when($mess_id !== 'all', function ($query) use ($mess_id) {
-            return $query->where('mess_id', $mess_id);
+            return $query->where('mess_id', $mess_id)->where('status', 1);
         })
         ->when($jabatan_id !== 'all', function ($query) use ($jabatan_id) {
             return $query->whereRaw("FIND_IN_SET(?, peruntukan)", [$jabatan_id]);
