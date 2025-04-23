@@ -250,7 +250,7 @@
                                                 <input type="date" class="form-control" id="tgl_awal" name="tgl_awal">
                                             </div>
                                             <div class="form-group">
-                                                <label for="nama_group">Divisi</label>
+                                                <label for="nama_group">Mess</label>
                                                 <!-- <input type="text" class="form-control" id="nama_group" name="nama_group"> -->
                                                 <select class="form-control" name="mess">
                                                 @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
