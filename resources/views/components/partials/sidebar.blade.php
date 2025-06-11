@@ -9,6 +9,11 @@
                     <div class="sb-nav-link-icon"></div>
                     Agenda Kendaraan
                 </a> --}}
+                @elseif (Auth::user()->hakAkses->hak_akses_id == 5)
+                    <a class="nav-link" href="{{ route('bookingkamar.list_booking') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Daftar Booking Kamar Petugas Mess
+                    </a>
                 @else
                     {{-- <a class="nav-link" href="{{ route('admin.dashboard.index') }}">
                         <div class="sb-nav-link-icon"></div>
@@ -36,11 +41,11 @@
                     </a>
                     <a class="nav-link" href="{{ route('bookingkamar.index') }}">
                         <div class="sb-nav-link-icon"></div>
-                        Booking Kamar
+                        Booking Kamar Mess
                     </a>
                     <a class="nav-link" href="{{ route('bookingkamar.list_booking') }}">
                         <div class="sb-nav-link-icon"></div>
-                        Daftar Booking Kamar
+                        Daftar Booking Mess
                     </a>
                     @if (Auth::user()->hakAkses->hak_akses_id == 2)
                     <a class="nav-link" href="{{ route('kaskecil.index') }}">

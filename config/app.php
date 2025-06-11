@@ -189,6 +189,7 @@ return [
         'DataTables' => Yajra\DataTables\Facades\DataTables::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
         'Agent' => Jenssegers\Agent\Facades\Agent::class,
+        'Whatsapp' => App\Facades\Whatsapp::class,
     ])->toArray(),
 
 ];

@@ -46,13 +46,50 @@
         <main>
             <div class="container-fluid">
                 <h2 class="mb-4">Daftar Booking Kamar</h2>
-
+                <button id="btnExport" type="button" data-toggle="modal" data-target="#exportModal" class="btn btn-warning">Export Data</button>
+                <br><br>
                 @if(session('success'))
                     <div class="alert alert-success">{{ session('success') }}</div>
                 @endif
                 @if(session('error'))
                     <div class="alert alert-warning">{{ session('error') }}</div>
                 @endif
+                <form method="GET" action="{{ route('bookingkamar.list_booking') }}" class="mb-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>Mess</label>
+                            <select name="mess" class="form-control">
+                                <option value="all">-- Semua Mess --</option>
+                                @foreach($mess as $m)
+                                    <option value="{{ $m->id }}" {{ request('mess') == $m->id ? 'selected' : '' }}>{{ $m->nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Tanggal Mulai (Dari)</label>
+                            <input type="date" name="tgl_awal" class="form-control" value="{{ request('tgl_awal') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Tanggal Selesai (Sampai)</label>
+                            <input type="date" name="tgl_akhir" class="form-control" value="{{ request('tgl_akhir') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Status</label>
+                            <select name="status" class="form-control">
+                                <option value="all">-- Semua Status --</option>
+                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
+                                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                <option value="checked_out" {{ request('status') == 'checked_out' ? 'selected' : '' }}>Checked Out</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{{ route('bookingkamar.list_booking') }}" class="btn btn-secondary">Reset</a>
+                    </div>
+                </form>
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped" id="dataTables-kaskecil">
                         <thead>
@@ -68,6 +105,7 @@
                         </thead>
                         <tbody>
                             @foreach($bookings as $index => $booking)
+                            @if (!empty(Auth::user()->mess))
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $booking->nama_pemesan }}</td>
@@ -80,6 +118,7 @@
                                         @elseif($booking->status == 'approved') bg-success 
                                         @elseif($booking->status == 'rejected') bg-danger 
                                         @elseif($booking->status == 'cancelled') bg-secondary 
+                                        @elseif($booking->status == 'checked_out') bg-primary
                                         @endif">
                                         {{ ucfirst($booking->status) }}
                                     </span>
@@ -101,22 +140,68 @@
                                         data-dokumen="{{ $booking->dokumen_pendukung }}">
                                         Detail
                                     </button>
-
+                                    
+                                    @if($booking->status == 'approved')
+                                    <form action="{{ route('bookingkamar.checkout', $booking->id) }}" method="POST" class="d-inline show-loading-on-submit">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-warning btn-sm">Checkout</button>
+                                        </form>
+                                    @endif
+                                    
+                                </td>
+                            </tr>
+                            
+                            @else
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $booking->nama_pemesan }}</td>
+                                <td>{{ $booking->kamar->nama_kamar }} - {{ $booking->kamar->mess->nama ?? '-' }}</td>
+                                <td>{{ $booking->tanggal_mulai }}</td>
+                                <td>{{ $booking->tanggal_selesai }}</td>
+                                <td>
+                                    <span class="badge 
+                                        @if($booking->status == 'pending') bg-warning 
+                                        @elseif($booking->status == 'approved') bg-success 
+                                        @elseif($booking->status == 'rejected') bg-danger 
+                                        @elseif($booking->status == 'cancelled') bg-secondary  
+                                        @elseif($booking->status == 'checked_out') bg-primary
+                                        @endif">
+                                        {{ ucfirst($booking->status) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <!-- Tombol Detail -->
+                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal"
+                                        data-id="{{ $booking->id }}"
+                                        data-nama="{{ $booking->nama_pemesan }}"
+                                        data-kamar="{{ $booking->kamar->nama_kamar }}"
+                                        data-jabatan="{{ $booking->jabatan }}"
+                                        data-regional="{{ $booking->regional }}"
+                                        data-email="{{ $booking->email }}"
+                                        data-no_hp="{{ $booking->no_hp }}"
+                                        data-tanggal_mulai="{{ $booking->tanggal_mulai }}"
+                                        data-tanggal_selesai="{{ $booking->tanggal_selesai }}"
+                                        data-catatan="{{ $booking->catatan }}"
+                                        data-status="{{ ucfirst($booking->status) }} ({{ $booking->keterangan ?? '-' }})"
+                                        data-dokumen="{{ $booking->dokumen_pendukung }}">
+                                        Detail
+                                    </button>
                                     @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
                                         @if($booking->status == 'pending')
-                                            <form action="{{ route('bookingkamar.approve', $booking->id) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('bookingkamar.approve', $booking->id) }}" method="POST" class="d-inline show-loading-on-submit">
                                                 @csrf
                                                 @method('PATCH')
                                                 <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                             </form>
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal"
+                                            <button class="btn btn-danger btn-sm show-loading-on-submit" data-bs-toggle="modal" data-bs-target="#rejectModal"
                                                 data-id="{{ $booking->id }}">
                                                 Reject
                                             </button>
                                         @endif
                                         @if($booking->status == 'approved')
                                         <!-- buatkan tombol untuk memunculkan modal agar dapat mengedit/memperpanjang tanggal selesai menginap disini  -->
-                                        <button class="btn btn-primary btn-sm" 
+                                        <button class="btn btn-primary btn-sm show-loading-on-submit" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#perpanjangModal"
                                             data-id="{{ $booking->id }}"
@@ -126,6 +211,11 @@
                                             data-tanggal_selesai="{{ $booking->tanggal_selesai }}">
                                             Perpanjang
                                         </button>
+                                        <form action="{{ route('bookingkamar.checkout', $booking->id) }}" method="POST" class="d-inline show-loading-on-submit">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-warning btn-sm">Checkout</button>
+                                        </form>
                                         @endif
                                     @elseif(auth()->user()->role == 'user' && $booking->status == 'pending')
                                         <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#cancelModal"
@@ -135,11 +225,74 @@
                                     @endif
                                 </td>
                             </tr>
+                            @endif
                             @endforeach
                         </tbody>
                     </table>
                 </div>
             </div>
+            <!-- Modal Export -->
+            <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exportModalLabel">Export Data Booking</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="exportForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="tgl_pengajuan_awal">Tanggal Awal</label>
+                                                <input type="date" class="form-control" id="tgl_awal" name="tgl_awal">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="nama_group">Mess</label>
+                                                <!-- <input type="text" class="form-control" id="nama_group" name="nama_group"> -->
+                                                <select class="form-control" name="mess">
+                                                @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
+                                                    <option value="" disabled selected>Pilih Mess</option>
+                                                    <option value='all'>Seluruh Mess</option>
+                                                    @foreach ($mess as $data_mess)
+                                                    <option value='{{ $data_mess->id }}'>{{ $data_mess->nama }}</option>
+                                                    @endforeach
+                                                    
+                                                @endif
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="tgl_pengajuan_akhir">Tanggal Akhir</label>
+                                                <input type="date" class="form-control" id="tgl_akhir" name="tgl_akhir">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="status">Status</label>
+                                                <!-- <input type="text" class="form-control" id="nomor_gl" name="nomor_gl"> -->
+                                                <select class="form-control" name="status">
+                                                    <option value="" disabled selected>Pilih Status</option>
+                                                    <option value='approved'>Approved</option>
+                                                    <option value='rejected'>Rejected</option>
+                                                    <option value='canceled'>Canceled</option>
+                                                    <option value='pending'>Pending</option>
+                                                    <option value='checked_out'>Check Out</option>
+                                                    <option value='all'>Seluruh Status</option>
+                                                    
+                                                </select>
+                                            </div>
+                                           
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" id="exportBtn">Export to Excel</button>
+                                    <button type="reset" class="btn btn-secondary mr-2" id="resetBtn">Reset Filter</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             <!-- Modal Perpanjang -->
             <div class="modal fade" id="perpanjangModal" tabindex="-1" aria-labelledby="perpanjangModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -195,6 +348,20 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Modal Loading -->
+            <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center">
+                <div class="modal-body">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5>Proses...</h5>
+                </div>
+                </div>
+            </div>
             </div>
 
             <!-- Modal Reject Booking -->
@@ -296,6 +463,34 @@
                 modal.find('#perpanjangForm').attr('action', `/bookingkamar/booking/perpanjangan/${id}`);
             })
             </script>
+        <script>
+            $('#exportBtn').on('click', function() {
+                var formData = $('#exportForm').serialize(); // Get the form data
+
+                // Trigger the Excel export request with the selected filters
+                window.location.href = "{{ route('bookingkamar.export') }}?" + formData;
+
+                // Use JavaScript to simulate a click event on the element with data-dismiss="modal"
+                $('[data-dismiss="modal"]').click();
+            });
+            // });
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const forms = document.querySelectorAll('form.show-loading-on-submit');
+
+                forms.forEach(function(form) {
+                    form.addEventListener('submit', function () {
+                        const modalElement = document.getElementById('loadingModal');
+                        const loadingModal = new bootstrap.Modal(modalElement, {
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+                        loadingModal.show();
+                    });
+                });
+            });
+        </script>
 
     </x-slot>
 </x-layouts.app>

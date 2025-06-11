@@ -34,6 +34,7 @@ class PKendaraan extends Model
         'apprv',
         'created_at',
         'updated_at',
+        'ket',
     ];
 
     // Relasi ke MDriver (driver = id_driver)

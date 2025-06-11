@@ -153,9 +153,9 @@
                                             </div>
 
                                             <div class="form-group col-md-6">
-                                                <b>Upload Memo <span class="text-danger">*</span></b>
+                                                <b>Upload Memo</b>
                                                 <input type="file" class="form-control" name="file_memo"
-                                                    id="file_memo" required accept=".pdf, .jpg, .jpeg, .png">
+                                                    id="file_memo" accept=".pdf, .jpg, .jpeg, .png">
                                             </div>
 
                                         </div>
@@ -172,6 +172,7 @@
                                                         </option>
                                                     @endforeach
                                                     <option value="rental">Rental</option>
+                                                    <option value="99">Ojek Online</option>
                                                 </select>
                                             </div>
 
@@ -200,6 +201,13 @@
                                                 <b>Kendaraan Rental <span class="text-danger">*</span></b>
                                                 <input type="text" class="form-control" name="rental_kendaraan"
                                                     id="rental_kendaraan">
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                        <div class="form-group col-md-12">
+                                                <b>Keterangan </b><span>(jika ada)</span>
+                                                <input class="form-control" name="ket" id="ket" rows="3"></input>
                                             </div>
                                         </div>
 
@@ -304,7 +312,7 @@
                                                     id='pejemputan1' required>
                                             </div>
                                             <div class="form-group col-md-6">
-                                                <b>Upload Memo <span class="text-danger">*</span></b>
+                                                <b>Upload Memo</b>
                                                 <input type="file" class="form-control" name="file_memo1"
                                                     id="file_memo1" accept=".pdf, .jpg, .jpeg, .png">
                                             </div>
@@ -335,7 +343,7 @@
                                             <!-- Input untuk Nama Rental -->
                                             <div id="rental_driver_input" class="form-group col-md-12"
                                                 style="display: none;">
-                                                <b>Nama Rental Driver <span class="text-danger">*</span></b>
+                                                <b>Nama Rental Driver <span class="text-danger">*</span></b><span> (Nama dan No.HP)</span>
                                                 <input type="text" class="form-control" name="rental_driver"
                                                     id="rental_driver">
                                             </div>
@@ -343,11 +351,18 @@
                                             <!-- Input untuk Kendaraan Rental -->
                                             <div id="rental_kendaraan_input" class="form-group col-md-12"
                                                 style="display: none;">
-                                                <b>Kendaraan Rental <span class="text-danger">*</span></b>
+                                                <b>Kendaraan Rental <span class="text-danger">*</span></b><span> (Kendaraan dan Plat Nomor)</span>
                                                 <input type="text" class="form-control" name="rental_kendaraan"
                                                     id="rental_kendaraan">
                                             </div>
 
+                                        </div>
+                                        <div class="row">
+                                        <div class="form-group col-md-12">
+                                                <b>Keterangan </b><span>(jika ada)</span>
+                                                <input type="text" class="form-control" name="ket1"
+                                                    id='ket1' rows="3">
+                                            </div>
                                         </div>
 
                                         <!-- </div> -->
@@ -460,7 +475,7 @@
                                         <th>Penjemputan</th>
                                         <th>File Memo</th>
                                         <th>Driver</th>
-                                        <th>Plat Nomor</th>
+                                        <th>Kendaraan</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -571,10 +586,26 @@
                                             </td>
 
                                             <td align="center">
-                                                {{ $item->driverDetail ? $item->driverDetail->nama_driver . ' - ' . $item->driverDetail->no_hp : '(Rental) ' . $item->rental_driver }}
+                                                @if ($item->driverDetail)
+                                                    {{ $item->driverDetail->nama_driver }} - {{ $item->driverDetail->no_hp }}
+                                                @elseif ($item->driver == 99)
+                                                    (Ojek Online)
+                                                @elseif ($item->driver == null)
+                                                    (Rental)<br>{{ $item->rental_driver }}
+                                                @else
+                                                    -
+                                                @endif
                                             </td>
                                             <td align="center">
-                                                {{ $item->kendaraanDetail ? $item->kendaraanDetail->nopol . ' - ' . $item->kendaraanDetail->tipe_kendaraan : $item->rental_kendaraan }}
+                                                @if ($item->kendaraanDetail)
+                                                    {{ $item->kendaraanDetail->nopol }} - {{ $item->kendaraanDetail->tipe_kendaraan }}
+                                                @elseif ($item->driver == 99)
+                                                    (Ojek Online)
+                                                @elseif ($item->driver == null)
+                                                    (Rental)<br>{{ $item->rental_kendaraan }}
+                                                @else
+                                                    -
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -698,6 +729,7 @@
                                 });
 
                                 driverSelect.append('<option value="rental">Rental</option>');
+                                driverSelect.append('<option value="99">Ojek Online</option>');
                             },
                             error: function(xhr, status, error) {
                                 console.error("Gagal mengambil data driver:", error);
@@ -740,6 +772,7 @@
                                 });
 
                                 driverSelect.append('<option value="rental">Rental</option>');
+                                driverSelect.append('<option value="99">Ojek Online</option>');
                             },
                             error: function(xhr, status, error) {
                                 console.error("Gagal mengambil data driver:", error);
@@ -758,23 +791,18 @@
                 });
             });
         </script> --}}
-
-
-
-
-
-
         <script>
             $(document).ready(function() {
                 // Set tanggal hari ini pada input secara langsung
-                $('#tgl_berangkat').val(moment().add(1, 'days').format('DD-MM-YYYY'));
+                // $('#tgl_berangkat').val(moment().add(1, 'days').format('DD-MM-YYYY'));
+                $('#tgl_berangkat').val(moment().format('DD-MM-YYYY'));
 
                 // Inisialisasi datepicker setelah nilai input di-set
                 $('#tgl_berangkat').daterangepicker({
                     singleDatePicker: true,
                     showDropdowns: true,
-                    startDate: moment().add(1, 'days'), // Tanggal default adalah hari ini
-                    minDate: moment().add(1, 'days'), // Blokir tanggal sebelumnya
+                    // startDate: moment().add(1, 'days'), // Tanggal default adalah hari ini
+                    // minDate: moment().add(1, 'days'), // Blokir tanggal sebelumnya
                     locale: {
                         format: 'DD-MM-YYYY' // Format tanggal
                     }
@@ -787,14 +815,15 @@
         <script>
             $(document).ready(function() {
                 // Set tanggal besok pada input secara langsung
-                $('#tgl_berangkat1').val(moment().add(1, 'days').format('DD-MM-YYYY'));
+                // $('#tgl_berangkat1').val(moment().add(1, 'days').format('DD-MM-YYYY'));
+                $('#tgl_berangkat1').val(moment().format('DD-MM-YYYY'));
 
                 // Inisialisasi datepicker setelah nilai input di-set
                 $('#tgl_berangkat1').daterangepicker({
                     singleDatePicker: true,
                     showDropdowns: true,
-                    startDate: moment().add(1, 'days'), // Tanggal default adalah besok
-                    minDate: moment().add(1, 'days'), // Blokir tanggal hari ini dan sebelumnya
+                    // startDate: moment().add(1, 'days'), // Tanggal default adalah besok
+                    // minDate: moment().add(1, 'days'), // Blokir tanggal hari ini dan sebelumnya
                     locale: {
                         format: 'DD-MM-YYYY' // Format tanggal
                     }
@@ -832,110 +861,6 @@
                 document.getElementById("form_edit").reset(); // Reset semua field form
             }
         </script>
-
-
-        {{-- <script>
-            $(document).ready(function() {
-                // Fungsi untuk menangani perubahan dropdown driver
-                function handleDriverChange() {
-                    let driverVal = $('#driver1').val();
-                    let driverWrapper = $('#driver1').closest('.form-group'); // Ambil div pembungkus
-
-                    if (driverVal === "Rental") {
-                        $('#rental_driver_input, #rental_kendaraan_input').show();
-                        $('#no_polisi1').val(null).prop('disabled', true).closest('.form-group').hide();
-                        driverWrapper.removeClass('col-md-6').addClass('col-md-12'); // Ubah lebar kolom
-                    } else {
-                        $('#rental_driver_input, #rental_kendaraan_input').hide();
-                        $('#rental_driver, #rental_kendaraan').val('');
-                        $('#no_polisi1').prop('disabled', false).closest('.form-group').show();
-                        driverWrapper.removeClass('col-md-12').addClass('col-md-6'); // Kembalikan lebar kolom
-                    }
-                }
-
-                // Ketika dropdown driver diubah
-                $('#driver1').on('change', handleDriverChange);
-
-                // Saat form edit dibuka
-                $(document).on('click', '.btn-info', function() {
-                    resetFormEdit();
-                    const id = $(this).data('id');
-
-                    $.ajax({
-                        url: `/pkendaraan/edit/${id}`,
-                        method: 'GET',
-                        success: function(response) {
-                            let data = response.data;
-                            let drivers = response.drivers;
-                            let kendaraans = response.kendaraans;
-                            //  Format tanggal
-                            let tglBerangkat = data.tgl_berangkat ? data.tgl_berangkat.split('-')
-                                .reverse()
-                                .join('-') : '';
-
-                            // Set value untuk input
-                            $('input[name="id"]').val(data.id);
-                            $('input[name="divisi1"]').val(data.divisi);
-                            $('input[name="nama_pic1"]').val(data.nama_pic);
-                            $('input[name="tgl_berangkat1"]').val(tglBerangkat);
-                            $('input[name="jam_berangkat1"]').val(data.jam_berangkat);
-                            $('input[name="jam_kembali1"]').val(data.jam_kembali);
-                            $('#jenis_tujuan1').val(data.jenis_tujuan);
-                            $('input[name="tujuan1"]').val(data.tujuan);
-                            $('input[name="pejemputan1"]').val(data.pejemputan);
-
-                            // Set dropdown driver
-                            // $('#driver1').html(`<option value="" disabled>Pilih Driver</option>`);
-                            // $('#driver1').append(`<option value="Rental">Rental</option>`);
-                            // drivers.forEach(driver => {
-                            //     let selected = (driver.id_driver == data.driver) ?
-                            //         'selected' : '';
-                            //     $('#driver1').append(
-                            //         `<option value="${driver.id_driver}" ${selected}>${driver.nama_driver} - ${driver.no_hp}</option>`
-                            //     );
-                            // });
-
-                            // Set dropdown kendaraan
-                            $('#no_polisi1').html(
-                                `<option value="" disabled selected>Pilih Kendaraan</option>`);
-                            kendaraans.forEach(kendaraan => {
-                                let selected = (kendaraan.id_kendaraan == data.no_polisi) ?
-                                    'selected' : '';
-                                $('#no_polisi1').append(
-                                    `<option value="${kendaraan.id_kendaraan}" ${selected}>${kendaraan.nopol} - ${kendaraan.tipe_kendaraan}</option>`
-                                );
-                            });
-
-                            // Jika driver adalah "Rental", tampilkan data rental_driver & rental_kendaraan
-                            let driverWrapper = $('#driver1').closest(
-                                '.form-group'); // Ambil div pembungkus
-
-                            if (data.driver === "Rental") {
-                                $('#driver1').val("Rental"); // Pastikan "Rental" terpilih
-                                $('#rental_driver_input, #rental_kendaraan_input').show();
-                                $('input[name="rental_driver"]').val(data.rental_driver);
-                                $('input[name="rental_kendaraan"]').val(data.rental_kendaraan);
-                                $('#no_polisi1').val(null).prop('disabled', true).closest(
-                                    '.form-group').hide();
-                                driverWrapper.removeClass('col-md-6').addClass(
-                                    'col-md-12'); // Ubah lebar kolom
-                            } else {
-                                $('#rental_driver_input, #rental_kendaraan_input').hide();
-                                $('#rental_driver, #rental_kendaraan').val('');
-                                $('#no_polisi1').prop('disabled', false).closest('.form-group')
-                                    .show();
-                                driverWrapper.removeClass('col-md-12').addClass(
-                                    'col-md-6'); // Kembalikan lebar kolom
-                            }
-                        },
-                        error: function(xhr) {
-                            console.error(xhr.responseText);
-                        }
-                    });
-                });
-            });
-        </script> --}}
-
 
         <script>
             // $(document).ready(function() {
@@ -1226,6 +1151,7 @@
                             });
 
                             driverSelect.append('<option value="Rental">Rental</option>');
+                            driverSelect.append('<option value="99">Ojek Online</option>');
                             driverSelect.val(currentSelection); // Pastikan pilihan tetap terpilih
                             handleRentalFields(currentSelection);
 
@@ -1339,6 +1265,7 @@
                             $('input[name="jam_kembali1"]').val(data.jam_kembali);
                             $('#jenis_tujuan1').val(data.jenis_tujuan);
                             $('input[name="tujuan1"]').val(data.tujuan);
+                            $('input[name="ket1"]').val(data.ket);
                             $('input[name="pejemputan1"]').val(data.pejemputan);
 
                             // Jika driver & no_polisi null, set driver ke "Rental"
