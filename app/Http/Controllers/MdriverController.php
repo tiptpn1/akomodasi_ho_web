@@ -6,12 +6,14 @@ use App\Exports\MasterDriverExport;
 use Illuminate\Http\Request;
 use App\Models\MDriver;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Auth;
 
 class MdriverController extends Controller
 {
     public function index()
     {
-        $drivers = MDriver::all(); // Mengambil semua data dari tabel driver
+        // $drivers = MDriver::all(); // Mengambil semua data dari tabel driver
+        $drivers = MDriver::where('driver_regional_id',Auth::user()->bagian->regional->id_regional)->get();
         return view('driver.index', compact('drivers'));
     }
 
@@ -22,6 +24,7 @@ class MdriverController extends Controller
         ]);
 
         MDriver::create([
+            'driver_regional_id' => Auth::user()->bagian->regional->id_regional,
             'nama_driver' => $request->nama_driver,
             'no_hp' => $request->no_hp,
         ]);

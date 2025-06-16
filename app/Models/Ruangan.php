@@ -29,16 +29,32 @@ class Ruangan extends Model
         return $this->hasMany(SendVicon::class, 'id_ruangan', 'id');
     }
 
-    public function getDataDistinct($column, $where = null)
-    {
-        $query = self::select($column)->where('lantai', '>', 0);
+    // public function getDataDistinct($column, $where = null)
+    // {
+    //     $query = self::select($column)->where('lantai', '>', 0);
 
-        if ($where) {
-            $query->where($where);
-        }
+    //     if ($where) {
+    //         $query->where($where);
+    //     }
 
-        return $query->distinct()->get();
+    //     return $query->distinct()->get();
+    // }
+
+    public function getDataDistinct($column, $where = null, $regionalId = null) // Tambahkan $regionalId
+{
+    $query = self::select($column)->where('lantai', '>', 0);
+
+    if ($where) {
+        $query->where($where);
     }
+
+    // Tambahkan kondisi where untuk regional jika $regionalId diberikan
+    if ($regionalId) {
+        $query->where('ruangan_regional_id', $regionalId);
+    }
+
+    return $query->distinct(); // <--- PENTING: Hapus .get() di sini
+}
 
     public function getSpesificData($where, $date = null)
     {
@@ -47,7 +63,7 @@ class Ruangan extends Model
             if ($date) {
                 $q->where('tanggal', $date);
             }
-        }, 'sendVicons.jenisrapat', 'sendVicons.bagian'])->where($where)->get();
+        }, 'sendVicons.jenisrapat', 'sendVicons.bagian'])->where($where);
     }
 
     public static function cekviconRuanganWaktu($tanggal, $waktu1, $waktu2)
@@ -62,5 +78,10 @@ class Ruangan extends Model
                     ->where('waktu2', '<=', $waktu2)
                     ->whereNotNull('id_ruangan');
             });
+    }
+
+    public function regional() 
+    {
+        return $this->belongsTo(MRegional::class, 'ruangan_regional_id', 'id_regional');
     }
 }

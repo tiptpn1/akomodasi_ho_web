@@ -1,308 +1,217 @@
 <x-layouts.app>
+    {{-- Slot untuk custom page styles --}}
     <x-slot name="styles">
         <style>
-            .color-legend {
-                display: flex;
-                flex-direction: row;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 20px;
-            }
-
-            @media (max-width: 494px) {
-                .color-legend {
-                    flex-direction: column !important;
-                }
-            }
-
-            .color-legend>div {
-                display: flex;
-                flex-direction: row;
-                gap: 5px;
-            }
-
-            .square {
-                border: 1px solid black;
-                width: 20px;
-                height: 20px;
-            }
-
-            .green {
-                background-color: rgb(8, 158, 8);
-            }
-
-            .yellow {
-                background-color: rgb(241, 197, 37);
-            }
-
-            .blue {
-                background-color: rgb(21, 223, 210);
-            }
-
-            .grey {
-                background-color: rgb(177, 177, 177);
-            }
-
-            th,
-            td {
-                font-size: 12px;
-            }
-
-            table {
-                width: 100% !important;
-            }
-
-            .table-overflow-x {
-                width: 100% !important;
-                overflow-x: scroll !important;
-            }
-
-            .table-overflow-x::-webkit-scrollbar {
-                height: 0;
-                background: transparent;
-            }
-
-            .hover-pointer:hover {
-                cursor: pointer;
-            }
+            th, td { font-size: 12px; vertical-align: middle !important; text-align: center; }
+            table { width: 100% !important; table-layout: fixed; }
+            .table-overflow-x { width: 100% !important; overflow-x: auto !important; }
+            .table-overflow-x::-webkit-scrollbar { height: 5px; background: #f1f1f1; }
+            .table-overflow-x::-webkit-scrollbar-thumb { background: #888; border-radius: 5px; }
+            .hover-pointer:hover { cursor: pointer; opacity: 0.8; }
+            .trip-cell { background-color: #3498db; color: white; font-weight: bold; border: 1px solid #2980b9 !important; }
+            .available-cell { background-color: #ecf0f1; }
+            #detail .modal-body td { padding: 5px; vertical-align: top; font-size: 14px; }
         </style>
     </x-slot>
 
+    {{-- Slot Konten Utama --}}
     <x-slot name="slot">
         <div id="layoutSidenav_content">
             <main>
-                <div class="container-fluid">
-                    <h3 class="mt-4">PT Perkebunan Nusantara I <br /> <em>Head Office</em></h3>
-                    <br>
+                <div class="container-fluid px-4">
+                    <h3 class="mt-4">Jadwal Penggunaan Kendaraan <br /> <em>{{ Auth::user()->bagian->regional->nama_regional}}</em></h3>
                     <div class="card mb-4">
                         <div class="card-body">
-                            <div class="row mb-2">
-                                <b>Ruangan Rapat:</b>
-                                <div class="ml-2">
-                                    <select class="form-control" name="ruangan" id="ruanganRapat"
-                                        style="height: 100% !important;">
-                                        <option value="" disabled>--Pilih Lantai--</option>
-                                        @foreach ($list_lantai as $lantai)
-                                            <option value="{{ $lantai->id_driver }}">
-                                                {{ $lantai->nama_driver }} </option>
-                                        @endforeach
-                                    </select>
+                            <div class="row align-items-center mb-3">
+                                <div class="col-md-4 d-flex align-items-center">
+                                    <b class="mr-2 flex-shrink-0">Tanggal:</b>
+                                    <input type="text" id="tanggal" name="tanggal" class="form-control" placeholder="Pilih Tanggal" style="height: 100% !important;">
+                                </div>
+                                <div class="col-md-3">
+                                     <button class="btn btn-success" id="exportPdf"> <i class="fas fa-file-pdf"></i> Export PDF</button>
                                 </div>
                             </div>
-                            <div class="row mb-2">
-                                <b>Tanggal:</b>
-                                <div class="ml-2">
-                                    <input type="text" id="tanggal" name="tanggal" class="form-control"
-                                        placeholder="Pilih Tanggal" style="height: 100% !important;">
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <button class="btn btn-success" id="exportPdf">Export PDF</button>
-                            </div>
-                            <div id="agendaContent"></div>
+                            
+                            {{-- Kontainer untuk tabel jadwal yang dimuat dinamis --}}
+                            <div id="scheduleContent"></div>
                         </div>
                     </div>
                 </div>
             </main>
         </div>
 
-        <div id="detail" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-            aria-hidden="true">
+        {{-- Modal untuk Menampilkan Detail Perjalanan --}}
+        <div id="detail" class="modal fade" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title" id="myModalLabel">Detail Ruang Rapat Dan Video Converence</h4>
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Detail Perjalanan</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body">
-                        <div id="surat" class="form-group">
-                            <div class="form-group">
-                                <label class="col-sm-13 control-label"></label>
-                                <div class="col-sm-12">
-                                    <table width="100%">
-                                        <tr>
-                                            <td style="width: 45%">Bagian</td>
-                                            <td style="width: 5%"> : </td>
-                                            <td style="width: 50%" id="det_bagian"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Acara</td>
-                                            <td> : </td>
-                                            <td id="det_acara"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Tanggal</td>
-                                            <td> : </td>
-                                            <td id="det_tgl"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Waktu</td>
-                                            <td> : </td>
-                                            <td id="det_waktu"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Peserta</td>
-                                            <td> : </td>
-                                            <td id="det_peserta"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Estimasi Jumlah Peserta di Kandir (jika ada)</td>
-                                            <td> : </td>
-                                            <td id="det_jumlahpeserta"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Tempat (jika ada peserta dari Kandir)</td>
-                                            <td> : </td>
-                                            <td id="det_tempat"></td>
-                                        </tr>
-                                        {{-- <tr>
-                                            <td>Bersifat Privat</td>
-                                            <td> : </td>
-                                            <td id="det_privat"></td>
-                                        </tr> --}}
-                                        <tr>
-                                            <td>Bersifat Vicon</td>
-                                            <td> : </td>
-                                            <td id="det_vicon"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Jenis Link</td>
-                                            <td> : </td>
-                                            <td id="det_jenislink"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Jenis Rapat</td>
-                                            <td> : </td>
-                                            <td id="det_jenisrapat"></td>
-                                        </tr>
-                                        {{-- <tr>
-                                            <td>Agenda Direksi</td>
-                                            <td> : </td>
-                                            <td id="det_agendadireksi"></td>
-                                        </tr> --}}
-                                        <tr>
-                                            <td>Personel yang dapat dihubungi</td>
-                                            <td> : </td>
-                                            <td id="det_personil"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Memo/Surat Undangan</td>
-                                            <td> : </td>
-                                            <td id="det_sk">
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Status</td>
-                                            <td> : </td>
-                                            <td id="det_status"></td>
-                                        </tr>
-                                        {{-- <tr>
-                                            <td>Link</td>
-                                            <td> : </td>
-                                            <td id="det_link"></td>
-                                        </tr> --}}
-                                        {{-- <tr>
-                                            <td>Password</td>
-                                            <td> : </td>
-                                            <td id="det_password"></td>
-                                        </tr> --}}
-                                        <tr>
-                                            <td>Keterangan</td>
-                                            <td> : </td>
-                                            <td id="det_keterangan"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Penginput</td>
-                                            <td> : </td>
-                                            <td id="det_user"></td>
-                                        </tr>
+                        <table class="table table-borderless">
+                            <tbody>
+                            <tr><td style="width: 30%; text-align: left;">Driver</td><td style="width: 5%; text-align: left;">:</td><td id="det_driver" style="text-align: left;"></td></tr>
+<tr><td style="text-align: left;">No. Polisi</td><td style="text-align: left;">:</td><td id="det_nopol" style="text-align: left;"></td></tr>
+<tr><td style="text-align: left;">PIC</td><td style="text-align: left;">:</td><td id="det_pic" style="text-align: left;"></td></tr>
+<tr><td style="text-align: left;">Divisi</td><td style="text-align: left;">:</td><td id="det_divisi" style="text-align: left;"></td></tr>
+<tr><td style="text-align: left;">Tanggal</td><td style="text-align: left;">:</td><td id="det_tgl" style="text-align: left;"></td></tr>
+<tr><td style="text-align: left;">Waktu</td><td style="text-align: left;">:</td><td id="det_waktu" style="text-align: left;"></td></tr>
+<tr><td style="text-align: left;">Jenis & Tujuan</td><td style="text-align: left;">:</td><td id="det_tujuan" style="text-align: left;"></td></tr>
+<tr><td style="text-align: left;">Titik Penjemputan</td><td style="text-align: left;">:</td><td id="det_penjemputan" style="text-align: left;"></td></tr>
+<!-- <tr><td style="text-align: left;">Status</td><td style="text-align: left;">:</td><td id="det_status" style="text-align: left;"></td></tr> -->
+<tr><td style="text-align: left;">Keterangan</td><td style="text-align: left;">:</td><td id="det_keterangan" style="text-align: left;"></td></tr>
+<tr><td style="text-align: left;">Memo/Surat</td><td style="text-align: left;">:</td><td id="det_memo" style="text-align: left;"></td></tr>
 
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default antoclose"
-                                    data-dismiss="modal">Close</button>
-                            </div>
-                        </div>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
                     </div>
                 </div>
             </div>
         </div>
     </x-slot>
 
+    {{-- Slot untuk skrip JavaScript halaman --}}
     <x-slot name="scripts">
         <script>
-            var date;
-            var lantai;
-            var get_data = '';
-
-            function setDateNow() {
-                today = new Date();
-                year = today.getFullYear();
-                month = today.getMonth() + 1;
-                date = today.getDate();
-
-                $('#tanggal').val(`${month}/${date}/${year}`).trigger('change');
-            }
+            let get_data = null;
+            let current_date = null; // Variabel untuk menyimpan tanggal saat ini
 
             function fetchData() {
-                if (get_data != '') {
+                // Ambil nilai tanggal terbaru langsung dari input setiap kali fungsi dipanggil
+                const dateValue = $('#tanggal').val();
+
+                if (!dateValue) {
+                    console.error("fetchData dipanggil tetapi tanggal kosong.");
+                    return;
+                }
+                
+                // Hentikan permintaan jika tanggalnya sama dengan yang terakhir dimuat
+                if (dateValue === current_date && get_data !== null) {
+                    return;
+                }
+                current_date = dateValue; // Perbarui tanggal saat ini
+
+                if (get_data) {
                     get_data.abort();
                 }
-
-                $('#agendaContent').html(`
-                        <div style="display: flex; flex-direction: row; justify-content: center;">
-                            <em><i class="fas fa-spin fa-spinner"></i> Process</em>
-                        </div>
-                    `);
+                
+                $('#scheduleContent').html(`<div class="text-center p-5"><em><i class="fas fa-spin fa-spinner"></i> Memuat Jadwal...</em></div>`);
 
                 get_data = $.ajax({
-                    url: "{{ route('admin.agenda.content') }}",
-                    method: "POST",
+                    url: "{{ route('admin.driver.content') }}",
+                    method: 'POST',
                     data: {
                         _token: "{{ csrf_token() }}",
-                        lt: lantai,
-                        date: date,
+                        date: dateValue
                     },
                     success: function(response) {
-                        $('#agendaContent').html(response);
+                        $('#scheduleContent').html(response);
                     },
                     error: function(xhr, status, error) {
-                        if (xhr.status == 419) {
-                            location.reload();
-                        } else if (status != 'abort') {
-                            $('#agendaContent').empty();
-                            swal({
-                                title: 'Error!',
-                                text: 'Gagal Memuat!',
-                                type: 'error',
-                            }, function(confirm) {
-                                fetchData();
-                            })
+                        if (status !== 'abort') {
+                            let errorDetails = `<strong>Terjadi Kesalahan (Status: ${xhr.status})</strong><br>`;
+                            if (xhr.status == 419) {
+                                errorDetails += 'Sesi Anda telah berakhir. Halaman akan dimuat ulang.';
+                                setTimeout(() => location.reload(), 2000);
+                            } else {
+                                errorDetails += 'Gagal memuat jadwal. Pastikan rute dan controller Anda sudah benar.';
+                            }
+                            $('#scheduleContent').html(`<div class="alert alert-danger text-center">${errorDetails}</div>`);
                         }
                     }
                 });
             }
+            
+            function detail(trip_id) {
+                const url = "{{ route('admin.driver.trip.details', ['id' => ':id']) }}".replace(':id', trip_id);
+                $.getJSON(url, response => {
+                    const data = response.data;
+                    if (!data) return;
+                    
+                    const tgl_split = data.tgl_berangkat.split("-");
+                    $('#det_driver').html(data.driver_detail ? data.driver_detail.nama_driver : (data.rental_driver || 'N/A'));
+                    $('#det_nopol').html(data.no_polisi);
+                    $('#det_pic').html(data.nama_pic);
+                    $('#det_divisi').html(data.divisi);
+                    $('#det_tgl').html(`${tgl_split[2]}-${tgl_split[1]}-${tgl_split[0]}`);
+                    $('#det_waktu').html(`${data.jam_berangkat.substring(0,5)} - ${data.jam_kembali.substring(0,5)} WIB`);
+                    $('#det_tujuan').html(`${data.jenis_tujuan} - ${data.tujuan}`);
+                    $('#det_penjemputan').html(data.pejemputan);
+                    // $('#det_status').html(data.status);
+                    $('#det_keterangan').html(data.ket || '-');
+                    $('#det_user').html(data.username);
+                    $('#det_memo').html(data.file_memo ? `<a href="{{ asset('') }}${data.file_memo}" target="_blank">Lihat Memo</a>` : 'Tidak ada memo');
+                    
+                    $('#detail').modal('show');
+                }).fail(() => alert('Gagal mengambil data dari server.'));
+            }
 
             $(document).ready(function() {
-                $('#tanggal').datepicker({});
-
-                $('#ruanganRapat').on('change', function() {
-                    lantai = $(this).val();
-
-                    fetchData();
+                // Inisialisasi datepicker
+                $('#tanggal').datepicker({
+                    format: 'mm/dd/yyyy',
+                    autoclose: true,
+                    todayHighlight: true
                 });
 
+                // --- PERBAIKAN LOGIKA EVENT LISTENER ---
+                // Pasang event listener yang akan berjalan setiap kali tanggal berubah
                 $('#tanggal').on('change', function() {
-                    date = $(this).val();
-
                     fetchData();
                 });
+                
+                // Fungsi untuk mengatur tanggal awal dan memicu pembaruan
+                function setInitialDate() {
+                    const today = new Date();
+                    const month = today.getMonth() + 1;
+                    const day = today.getDate();
+                    const year = today.getFullYear();
 
-                setDateNow();
+                    // Atur nilai input dan panggil .trigger('change')
+                    $('#tanggal').val(`${month}/${day}/${year}`).trigger('change');
+                }
 
-                $('#ruanganRapat').trigger('change');
+                // Panggil fungsi untuk mengatur tanggal dan memuat data pertama kali
+                setInitialDate();
+                
+                $('#exportPdf').on('click', function() {
+                    const exportDate = $('#tanggal').val();
+                    if (!exportDate) {
+                        alert('Silakan pilih tanggal terlebih dahulu.');
+                        return;
+                    }
+                    const button = $(this);
+                    button.html('<i class="fas fa-spin fa-spinner"></i> Memproses...').prop('disabled', true);
+
+                    fetch("{{ route('admin.driver.exportPdf') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ date: exportDate })
+                    })
+                    .then(res => {
+                        if (!res.ok) throw new Error('Gagal membuat PDF');
+                        return res.blob();
+                    })
+                    .then(blob => {
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `Laporan Jadwal Driver ${exportDate.replace(/\//g, '-')}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(url);
+                    })
+                    .catch((error) => alert(error.message))
+                    .finally(() => button.html('<i class="fas fa-file-pdf"></i> Export PDF').prop('disabled', false));
+                });
             });
         </script>
     </x-slot>

@@ -35,7 +35,8 @@ class PKendaraanController extends Controller
         }
 
         $get_divisi = Bagian::get();
-        $get_drivers = MDriver::get(); // Ambil semua driver dari database
+        // $get_drivers = MDriver::get(); // Ambil semua driver dari database
+        $get_drivers = MDriver::where('driver_regional_id',Auth::user()->bagian->regional->id_regional)->get();
 
         $view_data = [
             'pkendaraan' => $pkendaraan,
@@ -75,11 +76,19 @@ class PKendaraanController extends Controller
                         ->where('jam_kembali', '>', $jam_berangkat);
                 });
             })
+            ->where('status',2)
             ->pluck('driver') // Mengambil hanya kolom 'driver'
             ->toArray(); // Konversi ke array
 
-        // Ambil driver yang tidak sedang bertugas dalam waktu tersebut
-        $available_drivers = MDriver::whereNotIn('id_driver', $driver_terpakai)->get();
+        // // Ambil driver yang tidak sedang bertugas dalam waktu tersebut
+        // $available_drivers = MDriver::whereNotIn('id_driver', $driver_terpakai)->get();
+
+        // Inisialisasi query MDriver
+    $query = MDriver::whereNotIn('id_driver', $driver_terpakai);
+    $query->where('driver_regional_id', Auth::user()->bagian->regional->id_regional);
+
+    // Eksekusi query untuk mendapatkan driver yang tersedia
+    $available_drivers = $query->get();
 
         return response()->json(['drivers' => $available_drivers]);
     }
@@ -174,7 +183,11 @@ class PKendaraanController extends Controller
             ->toArray();
 
         // Ambil kendaraan yang tidak sedang bertugas dalam waktu tersebut
-        $available_vehicles = MKendaraan::whereNotIn('id_kendaraan', $kendaraan_terpakai ?: [])->get();
+        // $available_vehicles = MKendaraan::whereNotIn('id_kendaraan', $kendaraan_terpakai ?: [])->get();
+
+        $query = MKendaraan::whereNotIn('id_kendaraan', $kendaraan_terpakai ?: []);
+        $query->where('kendaraan_regional_id', Auth::user()->bagian->regional->id_regional);
+        $available_vehicles = $query->get();
 
         return response()->json([
             'drivers' => $available_drivers,
@@ -187,11 +200,12 @@ class PKendaraanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'file_memo' => 'required|mimes:pdf,jpg,jpeg,png|max:2048', // Maksimal 2MB
+            'file_memo' => 'mimes:pdf,jpg,jpeg,png|max:2048', // Maksimal 2MB
         ]);
 
         $pkendaraan = new PKendaraan();
         $pkendaraan->divisi = $request->divisi;
+        $pkendaraan->kendaraan_regional_id = Auth::user()->bagian->regional->id_regional;
         $pkendaraan->nama_pic = $request->nama_pic;
         $pkendaraan->tgl_berangkat = Carbon::createFromFormat('d-m-Y', $request->tgl_berangkat)->format('Y-m-d');
         $pkendaraan->jenis_tujuan = $request->jenis_tujuan;
@@ -199,12 +213,15 @@ class PKendaraanController extends Controller
         $pkendaraan->jam_kembali = $request->jam_kembali;
         $pkendaraan->tujuan = $request->tujuan;
         $pkendaraan->pejemputan = $request->pejemputan;
+        $pkendaraan->ket = $request->ket;
 
         // Jika driver yang dipilih adalah "Rental"
         if ($request->driver === "rental") {
             $pkendaraan->driver = null; // Tidak menyimpan ID driver dari database
             $pkendaraan->rental_driver = $request->rental_driver;
             $pkendaraan->rental_kendaraan = $request->rental_kendaraan;
+        } else if ($request->driver === 99){
+            $pkendaraan->driver = 99;
         } else {
             $pkendaraan->driver = $request->driver;
         }
@@ -215,6 +232,8 @@ class PKendaraanController extends Controller
             $namefile = time() . '_' . $name;
             $file->move(public_path('uploads/memo'), $namefile);
             $pkendaraan->file_memo = 'uploads/memo/' . $namefile; // Simpan path
+        } else {
+            $pkendaraan->file_memo = null; // atau kasih default string lain
         }
 
         $pkendaraan->status = 1;
@@ -239,6 +258,7 @@ class PKendaraanController extends Controller
                 'jam_kembali' => $data->jam_kembali,
                 'jenis_tujuan' => $data->jenis_tujuan,
                 'tujuan' => $data->tujuan,
+                'ket' => $data->ket,
                 'pejemputan' => $data->pejemputan,
                 'driver' => $data->driver ?? 'Rental', // Jika null, set default Rental
                 'rental_driver' => $data->rental_driver ?? '',
@@ -266,6 +286,8 @@ class PKendaraanController extends Controller
         $pkendaraan->tujuan = $request->tujuan1;
         $pkendaraan->pejemputan = $request->pejemputan1;
         $pkendaraan->no_polisi = $request->no_polisi1;
+        $pkendaraan->ket = $request->ket1;
+
         $pkendaraan->driver = ($request->driver1 === 'Rental') ? null : $request->driver1;
         // $pkendaraan->rental_driver = $request->rental_driver;
         // $pkendaraan->rental_kendaraan = $request->rental_kendaraan;
@@ -274,6 +296,8 @@ class PKendaraanController extends Controller
         if ($pkendaraan->driver === null) {
             $pkendaraan->rental_driver = $request->rental_driver;
             $pkendaraan->rental_kendaraan = $request->rental_kendaraan;
+        } else if ($request->driver === 99){
+            $pkendaraan->driver = 99;
         } else {
             // Jika ada driver, reset rental_driver dan rental_kendaraan ke null
             $pkendaraan->rental_driver = null;
@@ -303,9 +327,9 @@ class PKendaraanController extends Controller
 
         $pkendaraan->save();
 
+        session()->flash('success', 'Data berhasil diperbarui.');
         return response()->json([
             'redirect_url' => route('pkendaraan.index'),
-            'message' => 'Data berhasil diperbarui.'
         ]);
     }
 

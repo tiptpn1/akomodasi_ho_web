@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class SendVicon extends Model
 {
@@ -211,6 +212,7 @@ class SendVicon extends Model
     public static function dataTables(Request $request)
     {
         $query = SendVicon::with(['ruangan', 'bagian', 'jenisrapat'])->orderBy('id', 'desc');
+        // $query->where('tanggal', '2025-06-13');
 
         // Filter berdasarkan tanggal awal
         if ($request->has('tanggal_awal') && $request->get('tanggal_awal')) {
@@ -290,6 +292,90 @@ class SendVicon extends Model
         return $data;
     }
 
+        public static function dataTablesToday(Request $request)
+    {
+        $query = SendVicon::with(['ruangan', 'bagian', 'jenisrapat'])->orderBy('id', 'desc');
+        $query->where('tanggal', now()->format('Y-m-d'));
+
+        // Filter berdasarkan tanggal awal
+        if ($request->has('tanggal_awal') && $request->get('tanggal_awal')) {
+            $tgl_awal = date('Y-m-d', strtotime($request->input('tanggal_awal')));
+            $query->where('tanggal', '>=', $tgl_awal);
+        }
+
+        // Filter berdasarkan tanggal akhir
+        if ($request->has('tanggal_akhir') && $request->get('tanggal_akhir')) {
+            $tgl_akhir = date('Y-m-d', strtotime($request->input('tanggal_akhir')));
+            $query->where('tanggal', '<=', $tgl_akhir);
+        }
+
+        // Filter berdasarkan jenis rapat
+        if ($request->has('jenisrapat') && $request->get('jenisrapat')) {
+            $jenisrapat = $request->input('jenisrapat');
+            $query->where('jenisrapat_id', $jenisrapat);
+        }
+
+        // Filter berdasarkan acara
+        if ($request->has('acara') && $request->get('acara')) {
+            $acara = str_replace("'", "", $request->input('acara'));
+            $query->where('acara', 'LIKE', '%' . $acara . '%');
+        }
+
+        // Filter berdasarkan agenda direksi
+        if ($request->has('agenda_direksi') && $request->get('agenda_direksi')) {
+            $agenda_direksi = $request->input('agenda_direksi');
+            $query->where('agenda_direksi', $agenda_direksi);
+        }
+
+        // Filter berdasarkan vicon
+        if ($request->has('vicon') && $request->get('vicon')) {
+            $vicon = $request->input('vicon');
+            $query->where('vicon', $vicon);
+        }
+
+        // Filter berdasarkan bagian
+        if ($request->has('bagian') && $request->get('bagian')) {
+            $bagian = $request->input('bagian');
+            if (!in_array("", $bagian)) {
+                $query->whereIn('bagian_id', $bagian);
+            }
+        }
+
+        // Filter berdasarkan status approval
+        if ($request->input('status_approval') != '') {
+            $status_approval = $request->input('status_approval');
+            $query->where('status_approval', $status_approval);
+        }
+
+        // Searching
+        if ($request->input('search.value')) {
+            $search = $request->input('search.value');
+            $approve_status = preg_match('/\b' . $request->input('search.value') . '\b/i', 'Waiting for Approve') ? 0 : (preg_match('/\b' . $request->input('search.value') . '\b/i', 'Approved') ? 1 : '');
+            $query->where(function ($query) use ($search) {
+                $query->orWhere('acara', 'LIKE', "%{$search}%")
+                    ->orWhere('tanggal', 'LIKE', "%{$search}%")
+                    ->orWhere('waktu', 'LIKE', "%{$search}%")
+                    ->orWhere('ruangan_lain', 'LIKE', "%{$search}%")
+                    ->orWhere('vicon', 'LIKE', "%{$search}%")
+                    ->orWhereHas('bagian', function ($query) use ($search) {
+                        $query->where('master_bagian_nama', 'LIKE', "%{$search}%");
+                    })
+                    ->orWhereHas('ruangan', function ($query) use ($search) {
+                        $query->where('nama', 'LIKE', "%{$search}%");
+                    });
+            });
+
+            if ($approve_status != '') {
+                $query->orWhere('status_approval', $approve_status);
+            }
+        }
+
+        $data = $query;
+
+        return $data;
+    }
+
+
     public static function download(Request $request)
     {
         $query = self::with(['ruangan', 'bagian', 'jenisrapat'])->orderBy('tanggal', 'desc')
@@ -338,6 +424,19 @@ class SendVicon extends Model
             $jenisrapat = $request->input('jenisrapat');
             $query->where('jenisrapat_id', $jenisrapat);
         }
+
+        // // Filter berdasarkan bagian_regional_id
+        // if (Auth::check() && Auth::user()->bagian && Auth::user()->bagian->regional) {
+        //     $query->where('bagian_regional_id', Auth::user()->bagian->regional->id_regional);
+        // }
+
+        // Filter berdasarkan regional user yang login (BARU)
+if (Auth::check() && Auth::user()->bagian && Auth::user()->bagian->regional) {
+    $regionalId = Auth::user()->bagian->regional->id_regional;
+    $query->whereHas('bagian.regional', function ($q) use ($regionalId) {
+        $q->where('id_regional', $regionalId);
+    });
+}
 
         $data = $query->get();
 

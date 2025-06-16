@@ -47,4 +47,9 @@ class Bagian extends Model
     {
         return $this->hasMany(AgendaKendaraan::class, 'id_bagian', 'master_bagian_id');
     }
+
+    public function regional() 
+    {
+        return $this->belongsTo(MRegional::class, 'bagian_regional_id', 'id_regional');
+    }
 }

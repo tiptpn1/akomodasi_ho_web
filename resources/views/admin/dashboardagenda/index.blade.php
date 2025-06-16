@@ -72,7 +72,7 @@
         <div id="layoutSidenav_content">
             <main>
                 <div class="container-fluid">
-                    <h3 class="mt-4">PT Perkebunan Nusantara I <br /> <em>Head Office</em></h3>
+                    <h3 class="mt-4">PT Perkebunan Nusantara I <br /> <em>{{ Auth::user()->bagian->regional->nama_regional}}</em></h3>
                     <br>
                     <div class="card mb-4">
                         <div class="card-body">

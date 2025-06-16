@@ -16,6 +16,7 @@ class MKendaraan extends Model
     public $timestamps = true; // Jika menggunakan created_at dan updated_at
 
     protected $fillable = [
+        'kendaraan_regional_id',
         'nopol',
         'tipe_kendaraan',
         'kepemilikan',

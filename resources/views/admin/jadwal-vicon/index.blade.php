@@ -38,12 +38,26 @@
                     onclick="window.location='{{ route('admin.vicon.resetfilter') }}'">
                     Reload/Reset Filter
                 </button>
+<br>
+<br>
+
+                <div style="margin-bottom: 15px;">
+    <button type="button" id="agendaHariIni" class="btn btn-info btn-sm">
+        Agenda Hari Ini
+    </button>
+    <button type="button" id="semuaAgenda" class="btn btn-info btn-sm">
+        Semua Agenda
+    </button>
+</div>
+
 
                 <div class="card mb-4 mt-3">
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="display responsive" style="width: 100%; float:center;"
+              <table class="display responsive" style="width: 100%; float:center;"
                                 id="dataTables-agendavicon">
+                                <caption id="table-caption" style="caption-side: top; text-align: center; font-weight: bold; font-size: 1.2rem; color: #333;">
+        </caption>
                                 <thead>
                                     <tr>
                                         <th style="max-width: 5%">
@@ -1365,7 +1379,41 @@
                 }
             }
 
-            function fetchData() {
+
+    // Event listener untuk tombol "Agenda Hari ini"
+    $('#agendaHariIni').on('click', function() {
+        fetchData('hari_ini');
+    });
+
+    // Event listener untuk tombol "Semua Agenda"
+    $('#semuaAgenda').on('click', function() {
+        fetchData('semua');
+    });
+
+
+            function fetchData(tipeAgenda) {
+                // Ini akan mengubah 'undefined' menjadi 'hari_ini'. (default)
+                if (tipeAgenda !== 'semua') {
+        tipeAgenda = 'hari_ini';
+    }
+        
+                // --- TAMBAHAN: Logika untuk sorot tombol dan ubah judul ---
+    if (tipeAgenda === 'hari_ini') {
+        // Atur sorotan tombol
+        $('#agendaHariIni').removeClass('btn-secondary').addClass('btn-primary');
+        $('#semuaAgenda').removeClass('btn-primary').addClass('btn-secondary');
+        // Atur judul tabel
+        $('#table-caption').text('Agenda Hari Ini');
+    } else { // jika tipeAgenda adalah 'semua'
+        // Atur sorotan tombol
+        $('#semuaAgenda').removeClass('btn-secondary').addClass('btn-primary');
+        $('#agendaHariIni').removeClass('btn-primary').addClass('btn-secondary');
+        // Atur judul tabel
+        $('#table-caption').text('Semua Agenda');
+    }
+
+
+
                 if ($.fn.DataTable.isDataTable('#dataTables-agendavicon')) {
                     $('#dataTables-agendavicon').DataTable().destroy();
                 }
@@ -1381,6 +1429,10 @@
                         "dataType": 'json',
                         "data": function(data) {
                             data._token = "{{ csrf_token() }}";
+
+                            // Kirim tipe agenda ke controller
+                            data.tipe_agenda = tipeAgenda;
+                
                             data.tanggal_awal = $('#tanggal_awal').val();
                             data.tanggal_akhir = $('#tanggal_akhir').val();
                             data.acara = $('#acara').val();
