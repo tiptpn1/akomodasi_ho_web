@@ -80,6 +80,7 @@
                     @endif
                 </div>
 
+                
                 <table class="table table-bordered display responsive" style="width: 100%; float:center;"
                     id="dataTables-konsumsi">
                     <thead>
