@@ -70,6 +70,7 @@ class SendViconController extends Controller
         return view('admin.jadwal-vicon.index', $view_data);
     }
 
+
     /**
      * Show the form for creating a new resource.
      */
@@ -667,13 +668,41 @@ class SendViconController extends Controller
             ->orderBy('master_bagian_id', 'desc')
             ->first();
 
+        // Ambil tipe agenda dari request, default 'hari_ini' jika tidak ada
+            $tipeAgenda = $request->input('tipe_agenda', 'hari_ini');
+
+
         if (Auth::user()->hak_akses == 7) {
             // Jika hak akses 7, ambil semua data
-            $query = SendVicon::dataTables($request);
+            // $query = SendVicon::dataTables($request);
+
+            // Tentukan metode yang akan dipanggil berdasarkan tipeAgenda
+            if ($tipeAgenda == 'hari_ini') {
+                // Panggil metode untuk agenda hari ini
+                $query = SendVicon::dataTablesToday($request);
+            } else {
+                // Panggil metode untuk semua agenda (default)
+                $query = SendVicon::dataTables($request);
+            }
+
+
         } else {
-            $query = SendVicon::dataTables($request)
-                ->join('master_bagian', 'master_bagian.master_bagian_id', '=', 'sendvicon.bagian_id') // Sesuaikan nama tabel jika berbeda
+            // $query = SendVicon::dataTables($request)
+            //     ->join('master_bagian', 'master_bagian.master_bagian_id', '=', 'sendvicon.bagian_id') // Sesuaikan nama tabel jika berbeda
+            //     ->where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id);
+
+            // Tentukan metode yang akan dipanggil berdasarkan tipeAgenda
+            if ($tipeAgenda == 'hari_ini') {
+                // Panggil metode untuk agenda hari ini
+                $query = SendVicon::dataTablesToday($request)
+                     ->join('master_bagian', 'master_bagian.master_bagian_id', '=', 'sendvicon.bagian_id') // Sesuaikan nama tabel jika berbeda
                 ->where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id);
+            } else {
+                // Panggil metode untuk semua agenda (default)
+                $query = SendVicon::dataTables($request)
+                     ->join('master_bagian', 'master_bagian.master_bagian_id', '=', 'sendvicon.bagian_id') // Sesuaikan nama tabel jika berbeda
+                ->where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id);
+            }
         }
 
 

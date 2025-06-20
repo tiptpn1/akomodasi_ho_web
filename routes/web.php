@@ -30,6 +30,7 @@ use App\Http\Controllers\MessController;
 use App\Http\Controllers\BookingKamarController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\DashboardDriverController;
+use App\Http\Controllers\MRegionalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -98,6 +99,15 @@ Route::group(['prefix' => 'masterkendaraan', 'as' => 'masterkendaraan.'], functi
     Route::put('/update/{id}', [MKendaraanController::class, 'update'])->name('update');
     Route::delete('/destroy/{id}', [MKendaraanController::class, 'destroy'])->name('destroy');
     Route::get('/export', [MKendaraanController::class, 'export'])->name('export');
+});
+
+Route::group(['prefix' => 'masterregional', 'as' => 'masterregional.'], function () {
+    Route::get('/', [MRegionalController::class, 'index'])->name('index');
+    Route::post('/store', [MRegionalController::class, 'store'])->name('store');
+    Route::get('/edit/{id}', [MRegionalController::class, 'edit'])->name('edit');  // Add this route
+    Route::put('/update/{id}', [MRegionalController::class, 'update'])->name('update');
+    Route::delete('/destroy/{id}', [MRegionalController::class, 'destroy'])->name('destroy');
+    Route::get('/export', [MRegionalController::class, 'export'])->name('export');
 });
 
 Route::group(['prefix' => 'masterdriver', 'as' => 'masterdriver.'], function () {
@@ -269,6 +279,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     });
 
     Route::group(['prefix' => 'vicon', 'as' => 'vicon.', 'middleware' => 'role:admin,GA,divisi,sekper,read'], function () {
+        Route::get('datatoday', [SendViconController::class, 'datatoday'])->name('datatoday');
+        Route::get('dataall', [SendViconController::class, 'dataall'])->name('dataall');
+        
         Route::get('/', [SendViconController::class, 'index'])->name('index');
         Route::POST('/data', [SendViconController::class, 'getData'])->name('data');
         Route::get('{id}/show', [SendViconController::class, 'show'])->name('show');
@@ -334,11 +347,25 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::post('/export-pdf', [DashboardAgendaController::class, 'export_pdf'])->name('exportPdf');
     });
 
-    Route::group(['prefix' => 'driver', 'as' => 'driver.', 'middleware' => 'role:admin,GA,divisi,sekper,read'], function () {
-        Route::get('/', [DashboardDriverController::class, 'index'])->name('index');
-        Route::get('/get-driver-schedule', [DashboardDriverController::class, 'getDriverSchedule']);
 
-        Route::post('/get-content', [DashboardDriverController::class, 'getContent'])->name('content');
-        Route::post('/export-pdf', [DashboardDriverController::class, 'export_pdf'])->name('exportPdf');
-    });
+   // Grup rute yang Anda sediakan, dengan penambahan rute untuk detail perjalanan
+Route::group(['prefix' => 'driver', 'as' => 'driver.', 'middleware' => 'role:admin,GA,divisi,sekper,read'], function () {
+    
+    // Menampilkan halaman utama dasbor
+    Route::get('/', [DashboardDriverController::class, 'index'])->name('index');
+    
+    // Mengambil konten jadwal untuk tabel (via AJAX)
+    Route::post('/get-content', [DashboardDriverController::class, 'getContent'])->name('content');
+
+    // Mengambil detail perjalanan via AJAX untuk modal
+    Route::get('/trip-details/{id}', [DashboardDriverController::class, 'show_trip'])->name('trip.details');
+
+    // Mengekspor jadwal ke PDF
+    Route::post('/export-pdf', [DashboardDriverController::class, 'export_pdf'])->name('exportPdf');
+
+});
+
+
+
+
 });

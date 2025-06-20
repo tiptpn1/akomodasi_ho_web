@@ -5,20 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MKendaraan extends Model
+class MRegional extends Model
 {
     use HasFactory;
 
-    protected $table = 'master_kendaraan'; // Nama tabel di database
+    protected $table = 'master_regional'; // Nama tabel di database
 
-    protected $primaryKey = 'id_kendaraan'; // Primary Key
+    protected $primaryKey = 'id_regional'; // Primary Key
 
     public $timestamps = true; // Jika menggunakan created_at dan updated_at
 
     protected $fillable = [
-        'kendaraan_regional_id',
-        'nopol',
-        'tipe_kendaraan',
-        'kepemilikan',
+        'nama_regional',
     ];
 }

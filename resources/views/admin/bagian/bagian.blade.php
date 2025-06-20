@@ -27,6 +27,9 @@
                                             <center>Kode Bagian</center>
                                         </th>
                                         <th>
+                                            <center>Regional</center>
+                                        </th>
+                                        <th>
                                             <center>Status</center>
                                         </th>
                                         @if (!in_array(Auth::user()->master_hak_akses_id, [5, 6]))
@@ -43,6 +46,7 @@
                                             <td>{{ $result->master_bagian_nama }}</td>
                                             <td style="text-align: center;">{{ $result->master_bagian_posisi }}</td>
                                             <td style="text-align: center;">{{ $result->master_bagian_kode }}</td>
+                                            <td style="text-align: center;">{{ $result->regional->nama_regional }}</td>
                                             <td style="text-align: center;">
                                                 @if ($result->is_active == 1)
                                                     Aktif
@@ -100,6 +104,22 @@
                                                                     value="{{ $result->master_bagian_kode }}"
                                                                     placeholder="Isikan Kode Bagian" required>
                                                             </div>
+                                                            {{-- Tambahkan bagian ini untuk dropdown Regional --}}
+                    <div class="form-group">
+                        <label>Regional *</label>
+                        <select class="form-control" name="bagian_regional_id" required>
+                            <option value="">-- Pilih Regional --</option>
+                            @foreach ($regionals as $regional)
+                                <option value="{{ $regional->id_regional }}"
+                                    {{-- Ini adalah kunci untuk memilih opsi yang sudah ada --}}
+                                    @if ($result->bagian_regional_id == $regional->id_regional) selected @endif
+                                >
+                                    {{ $regional->nama_regional }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    {{-- Akhir bagian dropdown Regional --}}
                                                             <div class="form-group">
                                                                 <label>Status *</label>
                                                                 <select name="is_active" class="form-control" required>
@@ -160,6 +180,20 @@
                             <input type="text" class="form-control" name="master_bagian_kode"
                                 placeholder="Isikan Kode Bagian" required>
                         </div>
+
+                       <div class="form-group">
+    <label>Regional *</label>
+    <select class="form-control" name="bagian_regional_id" required>
+        <option value="">-- Pilih Regional --</option> {{-- Opsi default --}}
+        @foreach ($regionals as $regional)
+            <option value="{{ $regional->id_regional }}"
+                @if (isset($result) && $result->bagian_regional_id == $regional->id_regional) selected @endif>
+                {{ $regional->nama_regional }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
                         <div class="form-group">
                             <label>Status *</label>
                             <select name="is_active" class="form-control" required>

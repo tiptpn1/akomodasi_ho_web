@@ -17,6 +17,17 @@ class KonsumsiController extends Controller
 {
     public function index(Request $request)
     {
+        // 1. Ambil tipe agenda dari URL, default-nya adalah 'hari_ini'
+        $tipeKonsumsi = $request->input('tipe_konsumsi', 'hari_ini');
+
+
+            // BARU: Tentukan teks untuk caption berdasarkan tipe agenda
+    if ($tipeKonsumsi == 'hari_ini') {
+        $caption = 'Daftar Konsumsi Hari Ini';
+    } else {
+        $caption = 'Daftar Semua Konsumsi';
+    }
+
         $bagian_reg = Bagian::where('master_bagian_id', Auth::user()->master_nama_bagian_id)
         ->orderBy('master_bagian_id', 'desc')
         ->first();
@@ -26,6 +37,9 @@ class KonsumsiController extends Controller
                 ->join('sendvicon', 'konsumsi.id_sendvicon', '=', 'sendvicon.id')
                 ->join('master_bagian', 'sendvicon.bagian_id', '=', 'master_bagian.master_bagian_id')
                 ->whereIn('konsumsi.status', [1, 2])
+                ->when($tipeKonsumsi == 'hari_ini', function ($q) {
+            return $q->whereDate('sendvicon.tanggal', today());
+        })
                 ->where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id)
                 ->select(
                     'konsumsi.id as konsumsi_id',
@@ -45,6 +59,9 @@ class KonsumsiController extends Controller
                 ->join('master_bagian', 'sendvicon.bagian_id', '=', 'master_bagian.master_bagian_id')
                 ->where('konsumsi.konsumsi_kirim', 2)
                 ->whereIn('konsumsi.status', [2, 3])
+                ->when($tipeKonsumsi == 'hari_ini', function ($q) {
+            return $q->whereDate('sendvicon.tanggal', today());
+        })
                 ->where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id)
                 ->select(
                     'konsumsi.id as konsumsi_id',
@@ -60,6 +77,9 @@ class KonsumsiController extends Controller
             $query = DB::table('konsumsi')
                 ->join('sendvicon', 'konsumsi.id_sendvicon', '=', 'sendvicon.id')
                 ->join('master_bagian', 'sendvicon.bagian_id', '=', 'master_bagian.master_bagian_id')
+                ->when($tipeKonsumsi == 'hari_ini', function ($q) {
+            return $q->whereDate('sendvicon.tanggal', today());
+        })
                 ->where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id)
                 ->select(
                     'konsumsi.id as konsumsi_id',
@@ -191,7 +211,7 @@ class KonsumsiController extends Controller
         $bagians = Bagian::where('master_bagian.bagian_regional_id', $bagian_reg->bagian_regional_id)->get();
 
         // $konsumsi = Konsumsi::with(['sendVicon.bagian'])->get();
-        return view('konsumsi.index', compact('konsumsi', 'start', 'bagians', 'request_status'));
+        return view('konsumsi.index', compact('konsumsi', 'start', 'bagians', 'request_status', 'caption'));
     }
 
     public function create()
@@ -434,6 +454,7 @@ class KonsumsiController extends Controller
             $query = DB::table('konsumsi')
                 ->join('sendvicon', 'konsumsi.id_sendvicon', '=', 'sendvicon.id')
                 ->join('master_bagian', 'sendvicon.bagian_id', '=', 'master_bagian.master_bagian_id')
+                ->where('bagian_regional_id', Auth::user()->bagian->regional->id_regional)
                 ->where('konsumsi.status', '!=', 4)
                 ->select(
                     'konsumsi.id as konsumsi_id',

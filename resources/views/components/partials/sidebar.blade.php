@@ -23,6 +23,10 @@
                         <div class="sb-nav-link-icon"></div>
                         Dashboard Agenda
                     </a>
+                     <a class="nav-link" href="{{ route('admin.driver.index') }}">
+                        <div class="sb-nav-link-icon"></div>
+                        Dashboard Kendaraan
+                    </a>
                     <a class="nav-link" href="{{ route('admin.vicon.index') }}">
                         <div class="sb-nav-link-icon"></div>
                         Jadwal Agenda
@@ -41,11 +45,11 @@
                     </a>
                     <a class="nav-link" href="{{ route('bookingkamar.index') }}">
                         <div class="sb-nav-link-icon"></div>
-                        Booking Kamar
+                        Booking Kamar Mess
                     </a>
                     <a class="nav-link" href="{{ route('bookingkamar.list_booking') }}">
                         <div class="sb-nav-link-icon"></div>
-                        Daftar Booking Kamar
+                        Daftar Booking Mess
                     </a>
                     @if (Auth::user()->hakAkses->hak_akses_id == 2)
                     <a class="nav-link" href="{{ route('kaskecil.index') }}">
@@ -96,6 +100,10 @@
                             <div class="sb-nav-link-icon"></div>
                             Master Divisi/Bagian
                         </a>
+                        <a class="nav-link" href="{{ route('masterregional.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Master Regional
+                        </a>
                         <a class="nav-link" href="{{ route('admin.dashboard.master.jenis.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Master Jenis Rapat
@@ -114,7 +122,7 @@
         </div>
         <div class="sb-sidenav-footer">
             <div class="small">Logged in as:</div>
-            {{ Auth::user()->master_user_nama }}
+            {{ Auth::user()->master_user_nama }} -  {{ Auth::user()->bagian->regional->nama_regional}}
             <a href="{{ route('admin.logout') }}">
                 Logout
                 <i class="fas fa-sign-out-alt"></i>

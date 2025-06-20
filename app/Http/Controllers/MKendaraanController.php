@@ -6,12 +6,14 @@ use App\Exports\MasterKendaraanExport;
 use Illuminate\Http\Request;
 use App\Models\MKendaraan;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Auth;
 
 class MKendaraanController extends Controller
 {
     public function index()
     {
-        $kendaraans = MKendaraan::all(); // Mengambil semua data dari tabel kendaraan
+        // $kendaraans = MKendaraan::all(); // Mengambil semua data dari tabel kendaraan
+        $kendaraans = MKendaraan::where('kendaraan_regional_id',Auth::user()->bagian->regional->id_regional)->get();
         return view('kendaraan.index', compact('kendaraans'));
     }
 
@@ -24,6 +26,7 @@ class MKendaraanController extends Controller
         ]);
 
         MKendaraan::create([
+            'kendaraan_regional_id' => Auth::user()->bagian->regional->id_regional,
             'nopol' => $request->nopol,
             'tipe_kendaraan' => $request->tipe_kendaraan,
             'kepemilikan' => $request->kepemilikan,
@@ -76,7 +79,8 @@ class MKendaraanController extends Controller
 
     public function export(Request $request)
     {
-        $data = MKendaraan::all(); // Ambil semua data kendaraan
+        // $data = MKendaraan::all(); // Ambil semua data kendaraan
+        $data = MKendaraan::where('kendaraan_regional_id',Auth::user()->bagian->regional->id_regional)->get();
         return Excel::download(new MasterKendaraanExport($data), 'masterkendaraan_export.xlsx');
     }
 }

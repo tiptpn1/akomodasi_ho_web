@@ -78,10 +78,29 @@
                         <button class="btn btn-success" onclick="kirimSelected()">Kirim</button>
                         <button id="select-all-button" class="btn btn-warning">Select All</button>
                     @endif
+
+                    <br>
+<br>
+
+@php
+    // Ambil tipe agenda dari request, defaultnya 'hari_ini'
+    $tipeKonsumsi = request('tipe_konsumsi', 'hari_ini');
+@endphp
+
+<button type="button" id="konsumsiHariIni" class="btn {{ $tipeKonsumsi == 'hari_ini' ? 'btn-primary' : 'btn-info' }} btn-lg">
+    Konsumsi Hari Ini
+</button>
+
+<button type="button" id="semuaKonsumsi" class="btn {{ $tipeKonsumsi == 'semua' ? 'btn-primary' : 'btn-info' }} btn-lg">
+    Semua Konsumsi
+</button>
                 </div>
 
                 <table class="table table-bordered display responsive" style="width: 100%; float:center;"
                     id="dataTables-konsumsi">
+                        <caption style="caption-side: top; text-align: center; font-weight: bold; font-size: 1.2rem; color: #333;">
+        {{ $caption }}
+    </caption>
                     <thead>
                         <tr>
                             <th>No</th>
@@ -905,6 +924,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="formFilterKonsumsi">
+                        <input type="hidden" name="tipe_konsumsi" value="{{ request('tipe_konsumsi', 'semua') }}">
                         <div class="row">
                             <div class="form-group col-md-6">
                                 <b>Tanggal Awal</b>
@@ -1410,6 +1430,22 @@
                     $('#filterAcara').val('{{ Session::get('acara') }}');
                 @endif
             });
+
+            $(document).ready(function() {
+    // Dapatkan URL dasar tanpa parameter query
+    const baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+
+    $('#konsumsiHariIni').on('click', function() {
+        // Redirect ke halaman dengan parameter tipe_konsumsi=hari_ini
+        window.location.href = baseUrl + '?tipe_konsumsi=hari_ini';
+    });
+
+    $('#semuaKonsumsi').on('click', function() {
+        // Redirect ke halaman dengan parameter tipe_konsumsi=semua
+        window.location.href = baseUrl + '?tipe_konsumsi=semua';
+    });
+});
+
         </script>
     </x-slot>
 </x-layouts.app>

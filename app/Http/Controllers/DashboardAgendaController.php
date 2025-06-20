@@ -60,7 +60,11 @@ class DashboardAgendaController extends Controller
         $jenis_rapat = JenisRapat::all();
 
         try {
-            $ruangan = $this->model->getSpesificData(array('lantai' => $lantai), $date);
+            // $ruangan = $this->model->getSpesificData(array('lantai' => $lantai), $date);
+
+            $ruangan = $this->model->getSpesificData(array('lantai' => $lantai), $date)
+                    ->where('ruangan_regional_id', Auth::user()->bagian->regional->id_regional)
+                    ->get(); // Tambahkan ->get() untuk mengeksekusi query
 
             $data = [
                 'ruangan' => $ruangan,
@@ -91,10 +95,17 @@ class DashboardAgendaController extends Controller
 
         try {
             $all_ruangan = [];
-            $all_lantai = $this->model->getDataDistinct('lantai')->pluck('lantai');
+            $userRegionalId = Auth::user()->bagian->regional->id_regional;
+            // $all_lantai = $this->model->getDataDistinct('lantai')->pluck('lantai');
+            $all_lantai = $this->model->getDataDistinct('lantai', null, $userRegionalId)
+                         ->pluck('lantai'); // Sekarang Anda bisa memanggil pluck di sini
 
             foreach($all_lantai as $lantai) {
-                $all_ruangan[] = $this->model->getSpesificData(array('lantai' => $lantai), $date);
+                // $all_ruangan[] = $this->model->getSpesificData(array('lantai' => $lantai), $date);
+
+                $all_ruangan[] = $this->model->getSpesificData(array('lantai' => $lantai), $date)
+                    ->where('ruangan_regional_id', Auth::user()->bagian->regional->id_regional)
+                    ->get(); // Tambahkan ->get() untuk mengeksekusi query
             }
 
             $data = [
