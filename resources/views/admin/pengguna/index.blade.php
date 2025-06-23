@@ -19,6 +19,9 @@
                                             <center>Username
                                         </th>
                                         <th>
+                                            <center>Regional
+                                        </th>
+                                        <th>
                                             <center>Bagian
                                         </th>
                                         <th>
@@ -53,6 +56,9 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $result->master_user_nama }}</td>
+                                            <td style="text-align: center;">
+                                               {{ $result->nama_regional }}
+                                            </td>
                                             <td style="text-align: center;">
                                                 @php
                                                     $bagianCocok = $bagian->firstWhere(

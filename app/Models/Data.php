@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 
 class Data extends Model
 {
@@ -421,20 +422,92 @@ class Data extends Model
     // tampilkan seluruh data pada sebuah tabel master_user
     public function tampilalluser($table)
     {
-        $query = DB::table($table)
-            ->select('*')
-            ->orderBy('master_user_id', 'DESC')
+        // $query = DB::table($table)
+        //     ->select('*')
+        //     ->orderBy('master_user_id', 'DESC')
+        //     ->get();
+
+        $userRegionalId = Auth::user()->bagian->regional->id_regional;
+        if ($userRegionalId != "1") {
+        $query = DB::table($table) // Ini adalah tabel master_user
+            ->select(
+                $table . '.*',
+                'master_regional.nama_regional')
+            // JOIN pertama: master_user ke master_bagian
+            ->join(
+                'master_bagian',
+                'master_bagian.master_bagian_id',
+                '=',
+                $table . '.master_nama_bagian_id' // Pastikan nama kolom di master_user sesuai
+            )
+            // JOIN kedua: master_bagian ke master_regional
+            ->join(
+                'master_regional',
+                'master_regional.id_regional',
+                '=',
+                'master_bagian.bagian_regional_id'
+            )
+            ->where('master_bagian.bagian_regional_id', $userRegionalId)
+            ->orderBy($table . '.master_user_id', 'DESC')
             ->get();
+
+
+        }
+        else{
+        $query = DB::table($table) // Ini adalah tabel master_user
+            ->select(
+                $table . '.*',
+                'master_regional.nama_regional')
+            // JOIN pertama: master_user ke master_bagian
+            ->join(
+                'master_bagian',
+                'master_bagian.master_bagian_id',
+                '=',
+                $table . '.master_nama_bagian_id' // Pastikan nama kolom di master_user sesuai
+            )
+            // JOIN kedua: master_bagian ke master_regional
+            ->join(
+                'master_regional',
+                'master_regional.id_regional',
+                '=',
+                'master_bagian.bagian_regional_id'
+            )
+            ->orderBy($table . '.master_user_id', 'DESC')
+            ->get();
+
+        }
         return $query;
     }
 
     public function getActiveBagian()
     {
+        // $query = DB::table('master_bagian')
+        //     ->select("*")
+        //     ->where('is_active', '1')
+        //     ->orderBy('master_bagian_id', 'DESC')
+        //     ->get();
+
+        $userRegionalId = Auth::user()->bagian->regional->id_regional;
+
+        if ($userRegionalId != "1") {
         $query = DB::table('master_bagian')
-            ->select("*")
-            ->where('is_active', '1')
-            ->orderBy('master_bagian_id', 'DESC')
+            ->select('master_bagian.*', 'master_regional.nama_regional') // Pilih semua dari master_bagian dan nama_regional dari master_regional
+            ->join('master_regional', 'master_regional.id_regional', '=', 'master_bagian.bagian_regional_id') // Lakukan JOIN
+            ->where('master_bagian.is_active', '1') // Pastikan 'is_active' juga dari master_bagian
+            ->where('master_bagian.bagian_regional_id', $userRegionalId)
+            ->orderBy('master_regional.nama_regional', 'DESC')
             ->get();
+        }
+        else {
+        $query = DB::table('master_bagian')
+            ->select('master_bagian.*', 'master_regional.nama_regional') // Pilih semua dari master_bagian dan nama_regional dari master_regional
+            ->join('master_regional', 'master_regional.id_regional', '=', 'master_bagian.bagian_regional_id') // Lakukan JOIN
+            ->where('master_bagian.is_active', '1') // Pastikan 'is_active' juga dari master_bagian
+            ->orderBy('master_regional.nama_regional', 'DESC')
+            ->get();
+
+        }
+
         return $query;
     }
     public function getActiveHakAkses()
