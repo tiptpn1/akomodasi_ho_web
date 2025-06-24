@@ -20,5 +20,6 @@ class MKendaraan extends Model
         'nopol',
         'tipe_kendaraan',
         'kepemilikan',
+        'foto',
     ];
 }
