@@ -89,6 +89,7 @@
                                 <b>Lantai *</b>
                                 <input type="number" class="form-control" name="lantai" placeholder="Isikan Lantai Ruangan, contoh: 12"
                                     required>
+                                    <span class="text-secondary">*untuk ruang rapat Eksternal bisa diisikan 99</span>
                             </div>
                         </div>
                         <div class="form-group">

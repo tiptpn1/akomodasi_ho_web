@@ -181,9 +181,9 @@
                                 <h4 class="card-title"><strong>{{ $kamar->nama_kamar }}</strong></h4>
                                 <p class="card-text mb-1"><strong>Mess:</strong> {{ $kamar->mess->nama }}</p>
                                 <p class="card-text mb-1"><strong>Alamat:</strong> {{ $kamar->mess->lokasi }}
-                                    <button class="btn btn-sm btn-info" style="color: white;" onclick="window.open('https://www.google.com/maps?q={{ $kamar->mess->lat }},{{ $kamar->mess->lng }}', '_blank')"><i class="fa fa-map-marker" aria-hidden="true"></i></button>
+                                    <button class="btn btn-sm btn-info" style="color: white;" onclick="window.open('https://www.google.com/maps?q={{ $kamar->mess->lat }},{{ $kamar->mess->lng }}', '_blank')"><i class="fa fa-map-marker" aria-hidden="true"></i> Lihat Lokasi</button>
                                 </p>
-                                <p class="card-text mb-1"><strong>Jarak Ke HO :</strong> ± {{ $kamar->mess->jarak ?? '-'}} km ({{ $kamar->mess->waktu ?? '-'}} menit)</p>
+                                <p class="card-text mb-1"><strong>Jarak Ke HO :</strong> ± {{ $kamar->mess->jarak ?? '-'}} km <!--({{ $kamar->mess->waktu ?? '-'}} menit)</p>-->
                                 <!-- <p class="card-text"><strong>Contact Person:</strong> {{ $kamar->mess->cp ?? '' }} - {{ $kamar->mess->no_cp ?? ''}}</p> -->
                                 @if($kamar->petugas->isNotEmpty())
                                 <p class="card-text mb-1"><strong>Contact Person:</strong><br>

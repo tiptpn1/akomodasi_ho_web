@@ -19,6 +19,7 @@
                         <div class="sb-nav-link-icon"></div>
                         Dashboard
                     </a> --}}
+                    @if(Auth::user()->Bagian->master_bagian_id != 53)
                     <a class="nav-link" href="{{ route('admin.agenda.index') }}">
                         <div class="sb-nav-link-icon"></div>
                         Dashboard Agenda
@@ -31,6 +32,8 @@
                         <div class="sb-nav-link-icon"></div>
                         Konsumsi Rapat
                     </a>
+                    @endif
+                    @if (Auth::user()->Bagian->bagian_regional_id == 1)
                     <a class="nav-link" href="{{ route('makansiang.index') }}">
                         <div class="sb-nav-link-icon"></div>
                         Pengajuan Makan Siang
@@ -39,10 +42,14 @@
                         <div class="sb-nav-link-icon"></div>
                         Permintaan Kendaraan
                     </a>
+                    @else
+                    @endif
+                    @if(Auth::user()->Bagian->master_bagian_id != 53)
                     <a class="nav-link" href="{{ route('bookingkamar.index') }}">
                         <div class="sb-nav-link-icon"></div>
                         Booking Kamar Mess
                     </a>
+                    @endif
                     <a class="nav-link" href="{{ route('bookingkamar.list_booking') }}">
                         <div class="sb-nav-link-icon"></div>
                         Daftar Booking Mess
@@ -83,11 +90,13 @@
                             Kendaraan
                         </a> -->
                     @endif
-                    @if (Auth::user()->hakAkses->hak_akses_id == 1)
+                    @if (Auth::user()->hakAkses->hak_akses_id == 1 || Auth::user()->hakAkses->hak_akses_id == 2)
                         <a class="nav-link" href="{{ route('admin.ruangan.index') }}">
                             <div class="sb-nav-link-icon"></div>
-                            Master Ruangan
+                            Master Ruangan Vicon
                         </a>
+                        @endif
+                        @if (Auth::user()->hakAkses->hak_akses_id == 1)
                         <!-- <a class="nav-link" href="{{ route('admin.masterlink.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Link

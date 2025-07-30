@@ -301,7 +301,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         })->name('petugas');
     });
 
-    Route::group(['middleware' => 'role:admin'], function () {
+    Route::group(['middleware' => 'role:admin,GA'], function () {
         // Route untuk Link
         Route::group(['prefix' => 'masterlink', 'as' => 'masterlink.'], function () {
             Route::get('/', [LinkController::class, 'index'])->name('index');

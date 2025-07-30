@@ -21,31 +21,37 @@ class DashboardAgendaController extends Controller
     }
 
 
-    public function index()
-    {
-        // Ambil bagian_reg berdasarkan master_bagian_id dari user yang login
-        $bagian_reg = Bagian::where('master_bagian_id', Auth::user()->master_nama_bagian_id)
-            ->orderBy('master_bagian_id', 'desc')
-            ->first();
-    
-        // Pastikan $bagian_reg tidak null sebelum lanjut
-        if (!$bagian_reg) {
-            return back()->with('error', 'Data bagian regional tidak ditemukan.');
-        }
-    
-        // Ambil daftar lantai berdasarkan ruangan_regional_id
-        $list_lantai = Ruangan::select('lantai')
-            ->where('ruangan_regional_id', $bagian_reg->bagian_regional_id)
-            ->where('lantai','!=',0)
-            ->distinct()
-            ->get(); // Gunakan get() agar hasilnya koleksi model, bukan array
-    
-        $data = [
-            'list_lantai' => $list_lantai,
-        ];
-    
-        return view('admin.dashboardagenda.index', $data);
+public function index()
+{
+    // Jika master_bagian_id adalah 53, redirect ke URL tertentu
+    if (Auth::user()->Bagian && Auth::user()->Bagian->master_bagian_id == 53) {
+        return redirect()->away('https://arhan.ptpn1.co.id/bookingkamar/list_booking');
     }
+
+    // Ambil bagian_reg berdasarkan master_bagian_id dari user yang login
+    $bagian_reg = Bagian::where('master_bagian_id', Auth::user()->master_nama_bagian_id)
+        ->orderBy('master_bagian_id', 'desc')
+        ->first();
+
+    // Pastikan $bagian_reg tidak null sebelum lanjut
+    if (!$bagian_reg) {
+        return back()->with('error', 'Data bagian regional tidak ditemukan.');
+    }
+
+    // Ambil daftar lantai berdasarkan ruangan_regional_id
+    $list_lantai = Ruangan::select('lantai')
+        ->where('ruangan_regional_id', $bagian_reg->bagian_regional_id)
+        ->where('lantai','!=',0)
+        ->distinct()
+        ->get();
+
+    $data = [
+        'list_lantai' => $list_lantai,
+    ];
+
+    return view('admin.dashboardagenda.index', $data);
+}
+
     
 
     public function getContent(Request $request)
@@ -60,7 +66,7 @@ class DashboardAgendaController extends Controller
         $jenis_rapat = JenisRapat::all();
 
         try {
-            $ruangan = $this->model->getSpesificData(array('lantai' => $lantai), $date);
+            $ruangan = $this->model->getSpesificData(array('lantai' => $lantai), $date)->where('status', 'Aktif');
 
             $data = [
                 'ruangan' => $ruangan,
