@@ -36,7 +36,7 @@ class UserController extends Controller
                 ], 401));
             } else {
                 Auth::login($user);
-
+                //dd(Auth::user());
                 return response()->json([
                     'success' => true,
                     'message' => 'Success login',

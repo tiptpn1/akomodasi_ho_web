@@ -121,15 +121,19 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
-                        if (response.success) {
-                            window.location.href = "{{ route('admin.agenda.index') }}";
+                    if (response.success) {
+                        const bagianId = response.data.master_nama_bagian_id;
+                       
+                        if (bagianId == 53) {
+                            
+                            window.location.href = "{{ route('bookingkamar.list_booking') }}";
                         } else {
-                            $('#error-message').html("Username/Password Salah").removeClass('d-none');
+                            window.location.href = "{{ route('admin.agenda.index') }}";
                         }
-                    },
-                    error: function(xhr) {
+                    } else {
                         $('#error-message').html("Username/Password Salah").removeClass('d-none');
-                    },
+                    }
+                },
                     complete: function() {
                         // Re-enable the login button and hide the spinner after the request is complete
                         $('#loginButton').prop('disabled', false);

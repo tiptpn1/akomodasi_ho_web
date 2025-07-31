@@ -187,7 +187,7 @@
                                         data-dokumen="{{ $booking->dokumen_pendukung }}">
                                         Detail
                                     </button>
-                                        @if(Auth::user()->Bagian->master_bagian_id == 53 && $booking->status == 'approved')
+                                        @if(Auth::user()->master_nama_bagian_id == 53 && $booking->status == 'approved')
                                         <form action="{{ route('bookingkamar.checkout', $booking->id) }}" method="POST" class="d-inline show-loading-on-submit">
                                                 @csrf
                                                 @method('PATCH')
