@@ -30,6 +30,7 @@ use App\Http\Controllers\MessController;
 use App\Http\Controllers\BookingKamarController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\DashboardDriverController;
+use App\Models\BookingKamar;
 
 /*
 |--------------------------------------------------------------------------
@@ -143,6 +144,8 @@ Route::group(['prefix' => 'bookingkamar', 'as' => 'bookingkamar.'], function () 
     Route::get('/', [BookingKamarController::class, 'index'])->name('index');
     // Route::get('/booking', [BookingKamarController::class, 'index'])->name('booking.index');
     Route::post('/store', [BookingKamarController::class, 'store'])->name('store');
+    Route::get('/edit/{id}', [BookingKamarController::class, 'edit'])->name('bookingkamar.edit');
+    Route::put('/update/{id}', [BookingKamarController::class, 'update'])->name('bookingkamar.update');
     Route::post('/booking/{id}/checkout', [BookingKamarController::class, 'checkout'])->name('checkout');
     Route::get('/list_booking', [BookingKamarController::class, 'list_booking'])->name('list_booking');
     Route::patch('/booking/approve/{id}', [BookingKamarController::class, 'approve'])->name('approve');
@@ -152,9 +155,8 @@ Route::group(['prefix' => 'bookingkamar', 'as' => 'bookingkamar.'], function () 
     // Route::patch('/booking/perpanjangan', [BookingKamarController::class, 'perpanjangan'])->name('perpanjangan');
     Route::patch('/booking/checkout/{id}', [BookingKamarController::class, 'checkout'])->name('checkout');
     Route::get('/export', [BookingKamarController::class, 'export'])->name('export');
-    Route::get('/list-booking', [BookingKamarController::class, 'list_booking'])->name('bookingkamar.list');
+    // Route::get('/list-booking', [BookingKamarController::class, 'list_booking'])->name('bookingkamar.list');
 });
-
 
 Route::group(['prefix' => 'pkendaraan', 'as' => 'pkendaraan.'], function () {
     Route::get('/', [PKendaraanController::class, 'index'])->name('index');

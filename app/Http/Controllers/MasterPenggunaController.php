@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Data;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -23,13 +24,15 @@ class MasterPenggunaController extends Controller
         $view = $this->m_data->tampilalluser('master_user');
         $bagian = $this->m_data->getActiveBagian();
         $hak_akses = $this->m_data->getActiveHakAkses();
+        $m_mess = $this->m_data->getActiveMess();
         $data = array(
             "title"     => "ARHAN PTPN I",
             "halaman"   => "Dashboard",
             "linkhalaman" => "",
             "view" => $view,
             "bagian" => $bagian,
-            "hak_akses" => $hak_akses
+            "hak_akses" => $hak_akses,
+            "m_mess" => $m_mess,
         );
 
         return view('admin.pengguna.index', $data);
@@ -39,7 +42,10 @@ class MasterPenggunaController extends Controller
     {
         $bagian = $this->m_data->getActiveBagian();
         $hak_akses = $this->m_data->getActiveHakAkses();
-        return view('admin.pengguna.create', compact('bagian', 'hak_akses'));
+        $mess = DB::table('m_mess')
+            ->where('status', '1')
+            ->get();
+        return view('admin.pengguna.create', compact('bagian', 'hak_akses', 'mess'));
     }
 
     public function createPengguna(Request $request)
@@ -51,7 +57,8 @@ class MasterPenggunaController extends Controller
             'master_user_no_hp' => 'required',
             'master_user_status' => 'required',
             'master_user_password' => 'required',
-            'konpassword' => 'required|same:master_user_password'
+            'konpassword' => 'required|same:master_user_password',
+            'master_mess_id' => 'nullable'
         ], [
             'master_user_nama.required' => 'Username masih kosong, wajib diisi',
             'master_user_nama.unique' => 'Username sudah ada, silakan gunakan Username lain',
@@ -77,6 +84,7 @@ class MasterPenggunaController extends Controller
         $master_user_status = $request->master_user_status;
         $master_user_password = $request->master_user_password;
         $master_user_keterangan = $request->master_user_keterangan;
+        $master_mess_id = $request->master_mess_id;
 
         // Hash the password using bcrypt
         $hashedPassword = Hash::make($master_user_password);
@@ -89,6 +97,7 @@ class MasterPenggunaController extends Controller
             'master_user_status' => $master_user_status,
             'master_user_password' => $hashedPassword, // Use hashed password here
             'master_user_keterangan' => $master_user_keterangan ?? '',
+            'master_mess_id' => $master_mess_id ?: null
         );
 
         $this->m_data->input_data($data, 'master_user');
@@ -101,6 +110,7 @@ class MasterPenggunaController extends Controller
         $data['master_user'] = User::where('master_user_id',  $id)->first();
         $data['bagian'] = $this->m_data->getActiveBagian();
         $data['hak_akses'] = $this->m_data->getActiveHakAkses();
+        $data['m_mess'] = $this->m_data->getActiveMess();
 
         return view('admin.pengguna.edit', $data);
     }
@@ -113,6 +123,7 @@ class MasterPenggunaController extends Controller
             'master_nama_bagian_id' => 'required',
             'master_hak_akses_id' => 'required',
             'master_user_status' => 'required',
+            'master_mess_id' => 'nullable'
         ], [
             'master_user_nama.required' => 'Username masih kosong, wajib diisi',
             'master_user_nama.unique' => 'Username sudah ada, silakan gunakan Username lain',
@@ -134,6 +145,8 @@ class MasterPenggunaController extends Controller
         $master_user_no_hp = $request->master_user_no_hp;
         $master_user_status = $request->master_user_status;
         $master_user_keterangan = $request->master_user_keterangan;
+        $master_mess_id = $request->master_mess_id;
+        
 
         $data = array(
             'master_user_nama' => $master_user_nama,
@@ -141,7 +154,8 @@ class MasterPenggunaController extends Controller
             'master_hak_akses_id' => $master_hak_akses_id,
             'master_user_no_hp' => $master_user_no_hp,
             'master_user_status' => $master_user_status,
-            'master_user_keterangan' => $master_user_keterangan ?? ''
+            'master_user_keterangan' => $master_user_keterangan ?? '',
+            'master_mess_id' => $master_mess_id ?: null
         );
 
         $this->m_data->updatedata('master_user_id = ' . $id, $data, 'master_user');

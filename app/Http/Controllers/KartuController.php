@@ -41,7 +41,7 @@ class KartuController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
         // Validasi input
         $validator = Validator::make($request->all(), [
             'nama_pengaju' => 'required|string|max:255',
@@ -156,7 +156,7 @@ class KartuController extends Controller
 
     public function update(Request $request, $id)
     {
-        dd($request->all());
+        // dd($request->all());
         // dd('dapat');
         // Find the KasKecil record by ID
         // $makansiang = MakanSiang::findOrFail($id);
@@ -184,7 +184,7 @@ class KartuController extends Controller
         // ]);
 
         // Validasi input
-        dd($request->hasFile('memo1'));
+        // dd($request->hasFile('memo1'));
         $validator = Validator::make($request->all(), [
             'nama_pengaju1' => 'required|string|max:255',
             'nik1'           => 'required|string|max:50',

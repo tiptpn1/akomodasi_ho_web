@@ -131,9 +131,6 @@
                     </div>
                 </form>
 
-
-
-
                 @if(request('tanggal_mulai') && request('tanggal_selesai'))
                 <div class="row">
                     @forelse($kamars as $kamar)
@@ -216,9 +213,7 @@
                                                 @endfor
                                     </span>
                                     ({{ $kamar->reviews->count() }} Review)
-                                </p>
-
-
+                                </p>x
 
                                 <button class="btn btn-primary btn-book"
                                     data-bs-toggle="modal"
@@ -265,8 +260,6 @@
                     </div>
                 </div>
 
-
-
                 <!-- Modal Booking -->
                 <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
@@ -279,6 +272,7 @@
                                 @csrf
                                 <div class="modal-body">
                                     <input type="hidden" name="kamar_id" id="modalKamarId">
+                                    <input type="hidden" name="mess_id" id="modalMessId">
 
                                     <div class="mb-3">
                                         <label class="form-label">Nama Kamar</label>
@@ -350,6 +344,7 @@
                         </div>
                     </div>
                 </div>
+                
                 <!-- Modal Cancel Booking -->
                 <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
@@ -402,7 +397,6 @@
                         </div>
                     </div>
                 </div>
-
 
                 <!-- Modal Booking -->
                 <!-- Modal Preview Gambar -->
@@ -551,9 +545,11 @@
                 bookingModal.addEventListener('show.bs.modal', function(event) {
                     let button = event.relatedTarget;
                     let kamarId = button.getAttribute('data-id');
+                    let messId = button.getAttribute('data-id');
                     let namaKamar = button.getAttribute('data-nama');
 
                     document.getElementById('modalKamarId').value = kamarId;
+                    document.getElementById('modalMessId').value = messId;
                     document.getElementById('modalNamaKamar').value = namaKamar;
                 });
             });

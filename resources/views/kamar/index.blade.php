@@ -157,7 +157,6 @@
                                         <label class="form-label">Nama Mess:</label>
                                         <select class="form-control" name="mess_id" id="edit_mess_id">
                                             <option value="" disabled>Pilih Mess</option>
-                                            
                                         </select>
                                     </div>
                 
@@ -207,9 +206,6 @@
                     </div>
                 </div>
                 
-                
-
-
                 <div class="box box-primary mt-3">
                     <div class="box-body">
                         <div class="table-responsive">
@@ -242,7 +238,6 @@
                                                         <i class="fa fa-pencil" style="color: white;"></i>
                                                     </button>
                                                         
-
                                                     <!-- Delete Button -->
                                                     <form action="{{ route('kamar.destroy', $kamar->id) }}" method="POST" class="delete-mess-form">
                                                         @csrf
@@ -350,92 +345,92 @@
         
         <script>
             $(document).on('click', '#btnEdit', function() {
-    let id = $(this).data('id');
-    let url = "{{ url('kamar/edit') }}/" + id;
+            let id = $(this).data('id');
+            let url = "{{ url('kamar/edit') }}/" + id;
 
-    $.get(url, function(data) {
-        let kamar = data.kamar;
-        let messList = data.mess_list;
-        let jabatanList = data.jabatan_list;
+            $.get(url, function(data) {
+                let kamar = data.kamar;
+                let messList = data.mess_list;
+                let jabatanList = data.jabatan_list;
 
-        // Isi nilai input
-        $('#edit_kamar_id').val(kamar.id);
-        $('#edit_nama_kamar').val(kamar.nama_kamar);
-        $('#edit_kapasitas').val(kamar.kapasitas);
-        $('#edit_fasilitas').val(kamar.fasilitas);
+                // Isi nilai input
+                $('#edit_kamar_id').val(kamar.id);
+                $('#edit_nama_kamar').val(kamar.nama_kamar);
+                $('#edit_kapasitas').val(kamar.kapasitas);
+                $('#edit_fasilitas').val(kamar.fasilitas);
 
-        // Isi dropdown Mess
-        $('#edit_mess_id').empty().append('<option value="" disabled>Pilih Mess</option>');
-        $.each(messList, function(index, mess) {
-            $('#edit_mess_id').append(`<option value="${mess.id}">${mess.nama}</option>`);
-        });
-        $('#edit_mess_id').val(kamar.mess_id).trigger('change');
+                // Isi dropdown Mess
+                $('#edit_mess_id').empty().append('<option value="" disabled>Pilih Mess</option>');
+                $.each(messList, function(index, mess) {
+                    $('#edit_mess_id').append(`<option value="${mess.id}">${mess.nama}</option>`);
+                });
+                $('#edit_mess_id').val(kamar.mess_id).trigger('change');
 
-        // Isi dropdown Jabatan
-        $('#edit_peruntukan').empty().append('<option value="" disabled>Pilih Peruntukan</option>');
-        $.each(jabatanList, function(index, jabatan) {
-            $('#edit_peruntukan').append(`<option value="${jabatan.id}">${jabatan.jabatan}</option>`);
-        });
-        // $('#edit_peruntukan').val(kamar.peruntukan).trigger('change');
-        let peruntukanArray = [];
-        try {
-            peruntukanArray = JSON.parse(kamar.peruntukan);
-        } catch(e) {
-            peruntukanArray = kamar.peruntukan.split(','); // fallback ke koma
-        }
+                // Isi dropdown Jabatan
+                $('#edit_peruntukan').empty().append('<option value="" disabled>Pilih Peruntukan</option>');
+                $.each(jabatanList, function(index, jabatan) {
+                    $('#edit_peruntukan').append(`<option value="${jabatan.id}">${jabatan.jabatan}</option>`);
+                });
+                // $('#edit_peruntukan').val(kamar.peruntukan).trigger('change');
+                let peruntukanArray = [];
+                try {
+                    peruntukanArray = JSON.parse(kamar.peruntukan);
+                } catch(e) {
+                    peruntukanArray = kamar.peruntukan.split(','); // fallback ke koma
+                }
 
-        $('#edit_peruntukan').val(peruntukanArray).trigger('change');
+                $('#edit_peruntukan').val(peruntukanArray).trigger('change');
 
-        // Cek apakah ada foto utama
-        let fotoUtama = kamar.photos.find(photo => photo.is_utama == '1'); 
-        if (fotoUtama) {
-            $('#preview_foto_utama').attr('src', "/" + fotoUtama.foto);
-        } else {
-            $('#preview_foto_utama').attr('src', '');
-        }
+                // Cek apakah ada foto utama
+                let fotoUtama = kamar.photos.find(photo => photo.is_utama == '1'); 
+                if (fotoUtama) {
+                    $('#preview_foto_utama').attr('src', "/" + fotoUtama.foto);
+                } else {
+                    $('#preview_foto_utama').attr('src', '');
+                }
 
-        // Kosongkan foto pendukung sebelumnya
-        $('#preview_foto_pendukung').html('');
+                // Kosongkan foto pendukung sebelumnya
+                $('#preview_foto_pendukung').html('');
 
-        // Tambahkan foto pendukung
-        kamar.photos.forEach(photo => {
-            if (photo.is_utama != '1') {
-                const fotoHtml = `
-                    <div class="d-inline-block position-relative me-2 mb-2">
-                        <img src="/${photo.foto}" width="100" class="border">
-                        <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-foto" data-id="${photo.id}">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </div>
-                `;
-                $('#preview_foto_pendukung').append(fotoHtml);
-            }
-        });
-
-        $('#editKamarForm').attr('action', "{{ url('kamar/update') }}/" + id);
-
-        $('#preview_foto_pendukung').on('click', '.delete-foto', function () {
-            const photoId = $(this).data('id');
-
-            if (confirm('Yakin ingin menghapus foto ini?')) {
-                $.ajax({
-                    url: '/kamar/destroy-photo-kamar/' + photoId,
-                    type: 'DELETE',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function (response) {
-                        $(`button[data-id="${photoId}"]`).closest('div').remove();
-                    },
-                    error: function () {
-                        alert('Gagal menghapus foto.');
+                // Tambahkan foto pendukung
+                kamar.photos.forEach(photo => {
+                    if (photo.is_utama != '1') {
+                        const fotoHtml = `
+                            <div class="d-inline-block position-relative me-2 mb-2">
+                                <img src="/${photo.foto}" width="100" class="border">
+                                <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-foto" data-id="${photo.id}">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                        $('#preview_foto_pendukung').append(fotoHtml);
                     }
                 });
-            }
+
+                $('#editKamarForm').attr('action', "{{ url('kamar/update') }}/" + id);
+
+                $('#preview_foto_pendukung').on('click', '.delete-foto', function () {
+                    const photoId = $(this).data('id');
+
+                    if (confirm('Yakin ingin menghapus foto ini?')) {
+                        $.ajax({
+                            url: '/kamar/destroy-photo-kamar/' + photoId,
+                            type: 'DELETE',
+                            data: {
+                                _token: $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function (response) {
+                                $(`button[data-id="${photoId}"]`).closest('div').remove();
+                            },
+                            error: function () {
+                                alert('Gagal menghapus foto.');
+                            }
+                        });
+                    }
+                });
+                // $('#editKamarModal').modal('show'); // Tampilkan modal edit
+            });
         });
-        // $('#editKamarModal').modal('show'); // Tampilkan modal edit
-    });
-});
         </script>
         
         <script>

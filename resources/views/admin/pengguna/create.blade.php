@@ -28,7 +28,7 @@
                                     </div>
                                     <div class="form-group col-md-6">
                                         <b>Pilih Bagian *</b>
-                                        <select name="master_nama_bagian_id"
+                                        <select id="selectBagian" name="master_nama_bagian_id"
                                             class="form-control @error('master_nama_bagian_id') is-invalid @enderror"
                                             required>
                                             <option value="" disabled selected>Pilih Bagian</option>
@@ -104,6 +104,22 @@
                                         @enderror
                                     </div>
                                     <div class="form-group col-md-6">
+                                        <b>Pilih Lokasi Mess </b>
+                                        <select id="selectMess" name="master_mess_id"
+                                            class="form-control @error('master_mess_id') is-invalid @enderror">
+                                            <option value="" disabled selected>Pilih Lokasi Mess</option>
+                                            @foreach ($mess as $m)
+                                                <option value="{{ $m->id }}"
+                                                    {{ old('master_mess_id') == $m->id ? 'selected' : '' }}>
+                                                    {{ $m->nama }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('mess_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="form-group col-md-6">
                                         <b>Pilih Hak Akses *</b>
                                         <select name="master_hak_akses_id"
                                             class="form-control @error('master_hak_akses_id') is-invalid @enderror"
@@ -120,8 +136,6 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                </div>
-                                <div class="row">
                                     <div class="form-group col-md-6">
                                         <b>Status *</b>
                                         <select name="master_user_status"
@@ -140,11 +154,6 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    {{-- <div class="form-group col-md-6">
-                                        <b>NIK</b>
-                                        <input type="number" class="form-control" name="nik"
-                                            placeholder="Isikan NIK" value="{{ old('nik') }}">
-                                    </div> --}}
                                 </div>
                                 <div class="row">
                                     <div class="form-group col-md-6">
@@ -187,4 +196,30 @@
         </main>
         </div>
     </x-slot>
+
+    <script>
+        $(document).ready(function () {
+            const bagianSelect = $('#selectBagian');
+            const messSelect = $('#selectMess');
+
+            // Inisialisasi awal: disable jika bukan 'MESS'
+            toggleMessSelect();
+
+            bagianSelect.on('change', function () {
+                toggleMessSelect();
+            });
+
+            function toggleMessSelect() {
+                const selectedText = bagianSelect.find('option:selected').text().trim().toLowerCase();
+
+                if (selectedText === 'mess') {
+                    messSelect.prop('disabled', false);
+                } else {
+                    messSelect.prop('disabled', true);
+                    messSelect.val(''); // kosongkan pilihan jika tidak dipakai
+                }
+            }
+        });
+    </script>
+
 </x-layouts.app>

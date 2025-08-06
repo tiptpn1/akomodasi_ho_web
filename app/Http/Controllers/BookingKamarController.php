@@ -91,7 +91,6 @@ class BookingKamarController extends Controller
         return view('kamar.booking', compact('kamars', 'tanggal_mulai', 'tanggal_selesai', 'messes', 'jabatans','regionals'));
     }
 
-
     public function store(Request $request)
     {
         try {
@@ -187,7 +186,87 @@ class BookingKamarController extends Controller
         }
     }
 
+    public function edit($id)
+    {
+        try {
+            $booking = BookingKamar::findOrFail($id);
 
+            //dropdown
+            $kamar_list = KamarModel::with('mess')->where('status', 1)->get();
+            $jabatan_list = Jabatan::all();
+
+            return response()->json([
+                'success' => true,
+                'booking' => $booking,
+                'kamar_list' => $kamar_list,
+                'jabatan_list' => $jabatan_list
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve booking data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $booking = BookingKamar::findOrFail($id);
+
+            // Validate data
+            $validator = Validator::make($request->all(), [
+                'nama_pemesan' => 'required|string|max:255',
+                'kamar_id' => 'required|exists:m_kamar,id',
+                'jabatan' => 'required|string|max:255',
+                'regional' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'no_hp' => 'required|string|max:20',
+                'tanggal_mulai' => 'required|date',
+                'tanggal_selesai' => 'required|date|after:tanggal_mulai',
+                'catatan' => 'nullable|string',
+                'dokumen_pendukung' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            }
+
+            if ($request->hasFile('dokumen_pendukung')) {
+                // Delete old document if it exists
+                if ($booking->dokumen_pendukung && file_exists(public_path($booking->dokumen_pendukung))) {
+                    unlink(public_path($booking->dokumen_pendukung));
+                }
+                
+                // Upload new document
+                $file = $request->file('dokumen_pendukung');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('dokumen_booking'), $filename);
+                $dokumenPath = 'dokumen_booking/' . $filename;
+            } else {
+                $dokumenPath = $booking->dokumen_pendukung; // Keep the existing document
+            }
+
+            // Update the booking record
+            $booking->update([
+                'nama_pemesan' => $request->nama_pemesan,
+                'kamar_id' => $request->kamar_id,
+                'jabatan' => $request->jabatan,
+                'regional' => $request->regional,
+                'email' => $request->email,
+                'no_hp' => $request->no_hp,
+                'tanggal_mulai' => $request->tanggal_mulai,
+                'tanggal_selesai' => $request->tanggal_selesai,
+                'catatan' => $request->catatan,
+                'dokumen_pendukung' => $dokumenPath,
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Booking data has been successfully updated.']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to update booking: ' . $e->getMessage()], 500);
+        }
+    }
 
     public function cancelBooking(Request $request, $id)
     {
@@ -237,6 +316,7 @@ class BookingKamarController extends Controller
         
     //     return view('kamar.list_booking', compact('bookings','mess'));
     // }
+
     public function list_booking(Request $request)
     {
         $mess = MessModel::where('status', 1)->get();
@@ -248,28 +328,31 @@ class BookingKamarController extends Controller
 
         $bookings = BookingKamar::with('kamar.mess');
 
-        // Filter berdasarkan Mess yang dimiliki user
-        if (!empty(Auth::user()->mess)) {
-            $bookings->whereHas('kamar.mess', function ($query) {
-                $query->where('id', Auth::user()->mess);
-            });
-        }
-
-        // Filter berdasarkan pilihan user
-        if ($mess_filter && $mess_filter !== 'all') {
-            $bookings->whereHas('kamar.mess', function ($query) use ($mess_filter) {
-                $query->where('id', $mess_filter);
-            });
+        if (Auth::user()->master_nama_bagian_id == 53) {
+            $userMessId = Auth::user()->master_mess_id;
+            
+            if ($userMessId) {
+                $bookings->whereHas('kamar', function ($query) use ($userMessId) {
+                    $query->where('mess_id', $userMessId);
+                });
+            }
+        } else {
+            // Logika filter untuk user admin/lainnya
+            if ($mess_filter && $mess_filter !== 'all') {
+                $bookings->whereHas('kamar', function ($query) use ($mess_filter) {
+                    $query->where('mess_id', $mess_filter);
+                });
+            }
         }
 
         if ($tgl_awal) {
-            $bookings->where('tanggal_mulai', '>=', $tgl_awal);
+            $bookings->whereDate('tanggal_mulai', '>=', $tgl_awal);
         }
 
         if ($tgl_akhir) {
-            $bookings->where('tanggal_mulai', '<=', $tgl_akhir);
+            $bookings->whereDate('tanggal_selesai', '<=', $tgl_akhir);
         }
-
+        
         if ($status && $status !== 'all') {
             $bookings->where('status', $status);
         }
@@ -278,7 +361,6 @@ class BookingKamarController extends Controller
 
         return view('kamar.list_booking', compact('bookings', 'mess'));
     }
-
     
     public function approve($id)
     {

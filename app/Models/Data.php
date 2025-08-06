@@ -446,6 +446,15 @@ class Data extends Model
             ->get();
         return $query;
     }
+    public function getActiveMess()
+    {
+        $query = DB::table('m_mess')
+            ->select("*")
+            ->where('status', '1')
+            ->orderBy('id', 'DESC')
+            ->get();
+        return $query;
+    }
 
     // tampilkan data pada sebuah tabel dengan kondisi 'where'
     public function tampil($table, $where)

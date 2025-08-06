@@ -42,6 +42,9 @@
                                         <th>
                                             <center>Keterangan
                                         </th>
+                                        <th>
+                                            <center>Lokasi Mess
+                                        </th>
                                         <th style="min-width: 20%">
                                             <center>Aksi
                                         </th>
@@ -51,8 +54,8 @@
                                 <x-slot name="tableBody">
                                     @foreach ($view as $result)
                                         <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $result->master_user_nama }}</td>
+                                            <td style="text-align: center;">{{ $loop->iteration }}</td>
+                                            <td style="text-align: center;">{{ $result->master_user_nama }}</td>
                                             <td style="text-align: center;">
                                                 @php
                                                     $bagianCocok = $bagian->firstWhere(
@@ -83,7 +86,16 @@
                                                 @endif
                                             </td>
 
-                                            <td>{{ $result->master_user_keterangan }}</td>
+                                            <td style="text-align: center;">{{ $result->master_user_keterangan }}</td>
+                                            <td style="text-align: center;">
+                                                @php
+                                                    $mess = $m_mess->firstWhere(
+                                                        'id',
+                                                        $result->master_mess_id,
+                                                    );
+                                                @endphp
+                                                {{ $mess ? $mess->nama : '' }}
+                                            </td>
                                             <td>
                                                 <div class="row">
                                                     <a href="{{ route('admin.dashboard.master.pengguna.formResetPassword', ['id' => $result->master_user_id]) }}"

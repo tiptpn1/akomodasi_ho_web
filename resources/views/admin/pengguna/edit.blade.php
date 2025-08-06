@@ -122,6 +122,23 @@
                                         @enderror
                                     </div>
                                     <div class="form-group col-md-6">
+                                        <b>Pilih Lokasi Mess</b>
+                                        <select name="master_mess_id"
+                                            class="form-control @error('master_mess_id') is-invalid @enderror"
+                                            required>
+                                            <option value="" disabled>Pilih Lokasi Mess</option>
+                                            @foreach ($m_mess as $h)
+                                                <option value="{{ $h->id }}"
+                                                    {{ old('master_mess_id', $master_user->master_mess_id) == $h->id ? 'selected' : '' }}>
+                                                    {{ $h->nama }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('master_hak_akses_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="form-group col-md-6">
                                         <b>Pilih Hak Akses *</b>
                                         <select name="master_hak_akses_id"
                                             class="form-control @error('master_hak_akses_id') is-invalid @enderror"
@@ -138,13 +155,6 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                </div>
-                                <div class="row">
-                                    {{-- <div class="form-group col-md-6">
-                                        <b>NIK</b>
-                                        <input type="number" class="form-control" name="nik"
-                                            placeholder="Isikan NIK" value="{{ old('nik', $master_user->nik) }}">
-                                    </div> --}}
                                     <div class="form-group col-md-6">
                                         <b>Status *</b>
                                         <select name="master_user_status"
@@ -167,9 +177,7 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-
                                 </div>
-
                                 <div class="row">
                                     <div class="form-group col-md-12">
                                         <b>Keterangan</b>

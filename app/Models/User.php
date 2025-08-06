@@ -64,6 +64,11 @@ class User extends Authenticatable
         return $this->belongsTo(Bagian::class, 'master_nama_bagian_id', 'master_bagian_id');
     }
 
+    public function mess()
+    {
+        return $this->belongsTo(MessModel::class, 'master_mess_id', 'id');
+    }
+
     // public function regional()
     // {
     //     return $this->belongsTo(Bagian::class, 'bagian_regional_id', 'master_bagian_id');

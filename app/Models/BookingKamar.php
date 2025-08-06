@@ -10,7 +10,7 @@ class BookingKamar extends Model
     protected $table = 'booking_kamar';
     protected $fillable = [
         'kamar_id', 'nama_pemesan', 'email', 'no_hp', 'tanggal_mulai', 'tanggal_selesai', 'catatan', 'status','dokumen_pendukung','keterangan'
-        ,'jabatan','regional'];
+        ,'jabatan','regional', 'mess_id'];
 
     public function kamar()
     {

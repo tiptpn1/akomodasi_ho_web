@@ -20,7 +20,11 @@ class MessModel extends Model
         return $this->hasMany(KamarModel::class);
     }
     public function petugas()
-{
-    return $this->hasMany(PetugasMess::class, 'mess_id');
-}
+    {
+        return $this->hasMany(PetugasMess::class, 'mess_id');
+    }
+    public function kamar()
+    {
+        return $this->hasMany(KamarModel::class, 'mess_id');
+    }
 }
