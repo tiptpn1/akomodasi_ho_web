@@ -167,7 +167,7 @@
                                             <form action="{{ route('bookingkamar.approve', $booking->id) }}" method="POST" class="d-inline show-loading-on-submit">
                                                 @csrf
                                                 @method('PATCH')
-                                                <button type="button" class="btn btn-success btn-sm approve-btn" data-id="{{ $booking->id }}">Approve</button>
+                                                <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                             </form>
                                             <button class="btn btn-danger btn-sm show-loading-on-submit" data-bs-toggle="modal" data-bs-target="#rejectModal"
                                                 data-id="{{ $booking->id }}">
@@ -429,7 +429,6 @@
             </div>
             </div>
 
-            {{-- Modal Reject  --}}
             <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -542,7 +541,7 @@
         </script>
         <script>
             $('#exportBtn').on('click', function() {
-                var formData = $('#exportForm').serialize(); 
+                var formData = $('#exportForm').serialize(); // Get the form data
 
                 // Trigger the Excel export request with the selected filters
                 window.location.href = "{{ route('bookingkamar.export') }}?" + formData;
@@ -552,295 +551,20 @@
             });
         </script>
         <script>
-            // Fungsi untuk menampilkan modal loading
-            function showLoadingModal() {
-                const modalElement = document.getElementById('loadingModal');
-                const loadingModal = new bootstrap.Modal(modalElement, {
-                    backdrop: 'static',
-                    keyboard: false
-                });
-                loadingModal.show();
-                return loadingModal; // Mengembalikan instance modal
-            }
+            document.addEventListener('DOMContentLoaded', function () {
+                const forms = document.querySelectorAll('form.show-loading-on-submit');
 
-            // Event Listener untuk tombol Approve
-            $(document).on('click', '.approve-btn', function() {
-                const button = $(this);
-                const bookingId = button.data('id');
-                const url = `/bookingkamar/booking/approve/${bookingId}`; 
-
-                const loadingModalInstance = showLoadingModal(); // Tampilkan modal loading
-
-                $.ajax({
-                    url: url,
-                    method: 'PATCH', // Atau 'POST' jika route Anda menggunakan POST
-                    data: {
-                        _token: '{{ csrf_token() }}' // Mengirim CSRF token Laravel
-                    },
-                    success: function(response) {
-                        loadingModalInstance.hide(); // Sembunyikan modal loading
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: response.message
-                            }).then(() => {
-                                // Temukan baris tabel yang relevan
-                                const row = button.closest('tr');
-                                // Dapatkan objek DataTables untuk baris ini
-                                const rowData = dataTable.row(row).data();
-
-                                // Perbarui data di objek DataTables (sesuai indeks kolom Anda)
-                                // Contoh: jika status ada di kolom ke-6 (indeks 5)
-                                rowData[5] = `<span class="badge bg-success">Approved</span>`;
-
-                                // Untuk kolom aksi (indeks 6), hapus tombol approve/reject dan tambahkan checkout
-                                let actionsHtml = `<button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal"
-                                                        data-id="${bookingId}"
-                                                        data-nama="${rowData[1]}"
-                                                        data-kamar="${rowData[2]}"
-                                                        data-jabatan="${response.booking.jabatan}"
-                                                        data-regional="${response.booking.regional}"
-                                                        data-email="${response.booking.email}"
-                                                        data-no_hp="${response.booking.no_hp}"
-                                                        data-tanggal_mulai="${response.booking.tanggal_mulai}"
-                                                        data-tanggal_selesai="${response.booking.tanggal_selesai}"
-                                                        data-catatan="${response.booking.catatan}"
-                                                        data-status="Approved"
-                                                        data-dokumen="${response.booking.dokumen_pendukung}">
-                                                        Detail
-                                                    </button>`;
-                                // Tambahkan tombol Perpanjang jika peran sesuai dan status approved
-                                @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
-                                    actionsHtml += `<button class="btn btn-primary btn-sm"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#perpanjangModal"
-                                                        data-id="${bookingId}"
-                                                        data-nama="${rowData[1]}"
-                                                        data-kamar="${rowData[2]}"
-                                                        data-tgl_awal="${response.booking.tanggal_mulai}"
-                                                        data-tanggal_selesai="${response.booking.tanggal_selesai}">
-                                                        Perpanjang
-                                                    </button>`;
-                                    actionsHtml += `<form action="/bookingkamar/checkout/${bookingId}" method="POST" class="d-inline checkout-form-ajax">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <button type="submit" class="btn btn-warning btn-sm">Checkout</button>
-                                                    </form>`;
-                                @endif
-                                @if(Auth::user()->master_nama_bagian_id == 53)
-                                    actionsHtml += `<form action="/bookingkamar/checkout/${bookingId}" method="POST" class="d-inline checkout-form-ajax">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <button type="submit" class="btn btn-warning btn-sm">Checkout</button>
-                                                    </form>`;
-                                @endif
-
-                                rowData[6] = actionsHtml; // Update kolom aksi
-
-                                // Gambar ulang baris di DataTable
-                                dataTable.row(row).data(rowData).draw(false); // `draw(false)` untuk menghindari reset posisi halaman
-
-                                // Opsional: jika ada form success/error Laravel, sembunyikan
-                                $('.alert-success').hide();
-                                $('.alert-warning').hide();
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal!',
-                                text: response.message || 'Terjadi kesalahan saat menyetujui booking.'
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        loadingModalInstance.hide(); // Sembunyikan modal loading
-                        console.error('Error approving booking:', xhr);
-                        let message = 'Terjadi kesalahan pada server.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            message = xhr.responseJSON.message;
-                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            message = Object.values(xhr.responseJSON.errors).flat().join('<br>');
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal!',
-                            html: message
+                forms.forEach(function(form) {
+                    form.addEventListener('submit', function () {
+                        const modalElement = document.getElementById('loadingModal');
+                        const loadingModal = new bootstrap.Modal(modalElement, {
+                            backdrop: 'static',
+                            keyboard: false
                         });
-                    }
+                        loadingModal.show();
+                    });
                 });
             });
-
-            // Event Listener untuk form Reject (mengintersep submit)
-            $(document).on('submit', '#rejectForm', function(e) {
-                e.preventDefault(); // Mencegah submit form bawaan
-
-                const form = $(this);
-                const url = form.attr('action');
-                const formData = form.serialize();
-                const bookingId = form.find('#rejectBookingId').val(); // Ambil ID dari hidden input
-
-                const loadingModalInstance = showLoadingModal(); // Tampilkan modal loading
-                $('#rejectModal').modal('hide'); // Sembunyikan modal reject segera
-
-                $.ajax({
-                    url: url,
-                    method: 'PATCH',
-                    data: formData,
-                    success: function(response) {
-                        loadingModalInstance.hide(); // Sembunyikan modal loading
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: response.message
-                            }).then(() => {
-                                // Temukan baris tabel yang relevan
-                                const row = $(`button[data-id="${bookingId}"]`).closest('tr');
-                                const rowData = dataTable.row(row).data();
-
-                                // Perbarui data di objek DataTables
-                                rowData[5] = `<span class="badge bg-danger">Rejected</span>`;
-
-                                // Untuk kolom aksi, sembunyikan semua tombol kecuali Detail (atau sesuai kebutuhan)
-                                let actionsHtml = `<button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal"
-                                                        data-id="${bookingId}"
-                                                        data-nama="${rowData[1]}"
-                                                        data-kamar="${rowData[2]}"
-                                                        data-jabatan="${response.booking.jabatan}"
-                                                        data-regional="${response.booking.regional}"
-                                                        data-email="${response.booking.email}"
-                                                        data-no_hp="${response.booking.no_hp}"
-                                                        data-tanggal_mulai="${response.booking.tanggal_mulai}"
-                                                        data-tanggal_selesai="${response.booking.tanggal_selesai}"
-                                                        data-catatan="${response.booking.catatan}"
-                                                        data-status="Rejected (${response.booking.keterangan || '-'})"
-                                                        data-dokumen="${response.booking.dokumen_pendukung}">
-                                                        Detail
-                                                    </button>`;
-                                rowData[6] = actionsHtml; // Update kolom aksi
-
-                                dataTable.row(row).data(rowData).draw(false);
-                                // Opsional: jika ada form success/error Laravel, sembunyikan
-                                $('.alert-success').hide();
-                                $('.alert-warning').hide();
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal!',
-                                text: response.message || 'Terjadi kesalahan saat menolak booking.'
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        loadingModalInstance.hide(); // Sembunyikan modal loading
-                        console.error('Error rejecting booking:', xhr);
-                        let message = 'Terjadi kesalahan pada server.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            message = xhr.responseJSON.message;
-                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            message = Object.values(xhr.responseJSON.errors).flat().join('<br>');
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal!',
-                            html: message
-                        });
-                    }
-                });
-            });
-
-            // Event Listener untuk form Checkout (mengintersep submit)
-            $(document).on('submit', 'form.checkout-form-ajax', function(e) {
-                e.preventDefault();
-
-                const form = $(this);
-                const url = form.attr('action'); // Ambil action URL dari form
-
-                const loadingModalInstance = showLoadingModal();
-
-                $.ajax({
-                    url: url,
-                    method: 'PATCH',
-                    data: {
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        loadingModalInstance.hide();
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: response.message
-                            }).then(() => {
-                                const bookingId = url.split('/').pop(); // Extract ID from URL
-                                const row = $(`button[data-id="${bookingId}"]`).closest('tr');
-                                const rowData = dataTable.row(row).data();
-
-                                rowData[5] = `<span class="badge bg-primary">Checked Out</span>`;
-
-                                let actionsHtml = `<button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal"
-                                                        data-id="${bookingId}"
-                                                        data-nama="${rowData[1]}"
-                                                        data-kamar="${rowData[2]}"
-                                                        data-jabatan="${response.booking.jabatan}"
-                                                        data-regional="${response.booking.regional}"
-                                                        data-email="${response.booking.email}"
-                                                        data-no_hp="${response.booking.no_hp}"
-                                                        data-tanggal_mulai="${response.booking.tanggal_mulai}"
-                                                        data-tanggal_selesai="${response.booking.tanggal_selesai}"
-                                                        data-catatan="${response.booking.catatan}"
-                                                        data-status="Checked Out"
-                                                        data-dokumen="${response.booking.dokumen_pendukung}">
-                                                        Detail
-                                                    </button>`;
-                                rowData[6] = actionsHtml;
-
-                                dataTable.row(row).data(rowData).draw(false);
-                                $('.alert-success').hide();
-                                $('.alert-warning').hide();
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal!',
-                                text: response.message || 'Terjadi kesalahan saat checkout booking.'
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        loadingModalInstance.hide();
-                        console.error('Error checkout booking:', xhr);
-                        let message = 'Terjadi kesalahan pada server.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            message = xhr.responseJSON.message;
-                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            message = Object.values(xhr.responseJSON.errors).flat().join('<br>');
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal!',
-                            html: message
-                        });
-                    }
-                });
-            });            
-            
-            // document.addEventListener('DOMContentLoaded', function () {
-            //     const forms = document.querySelectorAll('form.show-loading-on-submit');
-
-            //     forms.forEach(function(form) {
-            //         form.addEventListener('submit', function () {
-            //             const modalElement = document.getElementById('loadingModal');
-            //             const loadingModal = new bootstrap.Modal(modalElement, {
-            //                 backdrop: 'static',
-            //                 keyboard: false
-            //             });
-            //             loadingModal.show();
-            //         });
-            //     });
-            // });
         </script>
 
         <script>

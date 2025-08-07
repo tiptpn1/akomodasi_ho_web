@@ -31,7 +31,7 @@
                                         <select id="selectBagian" name="master_nama_bagian_id"
                                             class="form-control @error('master_nama_bagian_id') is-invalid @enderror"
                                             required>
-                                            <option value="" disabled selected>Pilih Bagian</option>
+                                            <option value="" disabled selected >Pilih Bagian</option>
                                             @foreach ($bagian as $b)
                                                 <option value="{{ $b->master_bagian_id }}"
                                                     {{ old('master_nama_bagian_id') == $b->master_bagian_id ? 'selected' : '' }}>
@@ -107,7 +107,7 @@
                                         <b>Pilih Lokasi Mess </b>
                                         <select id="selectMess" name="master_mess_id"
                                             class="form-control @error('master_mess_id') is-invalid @enderror">
-                                            <option value="" disabled selected>Pilih Lokasi Mess</option>
+                                            <option value="" selected>-</option>
                                             @foreach ($mess as $m)
                                                 <option value="{{ $m->id }}"
                                                     {{ old('master_mess_id') == $m->id ? 'selected' : '' }}>
