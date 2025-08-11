@@ -17,8 +17,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PetugasMess;
-// use Whatsapp;
-use App\Facades\Whatsapp; // <- ini penting!
+use App\Facades\Whatsapp;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Exports\BookingExport;
@@ -118,14 +117,13 @@ class BookingKamarController extends Controller
                 'dokumen_pendukung' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Maks 2MB
             ]);
             if ($validator->fails()) {
-                return redirect()->back()
-                    ->withErrors($validator)
-                    ->withInput(); // agar input lama tetap muncul di form
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
             }
+
             // Cek apakah kamar tersedia
             $kamar = KamarModel::findOrFail($request->kamar_id);
             if (!$kamar->isAvailable($request->tanggal_mulai, $request->tanggal_selesai)) {
-                return back()->with('error', 'Kamar sudah penuh di tanggal tersebut!');
+                return response()->json(['success' => false, 'message' => 'Kamar sudah penuh di tanggal tersebut!'], 409);
             }
             // dd($request->jabatan_id);
             // Cek apakah jabatan sesuai dengan peruntukan kamar
@@ -138,23 +136,19 @@ class BookingKamarController extends Controller
             // if ($request->hasFile('dokumen_pendukung')) {
             //     $dokumenPath = $request->file('dokumen_pendukung')->store('dokumen_booking', 'public');
             // }
+
             $dokumenPath = null;
             // dd($request->file('dokumen_pendukung'));
             if ($request->hasFile('dokumen_pendukung')) {
                 $file = $request->file('dokumen_pendukung');
                 $filename = time() . '_' . $file->getClientOriginalName();
-
-                // Simpan langsung ke folder public/dokumen_booking
                 $file->move(public_path('dokumen_booking'), $filename);
-
-                // Simpan path relatif ke DB
                 $dokumenPath = 'dokumen_booking/' . $filename;
             }
             // dd($dokumenPath);
 
-
             // Simpan booking ke database
-            BookingKamar::create([
+            $booking = BookingKamar::create([
                 'kamar_id' => $request->kamar_id,
                 'nama_pemesan' => $request->nama_pemesan,
                 'jabatan' => $request->jabatan, 
@@ -166,24 +160,16 @@ class BookingKamarController extends Controller
                 'catatan' => $request->catatan,
                 'dokumen_pendukung' => $dokumenPath, 
                 'status' => 'pending',
+                'user_id' => Auth::id(),
             ]);
 
-            $admin= User::where('master_hak_akses_id', '2')->get();
-            // dd($petugas);
-            foreach ($admin as $p) {
-                $message = "Halo, {$p->master_user_nama} 😊.\n\n"
-                . "Ada masuk booking kamar atas nama {$request->nama_pemesan} yang akan menginap di *{$kamar->mess->nama}* - *{$kamar->nama_kamar}* untuk tanggal {$request->tanggal_mulai} s.d. {$request->tanggal_selesai}! \n\n"
-                . "Silahkan buka ARHAN untuk approve booking tersebut.\n\n";
-                Whatsapp::send($p->master_user_no_hp, $message);
-            }
+            // Dispatch job untuk mengirim notifikasi secara asinkron
+            dispatch(new SendWhatsappNotification($booking, 'pending', null, null, Auth::user()));
 
-            return back()->with('success', 'Booking berhasil, menunggu konfirmasi!');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()->withErrors($e->validator->errors())->withInput();
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return back()->with('error', 'Data tidak ditemukan.');
+            return response()->json(['success' => true]);
+
         } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
         }
     }
 

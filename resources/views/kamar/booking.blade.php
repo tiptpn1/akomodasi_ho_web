@@ -681,22 +681,60 @@
                     .catch(error => console.error('Error:', error));
             }
         </script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const bookingForm = document.querySelector('#bookingModal form');
-        const bookingBtn = document.getElementById('btnBooking');
 
-        bookingForm.addEventListener('submit', function () {
-            // Disable tombol
-            bookingBtn.disabled = true;
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const bookingForm = document.querySelector('#bookingModal form');
+                const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
 
-            // Ubah isi tombol ke spinner
-            bookingBtn.innerHTML = `
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                Proses...
-            `;
-        });
-    });
-</script>
+                bookingForm.addEventListener('submit', function (e) {
+                    e.preventDefault(); // Mencegah pengiriman form default
+                    
+                    const formData = new FormData(this);
+
+                    fetch(this.action, {
+                        method: this.method,
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Berhasil!',
+                                text: 'Booking berhasil dibuat.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                bookingModal.hide();
+                                location.reload();
+                            });
+                        } else {
+                            let errorMessage = data.message || 'Terjadi kesalahan saat booking.';
+                            if (data.errors) {
+                                errorMessage = Object.values(data.errors).flat().join('<br>');
+                            }
+                            Swal.fire({
+                                title: 'Gagal!',
+                                html: errorMessage,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan jaringan atau server.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+                });
+            });
+        </script>
     </x-slot>
 </x-layouts.app>
