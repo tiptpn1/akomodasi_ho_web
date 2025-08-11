@@ -1,6 +1,7 @@
 <?php 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendWhatsappNotification;
 use App\Models\Booking;
 use App\Models\BookingKamar;
 use App\Models\Jabatan;
@@ -156,14 +157,14 @@ class BookingKamarController extends Controller
             BookingKamar::create([
                 'kamar_id' => $request->kamar_id,
                 'nama_pemesan' => $request->nama_pemesan,
-                'jabatan' => $request->jabatan, // Gunakan ID jabatan
+                'jabatan' => $request->jabatan, 
                 'regional' => $request->regional,
                 'email' => $request->email,
                 'no_hp' => $request->no_hp,
                 'tanggal_mulai' => $request->tanggal_mulai,
                 'tanggal_selesai' => $request->tanggal_selesai,
                 'catatan' => $request->catatan,
-                'dokumen_pendukung' => $dokumenPath, // Simpan path dokumen
+                'dokumen_pendukung' => $dokumenPath, 
                 'status' => 'pending',
             ]);
 
@@ -364,45 +365,9 @@ class BookingKamarController extends Controller
         $booking->status = 'approved';
         $booking->save();
 
-        $user = Auth::user();
-        
-        // Ambil semua petugas mess terkait untuk notifikasi
-        $id_mess = $booking->kamar->mess->id; 
-        $petugas = PetugasMess::where('mess_id', $id_mess)->get();
-        
-        foreach ($petugas as $p) {
-            $message = "Halo, {$p->nama_petugas} 😊.\n\n"
-            . "Karyawan atas nama {$booking->nama_pemesan} ({$booking->regional}) yang akan menginap di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* untuk tanggal {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai} telah disetujui! 🎉\n\n"
-            . "Mohon dipersiapkan untuk kamar dan perlengkapan yang dibutuhkan.\n\n";
-            Whatsapp::send($p->no_petugas, $message);
-        }
+        dispatch(new SendWhatsappNotification($booking, 'approved', null, null, Auth::user()));
 
-        $daftarPetugas = '';
-        foreach ($petugas as $p) {
-            $daftarPetugas .= "- {$p->nama_petugas} ({$p->no_petugas})\n";
-        }
-        
-        $message1 = "Halo, {$booking->nama_pemesan} dari {$booking->regional} 😊.\n\n"
-        . "Pemesanan kamar di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* untuk tanggal {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai} telah disetujui! 🎉\n\n"
-        . "Jika ada sesuatu yang dibutuhkan dapat berkoordinasi dengan petugas mess:\n\n"
-        . $daftarPetugas;
-
-        $response = Whatsapp::send($booking->no_hp, $message1);
-
-        // notif wa hak akses 2
-        $admins = User::where('master_hak_akses_id', 2)->get();
-        $adminMessage = "Halo {$user->master_user_nama} 😊.\n\n"
-        . "Booking kamar atas nama {$booking->nama_pemesan} di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* telah *Disetujui*.\n"
-        . "Tanggal menginap: {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai}.\n\n"
-        . "Lihat detail di ARHAN untuk informasi lebih lanjut.";
-
-        foreach ($admins as $admin) {
-            Whatsapp::send($admin->master_user_no_hp, $adminMessage);
-        }
-
-        return $response->successful()
-            ? back()->with('success', 'Booking disetujui dan pesan WhatsApp terkirim.')
-            : back()->with('error', 'Booking disetujui tapi gagal mengirim WhatsApp.');
+        return response()->json(['success' => true]);
     }
 
     public function checkout($id)
@@ -421,37 +386,10 @@ class BookingKamarController extends Controller
             ]);
         }
 
-        $message = "Halo, {$booking->nama_pemesan} 😊.\n\n"
-            . "Anda telah berhasil Check Out dari *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* untuk tanggal {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai}\n\n"
-            . "Kami sangat menghargai jika Anda bisa memberikan review setelah menginap.\n\n"
-            . "Klik link berikut untuk memberikan review:\n\n"
-            . route('review.show', ['token' => $token]);
-        
-        $response = Whatsapp::send($booking->no_hp, $message);
+        // Kirim Job ke antrean dengan status 'checked_out'
+        dispatch(new SendWhatsappNotification($booking, 'checked_out', null, $token, Auth::user()));
 
-        // notif wa hak akses 2
-        $admins = User::where('master_hak_akses_id', 2)->get();
-        $adminMessage = "Halo {$user->master_user_nama} 😊.\n\n"
-        . "Booking kamar atas nama {$booking->nama_pemesan} di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* telah *Check Out*.\n"
-        . "Tanggal menginap: {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai}.\n\n"
-        . "Silahkan buka ARHAN untuk monitoring data tersebut.\n\n";
-
-        foreach ($admins as $admin) {
-            Whatsapp::send($admin->master_user_no_hp, $adminMessage);
-        }
-
-        $id_mess = $booking->kamar->mess->id; 
-        $petugas = PetugasMess::where('mess_id', $id_mess)->get();
-        foreach ($petugas as $p) {
-            $message2 = "Halo, {$p->nama_petugas} 😊.\n\n"
-            . "Karyawan atas nama {$booking->nama_pemesan} yang menginap di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* untuk tanggal {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai} telah check out! \n\n"
-            . "Kamar dapat segera dibersihkan.\n\n";
-            Whatsapp::send($p->no_petugas, $message2);
-        }
-
-        return $response->successful()
-            ? back()->with('success', 'Checkout berhasil dan pesan WhatsApp terkirim.')
-            : back()->with('error', 'Checkout berhasil tapi gagal mengirim WhatsApp.');
+        return response()->json(['success' => true]);
     }
 
     // Proses reject booking (Admin)
@@ -463,37 +401,12 @@ class BookingKamarController extends Controller
             'keterangan' => $request->alasan_reject
         ]);
 
-        $user = Auth::user();
+        // Kirim Job ke antrean dengan status 'rejected'
+        dispatch(new SendWhatsappNotification($booking, 'rejected', $request->alasan_reject, null, Auth::user()));
 
-        $token = $booking->review->token ?? Str::random(32);
-        if (!$booking->review) {
-            ReviewModel::create([
-                'booking_id' => $booking->id,
-                'token' => $token,
-            ]);
-        }
-
-        $message = "Halo, {$booking->nama_pemesan} 🙏.\n\n"
-            . "Mohon maaf, pemesanan anda pada *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* untuk tanggal {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai} tidak disetujui dengan keterangan:\n{$booking->keterangan}\n\n";
-
-        $response = Whatsapp::send($booking->no_hp, $message);
-
-        // notif wa hak akses 2
-        $admins = User::where('master_hak_akses_id', 2)->get();
-        $adminMessage = "Halo {$user->master_user_nama} 😊.\n\n"
-        . "Booking kamar atas nama {$booking->nama_pemesan} di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* telah *Ditolak*.\n"
-        . "Tanggal menginap: {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai}.\n"
-        . "Keterangan: {$booking->keterangan}\n\n"
-        . "Lihat detail di ARHAN untuk informasi lebih lanjut.";
-
-        foreach ($admins as $admin) {
-            Whatsapp::send($admin->master_user_no_hp, $adminMessage);
-        }
-
-        return $response->successful()
-            ? back()->with('success', 'Booking telah ditolak dan pesan Whatsapp ditolak terkirim!')
-            : back()->with('error', 'Booking telah ditolak!');
+        return back()->with('success', 'Booking telah ditolak dan pesan Whatsapp akan segera terkirim!');
     }
+
     // Proses cancel booking (User)
     public function cancel(Request $request, $id)
     {
@@ -516,35 +429,6 @@ class BookingKamarController extends Controller
         $request->validate([
             'tanggal_selesai_baru' => 'required|date|after:today',
         ]);
-    
-        // $booking = BookingKamar::findOrFail($id);
-        // $tanggalLama = $booking->tanggal_selesai;
-        // $tanggalBaru = $request->tanggal_selesai_baru;
-        // $idKamar = $booking->kamar_id;
-    
-        // // Cek apakah ada booking lain untuk kamar yang sama di antara tanggal tersebut
-        // $conflict = DB::table('booking_kamar')
-        //     ->where('kamar_id', $idKamar)
-        //     ->where('id', '!=', $id) // Hindari current booking
-        //     ->where(function ($query) use ($tanggalLama, $tanggalBaru) {
-        //         $query->whereBetween('tanggal_mulai', [$tanggalLama, $tanggalBaru])
-        //               ->orWhereBetween('tanggal_selesai', [$tanggalLama, $tanggalBaru])
-        //               ->orWhere(function ($query2) use ($tanggalLama, $tanggalBaru) {
-        //                   $query2->where('tanggal_mulai', '<=', $tanggalLama)
-        //                          ->where('tanggal_selesai', '>=', $tanggalBaru);
-        //               });
-        //     })
-        //     ->exists();
-    
-        // if ($conflict) {
-        //     return back()->with('error', 'Perpanjangan gagal! Tanggal tersebut sudah dibooking oleh pengguna lain.');
-        // }
-    
-        // // Jika tidak ada konflik, update tanggal_selesai
-        // $booking->update([
-        //     'tanggal_selesai' => $tanggalBaru,
-        //     'keterangan' => 'Diperpanjang sampai ' . $tanggalBaru
-        // ]);
     
         // return back()->with('success', 'Perpanjangan berhasil!');
         $booking = BookingKamar::findOrFail($id);
@@ -582,44 +466,10 @@ class BookingKamarController extends Controller
             'keterangan' => 'Diperpanjang sampai ' . $tanggalSelesaiBaru->toDateString(),
         ]);
 
-        // return back()->with('success', 'Perpanjangan berhasil!');
-        $id_mess =$booking->kamar->mess->id; 
-        $petugas= PetugasMess::where('mess_id', $id_mess)->get();
-        // dd($petugas);
-        foreach ($petugas as $p) {
-            $message = "Halo, {$p->nama_petugas} 😊.\n\n"
-            . "Karyawan atas nama {$booking->nama_pemesan} yang akan menginap di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
-            . "Mohon dipersiapkan untuk kamar dan perlengkapan yang dibutuhkan.\n\n";
-            Whatsapp::send($p->no_petugas, $message);
-        }
+        // Kirim Job ke antrean dengan status 'perpanjangan'
+        dispatch(new SendWhatsappNotification($booking, 'perpanjangan', $booking->keterangan, null, Auth::user()));
 
-        $daftarPetugas = '';
-        foreach ($petugas as $p) {
-            $daftarPetugas .= "- {$p->nama_petugas} ({$p->no_petugas})\n";
-        }
-        
-        $message1 = "Halo, {$booking->nama_pemesan} 😊.\n\n"
-            . "Pemesanan kamar di *{$booking->kamar->mess->nama_mess}* - *{$booking->kamar->nama_kamar}* telah disetujui! 🎉\n\n"
-            . "Jika ada sesuatu yang dibutuhkan dapat berkoordinasi dengan petugas mess:\n\n"
-            . $daftarPetugas;
-
-           
-        $response = Whatsapp::send($booking->no_hp, $message1);
-
-        // notif wa hak akses 2
-        $admins = User::where('master_hak_akses_id', 2)->get();
-        $adminMessage = "Halo {$user->master_user_nama} 😊.\n\n"
-        . "Booking kamar atas nama {$booking->nama_pemesan} di *{$booking->kamar->mess->nama}* - *{$booking->kamar->nama_kamar}* telah *Disetujui*.\n"
-        . "Tanggal menginap: {$booking->tanggal_mulai} s.d. {$booking->tanggal_selesai}.\n\n"
-        . "Lihat detail di ARHAN untuk informasi lebih lanjut.";
-
-        foreach ($admins as $admin) {
-            Whatsapp::send($admin->master_user_no_hp, $adminMessage);
-        }
-        
-        return $response->successful()
-            ? back()->with('success', 'Booking disetujui dan pesan WhatsApp terkirim.')
-            : back()->with('error', 'Booking disetujui tapi gagal mengirim WhatsApp.');
+        return back()->with('success', 'Perpanjangan berhasil dan pesan WhatsApp akan segera terkirim.');
     }
 
     public function export(Request $request)
@@ -655,7 +505,6 @@ class BookingKamarController extends Controller
             }
         }
 
-
         // Fetch the data
         $data = $booking->with('kamar.mess')->get();
         // dd($data);
@@ -665,5 +514,4 @@ class BookingKamarController extends Controller
         // Export logic (using Laravel Excel)
         return Excel::download(new BookingExport($data), 'booking_kamar_export.xlsx');
     }
-
 }

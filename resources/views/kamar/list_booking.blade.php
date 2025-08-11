@@ -155,25 +155,30 @@
 
                                     {{-- Tombol Checkout --}}
                                     @if(Auth::user()->master_nama_bagian_id == 53 && $booking->status == 'approved')
-                                    <form action="{{ route('bookingkamar.checkout', $booking->id) }}" method="POST" class="d-inline show-loading-on-submit">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="btn btn-warning btn-sm">Checkout</button>
-                                    </form>
+                                    <button type="button" class="btn btn-warning btn-sm checkout-btn" 
+                                            data-id="{{ $booking->id }}" 
+                                            data-url="{{ route('bookingkamar.checkout', $booking->id) }}">
+                                        Checkout
+                                    </button>
                                     @endif
 
                                     @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
+                                        {{-- Tombol Approve --}}
                                         @if($booking->status == 'pending')
-                                            <form action="{{ route('bookingkamar.approve', $booking->id) }}" method="POST" class="d-inline show-loading-on-submit">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button type="submit" class="btn btn-success btn-sm">Approve</button>
-                                            </form>
-                                            <button class="btn btn-danger btn-sm show-loading-on-submit" data-bs-toggle="modal" data-bs-target="#rejectModal"
-                                                data-id="{{ $booking->id }}">
+                                            <button type="button" class="btn btn-success btn-sm approve-btn" 
+                                                    data-id="{{ $booking->id }}" 
+                                                    data-url="{{ route('bookingkamar.approve', $booking->id) }}">
+                                                Approve
+                                            </button>
+                                            <button class="btn btn-danger btn-sm show-loading-on-submit" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#rejectModal"
+                                                    data-id="{{ $booking->id }}">
                                                 Reject
                                             </button>
                                         @endif
+
+                                        {{-- Tombol Perpanjang --}}
                                         @if($booking->status == 'approved')
                                         <button class="btn btn-primary btn-sm show-loading-on-submit" 
                                             data-bs-toggle="modal" 
@@ -185,11 +190,11 @@
                                             data-tanggal_selesai="{{ $booking->tanggal_selesai }}">
                                             Perpanjang
                                         </button>
-                                        <form action="{{ route('bookingkamar.checkout', $booking->id) }}" method="POST" class="d-inline show-loading-on-submit">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button type="submit" class="btn btn-warning btn-sm">Checkout</button>
-                                        </form>
+                                        <button type="button" class="btn btn-warning btn-sm checkout-btn" 
+                                                data-id="{{ $booking->id }}" 
+                                                data-url="{{ route('bookingkamar.checkout', $booking->id) }}">
+                                            Checkout
+                                        </button>
                                         @endif
                                     @elseif(auth()->user()->role == 'user' && $booking->status == 'pending')
                                         <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#cancelModal"
@@ -429,6 +434,7 @@
             </div>
             </div>
 
+            {{-- Modal Reject  --}}
             <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -509,6 +515,150 @@
                     document.getElementById('rejectBookingId').value = bookingId;
                 });
             });
+        </script>
+        <script>
+            //Tombol Approve
+            $(document).ready(function() {
+                $('.approve-btn').click(function(e) {
+                    e.preventDefault();
+                    
+                    const bookingId = $(this).data('id');
+                    const approveUrl = $(this).data('url');
+                    const button = $(this);
+                    
+                    // Show confirmation dialog
+                    Swal.fire({
+                        title: 'Apakah Anda yakin ingin menyetujui booking ini?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Ya, Approve!',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Disable button agar tidak double klik
+                            button.prop('disabled', true);
+                            
+                            $.ajax({
+                                url: approveUrl,
+                                type: 'PATCH',
+                                data: {
+                                    _token: $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        Swal.fire({
+                                            title: 'Berhasil!',
+                                            text: 'Booking berhasil disetujui.',
+                                            icon: 'success',
+                                            confirmButtonColor: '#28a745',
+                                        }).then(() => {
+                                            location.reload();
+                                        });
+                                    } else {
+                                        throw new Error(response.message || 'Approval failed');
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('Approval error:', error);
+                                    
+                                    let errorMessage = 'Terjadi kesalahan saat memproses approval.';
+                                    
+                                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                                        errorMessage = xhr.responseJSON.message;
+                                    }
+                                    
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: errorMessage,
+                                        icon: 'error',
+                                        confirmButtonColor: '#dc3545'
+                                    });
+                                    
+                                    button.prop('disabled', false);
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+            
+            //Tombol Checkout
+            $(document).ready(function() {
+                $('.checkout-btn').click(function(e) {
+                    e.preventDefault();
+                    
+                    const bookingId = $(this).data('id');
+                    const checkoutUrl = $(this).data('url');
+                    const button = $(this);
+                    
+                    // Show confirmation dialog
+                    Swal.fire({
+                        title: 'Konfirmasi Checkout',
+                        text: 'Apakah Anda yakin ingin checkout kamar ini?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Ya, Checkout!',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            button.prop('disabled', true);
+                            
+                            $.ajax({
+                                url: checkoutUrl,
+                                type: 'PATCH',
+                                data: {
+                                    _token: $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        Swal.fire({
+                                            title: 'Berhasil!',
+                                            text: 'Kamar berhasil di-checkout',
+                                            icon: 'success',
+                                            confirmButtonColor: '#28a745'
+                                        }).then(() => {
+                                            location.reload();
+                                        });
+                                    } else {
+                                        throw new Error(response.message || 'Checkout failed');
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('Checkout error:', xhr.responseJSON);
+                                    
+                                    let errorMessage = 'Terjadi kesalahan saat memproses checkout.';
+                                    
+                                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                                        errorMessage = xhr.responseJSON.message;
+                                    } else if (xhr.status === 404) {
+                                        errorMessage = 'Booking tidak ditemukan.';
+                                    } else if (xhr.status === 403) {
+                                        errorMessage = 'Anda tidak memiliki akses untuk melakukan checkout.';
+                                    } else if (xhr.status === 500) {
+                                        errorMessage = 'Terjadi kesalahan server. Silakan coba lagi.';
+                                    }
+                                    
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: errorMessage,
+                                        icon: 'error',
+                                        confirmButtonColor: '#dc3545'
+                                    });
+                                    
+                                    // Re-enable button
+                                    button.prop('disabled', false);
+                                }
+                            });
+                        }
+                    });
+                });
+            });         
         </script>
         <script>
             $('#perpanjangModal').on('show.bs.modal', function (event) {
