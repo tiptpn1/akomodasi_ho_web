@@ -549,7 +549,7 @@
                                 },
                                 success: function(response) {
                                     if (response.success) {
-                                        Swal.fire({
+                                        Swal.fire({  
                                             title: 'Berhasil!',
                                             text: 'Booking berhasil disetujui.',
                                             icon: 'success',

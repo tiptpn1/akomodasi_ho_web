@@ -97,7 +97,7 @@
     <div id="layoutSidenav">
         <x-partials.sidebar />
 
-        {{ $slot }}
+        {{ $slot }}  
     </div>
 
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js" crossorigin="anonymous">
