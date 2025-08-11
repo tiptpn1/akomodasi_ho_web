@@ -5,6 +5,7 @@ use App\Jobs\SendWhatsappNotification;
 use App\Models\Booking;
 use App\Models\BookingKamar;
 use App\Models\Jabatan;
+use App\Models\Regional;
 use App\Models\KamarModel;
 use App\Models\MessModel;
 use App\Models\ReviewModel;
@@ -35,15 +36,12 @@ class BookingKamarController extends Controller
         $tanggal_selesai = $request->query('tanggal_selesai');
         $mess_id = $request->query('mess_id', 'all');
         $jabatan_id = $request->query('jabatan_id', 'all');
+        $regional_id = $request->query('regional_id', 'all');
 
         // Ambil daftar Mess dan Jabatan untuk filter dropdown
         $messes = MessModel::where('status', 1)->get();
         $jabatans = Jabatan::all();
-
-        $regionals = [
-            'Head Office','Regional 1', 'Regional 2', 'Regional 3', 'Regional 4',
-            'Regional 5', 'Regional 6', 'Regional 7', 'Regional 8'
-        ];
+        $regionals = Regional::all();
         
         // Jika tanggal belum dipilih, kembalikan koleksi kosong
         if (!$tanggal_mulai || !$tanggal_selesai) {
@@ -94,21 +92,22 @@ class BookingKamarController extends Controller
     public function store(Request $request)
     {
         try {
-            // Cari ID jabatan berdasarkan nama jabatan
             $jabatan = \DB::table('m_jabatan')->where('jabatan', $request->jabatan)->first();
             // dd($request->all());
             if (!$jabatan) {
                 return back()->with('error', 'Jabatan tidak valid.');
             }
 
-            // Lakukan validasi dengan ID jabatan yang ditemukan
-            $request->merge(['jabatan_id' => $jabatan->id]); // Menambahkan jabatan_id ke request
+            $regional = \DB::table('master_regional')->where('id_regional', $request->regional)->first();
+            $request->merge(['jabatan_id' => $jabatan->id]);
+            $request->merge(['regional_id' => $regional->id_regional]);
+
             // dd($request->merge(['jabatan_id' => $jabatan->id]));
             $validator = Validator::make($request->all(), [
                 'kamar_id' => 'required|exists:m_kamar,id',
                 'nama_pemesan' => 'required|string|max:255',
-                'jabatan_id' => 'required|exists:m_jabatan,id', // Validasi menggunakan ID
-                'regional' => 'required|string|max:255',
+                'jabatan_id' => 'required|exists:m_jabatan,id',
+                'regional' => 'required|exists:master_regional,id_regional',
                 'email' => 'required|email|max:255',
                 'no_hp' => 'required|string|max:20',
                 'tanggal_mulai' => 'required|date',
@@ -147,7 +146,6 @@ class BookingKamarController extends Controller
             }
             // dd($dokumenPath);
 
-            // Simpan booking ke database
             $booking = BookingKamar::create([
                 'kamar_id' => $request->kamar_id,
                 'nama_pemesan' => $request->nama_pemesan,

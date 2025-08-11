@@ -165,8 +165,6 @@
                                         @endforeach
                                     </div>
 
-
-
                                     <!-- Tombol Next -->
                                     <button class="btn btn-sm btn-light next-btn" data-kamar-id="{{ $kamar->id }}"
                                         style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 10; width: 30px; height: 30px; display: none;">❯</button>
@@ -298,7 +296,7 @@
                                         <select name="regional" class="form-control" required>
                                             <option value="">-- Pilih Regional --</option>
                                             @foreach ($regionals as $regional)
-                                            <option value="{{ $regional }}">{{ $regional }}</option>
+                                            <option value="{{ $regional->id_regional }}">{{ $regional->nama_regional }}</option>
                                             @endforeach
                                         </select>
                                     </div>
