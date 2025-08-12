@@ -105,6 +105,10 @@
                             <div class="sb-nav-link-icon"></div>
                             Master Divisi/Bagian
                         </a>
+                        <a class="nav-link" href="{{ route('admin.regional.index') }}">
+                            <div class="sb-nav-link-icon"></div>
+                            Master Regional
+                        </a>
                         <a class="nav-link" href="{{ route('admin.dashboard.master.jenis.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Master Jenis Rapat

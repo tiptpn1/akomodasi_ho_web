@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AgendaKendaraanController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MasterJenisRapatController;
 use App\Http\Controllers\BagianController;
+use App\Http\Controllers\RegionalController;
 use App\Http\Controllers\DashboardAgendaController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LinkController;
@@ -321,6 +322,12 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
             Route::get('/', [BagianController::class, 'index'])->name('index');
             Route::post('/tambah', [BagianController::class, 'store'])->name('store');
             Route::put('/update/{id}', [BagianController::class, 'update'])->name('update');
+        });
+        // Route untuk Regional
+        Route::group(['prefix' => 'regional', 'as' => 'regional.'], function () {
+            Route::get('/', [RegionalController::class, 'index'])->name('index');
+            Route::post('/tambah', [RegionalController::class, 'store'])->name('store');
+            Route::put('/update/{id}', [RegionalController::class, 'update'])->name('update');
         });
         // Route untuk Hak Akses
         Route::group(['prefix' => 'hak_akses', 'as' => 'hak_akses.'], function () {
