@@ -337,20 +337,12 @@
                                     </select>
                                 </div>
 
-                                <div class="mb-4">
+                                 <div class="mb-4">
                                     <label class="form-label fw-bold">Regional</label>
-                                    <select class="form-select" name="regional" id="editRegional" required>
-                                        <option value="" disabled selected>Pilih Regional</option>
-                                        @php
-                                            $regionals = ['Head Office','Regional 1', 'Regional 2', 'Regional 3', 'Regional 4',
-                                                            'Regional 5', 'Regional 6', 'Regional 7', 'Regional 8'];
-                                        @endphp
-                                        @foreach($regionals as $reg)
-                                            <option value="{{ $reg }}">{{ $reg }}</option>
-                                        @endforeach
+                                    <select class="form-select select2-edit-regional" name="regional" id="editRegional" required>
+                                        <option></option>
                                     </select>
                                 </div>
-
                                 <div class="mb-4">
                                     <label class="form-label fw-bold">Email</label>
                                     <input type="email" id="editEmail" name="email" class="form-control" required>
@@ -505,14 +497,65 @@
                         detailDokumenLink.style.display = 'block'; // Sembunyikan link atau tampilkan teks "Tidak ada dokumen"
                     }
                 });
-            
-                let rejectModal = document.getElementById('rejectModal');
-                let rejectForm = document.getElementById('rejectForm');
-                rejectModal.addEventListener('show.bs.modal', function (event) {
-                    let button = event.relatedTarget;
-                    let bookingId = button.getAttribute('data-id');
-                    rejectForm.action = rejectForm.action.replace(':id', bookingId);
-                    document.getElementById('rejectBookingId').value = bookingId;
+
+                $('#rejectModal').on('show.bs.modal', function (event) {
+                    let button = $(event.relatedTarget);
+                    let bookingId = button.data('id');
+                    let form = $('#rejectForm');
+                    
+                    form.attr('action', `{{ url('bookingkamar/booking/reject') }}/${bookingId}`);
+                    form.find('#rejectBookingId').val(bookingId);
+                });
+
+                $('#rejectForm').on('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const form = $(this);
+                    const actionUrl = form.attr('action');
+                    const formData = form.serialize();
+
+                    $.ajax({
+                        url: actionUrl,
+                        method: 'POST',
+                        data: formData,
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: 'Berhasil!',
+                                    text: 'Booking berhasil ditolak.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    // Tutup modal dan refresh halaman
+                                    const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+                                    rejectModal.hide();
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Gagal!',
+                                    text: response.message || 'Terjadi kesalahan saat menolak booking.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Reject error:', xhr.responseJSON);
+                            let errorMessage = 'Terjadi kesalahan saat menolak booking.';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                                errorMessage = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                            }
+                            Swal.fire({
+                                title: 'Error!',
+                                html: errorMessage,
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    });
                 });
             });
         </script>
@@ -720,7 +763,7 @@
         <script>
         $(document).ready(function () {
             // Inisialisasi Select2
-            $('.select2-edit-kamar, .select2-edit-jabatan').select2({
+            $('.select2-edit-kamar, .select2-edit-jabatan, .select2-edit-regional').select2({
                 dropdownParent: $('#editModal'),
                 width: '100%',
                 placeholder: function(){
@@ -750,6 +793,7 @@
                         const booking = data.booking;
                         const kamarList = data.kamar_list;
                         const jabatanList = data.jabatan_list;
+                        const regionalList = data.regional_list;
 
                         $('#editBookingId').val(booking.id);
                         $('#editNamaPemesan').val(booking.nama_pemesan);
@@ -780,6 +824,16 @@
                             );
                         });
                         jabatanSelect.val(booking.jabatan).trigger('change.select2');
+
+                        // Dropdown Regional
+                        const regionalSelect = $('#editRegional');
+                        regionalSelect.empty().append('<option value="" disabled>Pilih Regional</option>');
+                        $.each(regionalList, function (i, regional) {
+                            regionalSelect.append(
+                                `<option value="${regional.id_regional}">${regional.nama_regional}</option>`
+                            );
+                        });
+                        regionalSelect.val(booking.regional).trigger('change.select2');
 
                         // Dropdown Regional
                         $('#editRegional').val(booking.regional).trigger('change.select2');

@@ -179,12 +179,14 @@ class BookingKamarController extends Controller
             //dropdown
             $kamar_list = KamarModel::with('mess')->where('status', 1)->get();
             $jabatan_list = Jabatan::all();
+            $regional_list = Regional::all();
 
             return response()->json([
                 'success' => true,
                 'booking' => $booking,
                 'kamar_list' => $kamar_list,
-                'jabatan_list' => $jabatan_list
+                'jabatan_list' => $jabatan_list,
+                'regional_list' => $regional_list,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -388,7 +390,7 @@ class BookingKamarController extends Controller
         // Kirim Job ke antrean dengan status 'rejected'
         dispatch(new SendWhatsappNotification($booking, 'rejected', $request->alasan_reject, null, Auth::user()));
 
-        return back()->with('success', 'Booking telah ditolak dan pesan Whatsapp akan segera terkirim!');
+        return response()->json(['success' => true]);
     }
 
     // Proses cancel booking (User)
