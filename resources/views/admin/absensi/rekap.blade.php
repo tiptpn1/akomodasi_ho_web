@@ -160,7 +160,7 @@
                                             <td>{{ $absensi->instansi }}</td>
                                             <td>
                                                 <center>
-                                                    {{ Carbon\Carbon::parse($absensi->created)->format('H:i:s') }}
+                                                    {{ Carbon\Carbon::parse($absensi->created_at)->format('H:i:s') }}
                                                 </center>
                                             </td>
                                             <td>
