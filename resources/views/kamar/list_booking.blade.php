@@ -98,25 +98,29 @@
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped" id="dataTables-kaskecil">
                         <thead>
-                            <tr>
+                            <tr style="text-align: center;">
                                 <th>No</th>
                                 <th>Nama Pemesan</th>
                                 <th>Kamar</th>
                                 <th>Tanggal Mulai</th>
                                 <th>Tanggal Selesai</th>
+                                <th>Tanggal Selesai (awal)</th>
+                                <th>Keterangan</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody >
+                        <tbody>
                             @foreach($bookings as $index => $booking)
                             {{-- @if (!empty(Auth::user()->mess)) --}}{{-- Ini sebaiknya logic di controller atau diubah --}}
-                            <tr>
+                            <tr >
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $booking->nama_pemesan }}</td>
                                 <td>{{ $booking->kamar->nama_kamar }} - {{ $booking->kamar->mess->nama ?? '-' }}</td>
                                 <td>{{ $booking->tanggal_mulai }}</td>
                                 <td>{{ $booking->tanggal_selesai }}</td>
+                                <td>{{ $booking->tanggal_selesai_awal }}</td>
+                                <td style="text-align: center;">{{ $booking->keterangan }}</td>
                                 <td>
                                     <span class="badge 
                                         @if($booking->status == 'pending') bg-warning 
@@ -128,22 +132,39 @@
                                         {{ ucfirst($booking->status) }}
                                     </span>
                                 </td>
+
                                 <td>
                                     <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal"
                                         data-id="{{ $booking->id }}"
                                         data-nama="{{ $booking->nama_pemesan }}"
                                         data-kamar="{{ $booking->kamar->nama_kamar }} - {{ $booking->kamar->mess->nama ?? '-' }}"
                                         data-jabatan="{{ $booking->jabatan }}"
-                                        data-regional="{{ $booking->regional }}"
+                                        data-regional="{{ $booking->regional->nama_regional ?? '-' }}"
                                         data-email="{{ $booking->email }}"
                                         data-no_hp="{{ $booking->no_hp }}"
                                         data-tanggal_mulai="{{ $booking->tanggal_mulai }}"
                                         data-tanggal_selesai="{{ $booking->tanggal_selesai }}"
+                                        data-tanggal_selesai_awal="{{ $booking->tanggal_selesai_awal }}"
                                         data-catatan="{{ $booking->catatan }}"
-                                        data-status="{{ ucfirst($booking->status) }} ({{ $booking->keterangan ?? '-' }})"
+                                        data-status="{{ $booking->status }}"
+                                        data-keterangan="{{ $booking->keterangan }}"
                                         data-dokumen="{{ $booking->dokumen_pendukung }}">
                                         Detail
                                     </button>
+
+                                    {{-- Tombol Cek Ketersediaan --}}
+                                    @if(in_array(Auth::user()->master_hak_akses_id, [3]) && $booking->status == 'approved')
+                                        <button class="btn btn-warning btn-sm" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#ketersediaanModal"
+                                            data-id="{{ $booking->id }}"
+                                            data-nama="{{ $booking->nama_pemesan }}"
+                                            data-kamar="{{ $booking->kamar->nama_kamar }} - {{ $booking->kamar->mess->nama ?? '-' }}"
+                                            data-tgl_mulai="{{ $booking->tanggal_mulai }}"
+                                            data-tanggal_selesai="{{ $booking->tanggal_selesai }}">
+                                            Cek Ketersediaan
+                                        </button>
+                                    @endif
 
                                     {{-- Tombol Edit --}}
                                     @if(in_array(Auth::user()->master_hak_akses_id, [1, 2]) && $booking->status != 'checked_out')
@@ -155,7 +176,7 @@
 
                                     {{-- Tombol Checkout --}}
                                     @if(Auth::user()->master_nama_bagian_id == 53 && $booking->status == 'approved')
-                                    <button type="button" class="btn btn-warning btn-sm checkout-btn" 
+                                    <button type="button" class="btn btn-secondary btn-sm checkout-btn" 
                                             data-id="{{ $booking->id }}" 
                                             data-url="{{ route('bookingkamar.checkout', $booking->id) }}">
                                         Checkout
@@ -190,7 +211,7 @@
                                             data-tanggal_selesai="{{ $booking->tanggal_selesai }}">
                                             Perpanjang
                                         </button>
-                                        <button type="button" class="btn btn-warning btn-sm checkout-btn" 
+                                        <button type="button" class="btn btn-secondary btn-sm checkout-btn" 
                                                 data-id="{{ $booking->id }}" 
                                                 data-url="{{ route('bookingkamar.checkout', $booking->id) }}">
                                             Checkout
@@ -304,6 +325,42 @@
             </div>
             </div>
 
+            {{-- Modal Cek Ketersediaan --}}
+            <div class="modal fade" id="ketersediaanModal" tabindex="-1" aria-labelledby="ketersediaanModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form id="ketersediaanForm" method="POST">
+                @csrf
+                {{-- NOTE: ini AJUKAN booking baru (POST). Jangan pakai @method('PATCH') --}}
+                <input type="hidden" name="id" id="ketersediaan_id">
+
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="ketersediaanModalLabel">Cek Ketersediaan Kamar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+
+                    <div class="modal-body">
+                    <p><strong>Nama Pemesan:</strong> <span id="ketersediaan_nama"></span></p>
+                    <p><strong>Kamar:</strong> <span id="ketersediaan_kamar"></span></p>
+                    <p><strong>Tanggal Mulai (lama):</strong> <span id="ketersediaan_awal"></span></p>
+                    <p><strong>Tanggal Selesai (lama):</strong> <span id="ketersediaan_selesai"></span></p>
+
+                    <div class="mb-3">
+                        <label for="tanggal_cek" class="form-label">Tanggal Selesai Baru</label>
+                        <input type="date" class="form-control" name="tanggal_selesai_baru" id="tanggal_cek" required>
+                        <div id="infoKetersediaan" class="mt-2"></div>
+                    </div>
+                    </div>
+
+                    <div class="modal-footer">
+                    <button type="button" id="btnAjukanPerpanjangan" class="btn btn-primary d-none">Ajukan</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+                </form>
+            </div>
+            </div>
+
             {{-- Modal Edit --}}    
             <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
@@ -405,8 +462,10 @@
                             <p><strong>No HP:</strong> <span id="detailNoHp"></span></p>
                             <p><strong>Tanggal Mulai:</strong> <span id="detailTanggalMulai"></span></p>
                             <p><strong>Tanggal Selesai:</strong> <span id="detailTanggalSelesai"></span></p>
+                            <p id="rowTanggalSelesaiAwal"><strong>Tanggal Selesai (awal):</strong> <span id="detailTanggalSelesaiAwal"></span></p>
                             <p><strong>Catatan:</strong> <span id="detailCatatan"></span></p>
                             <p><strong>Status:</strong> <span id="detailStatus"></span></p>
+                            <p><strong>Keterangan:</strong> <span id="detailKeterangan"></span></p>
                             <p><strong>Dokumen:</strong> <a id="detailDokumen" href="#" target="_blank">Lihat Dokumen</a></p>
                         </div>
                     </div>
@@ -456,60 +515,81 @@
     <x-slot name="scripts">
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
         <script>
             $(document).ready(function() {
+                // Inisialisasi DataTables
                 $('#dataTables-kaskecil').DataTable({
                     responsive: true
                 });
-            });
-        </script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                let detailModal = document.getElementById('detailModal');
-                detailModal.addEventListener('show.bs.modal', function (event) {
-                    let button = event.relatedTarget;
-                    document.getElementById("detailNama").textContent = button.getAttribute("data-nama");
-                    document.getElementById("detailKamar").textContent = button.getAttribute("data-kamar");
-                    document.getElementById("detailJabatan").textContent = button.getAttribute("data-jabatan");
-                    document.getElementById("detailRegional").textContent = button.getAttribute("data-regional");
-                    document.getElementById("detailEmail").textContent = button.getAttribute("data-email");
-                    document.getElementById("detailNoHp").textContent = button.getAttribute("data-no_hp");
-                    document.getElementById("detailTanggalMulai").textContent = button.getAttribute("data-tanggal_mulai");
-                    document.getElementById("detailTanggalSelesai").textContent = button.getAttribute("data-tanggal_selesai");
-                    document.getElementById("detailCatatan").textContent = button.getAttribute("data-catatan");
-                    document.getElementById("detailStatus").textContent = button.getAttribute("data-status");
+
+                // SweetAlert untuk pesan dari Controller
+                @if(session('status'))
+                    Swal.fire({
+                        icon: '{{ session('status') == 'success' ? 'success' : 'error' }}',
+                        title: '{{ session('status') == 'success' ? 'Berhasil!' : 'Oops...' }}',
+                        text: '{{ session('message') }}',
+                        showConfirmButton: '{{ session('status') == 'error' ? 'true' : 'false' }}',
+                        timer: '{{ session('status') == 'success' ? 3000 : null }}'
+                    });
+                @endif
+
+                // Inisialisasi Select2
+                $('.select2-edit-kamar, .select2-edit-jabatan, .select2-edit-regional').select2({
+                    dropdownParent: $('#editModal'),
+                    width: '100%',
+                    placeholder: function() {
+                        return $(this).data('placeholder');
+                    },
+                    theme: 'bootstrap-5'
+                });
+
+                // Modal Detail
+                $('#detailModal').on('show.bs.modal', function(event) {
+                    const button = $(event.relatedTarget);
+                    const data = button.data();
                     
-                    // Handle dokumen pendukung
-                    let dokumenPath = button.getAttribute("data-dokumen");
-                    let detailDokumenLink = document.getElementById("detailDokumen");
-                    if (dokumenPath && dokumenPath !== 'null' && dokumenPath !== '') { // Pastikan dokumenPath tidak null atau string kosong
-                        detailDokumenLink.href = "/storage/" + dokumenPath;
-                        detailDokumenLink.textContent = dokumenPath.split('/').pop(); // Tampilkan hanya nama file
-                        detailDokumenLink.style.display = 'inline'; // Tampilkan link
+                    $('#detailNama').text(data.nama);
+                    $('#detailKamar').text(data.kamar);
+                    $('#detailJabatan').text(data.jabatan);
+                    $('#detailRegional').text(data.regional);
+                    $('#detailEmail').text(data.email);
+                    $('#detailNoHp').text(data.no_hp);
+                    $('#detailTanggalMulai').text(data.tanggal_mulai);
+                    $('#detailTanggalSelesai').text(data.tanggal_selesai);
+                    $('#detailTanggalSelesaiAwal').text(data.tanggal_selesai_awal);
+                    $('#detailCatatan').text(data.catatan);
+                    $('#detailStatus').text(data.status);
+                    $('#detailKeterangan').text(data.keterangan);
+                    
+                    const dokumenPath = data.dokumen;
+                    const detailDokumenLink = $('#detailDokumen');
+                    if (dokumenPath && dokumenPath !== 'null' && dokumenPath !== '') {
+                        detailDokumenLink.attr('href', `/storage/${dokumenPath}`);
+                        detailDokumenLink.text(dokumenPath.split('/').pop());
+                        detailDokumenLink.show();
                     } else {
-                        detailDokumenLink.textContent = 'Tidak ada dokumen';
-                        detailDokumenLink.removeAttribute('href'); // Hapus href jika tidak ada dokumen
-                        detailDokumenLink.style.display = 'block'; // Sembunyikan link atau tampilkan teks "Tidak ada dokumen"
+                        detailDokumenLink.text('Tidak ada dokumen');
+                        detailDokumenLink.removeAttr('href');
+                        detailDokumenLink.show(); // Tetap tampilkan teks "Tidak ada dokumen"
                     }
                 });
 
-                $('#rejectModal').on('show.bs.modal', function (event) {
-                    let button = $(event.relatedTarget);
-                    let bookingId = button.data('id');
-                    let form = $('#rejectForm');
+                // Modal Reject
+                $('#rejectModal').on('show.bs.modal', function(event) {
+                    const button = $(event.relatedTarget);
+                    const bookingId = button.data('id');
+                    const form = $('#rejectForm');
                     
-                    form.attr('action', `{{ url('bookingkamar/booking/reject') }}/${bookingId}`);
-                    form.find('#rejectBookingId').val(bookingId);
+                    form.attr('action', `/bookingkamar/booking/reject/${bookingId}`);
                 });
 
+                // Reject
                 $('#rejectForm').on('submit', function(e) {
                     e.preventDefault();
-                    
                     const form = $(this);
                     const actionUrl = form.attr('action');
                     const formData = form.serialize();
@@ -523,256 +603,291 @@
                                 Swal.fire({
                                     title: 'Berhasil!',
                                     text: 'Booking berhasil ditolak.',
-                                    icon: 'success',
-                                    confirmButtonText: 'OK'
+                                    icon: 'success'
                                 }).then(() => {
-                                    // Tutup modal dan refresh halaman
-                                    const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
-                                    rejectModal.hide();
                                     location.reload();
                                 });
                             } else {
                                 Swal.fire({
                                     title: 'Gagal!',
                                     text: response.message || 'Terjadi kesalahan saat menolak booking.',
-                                    icon: 'error',
-                                    confirmButtonText: 'OK'
+                                    icon: 'error'
                                 });
                             }
                         },
-                        error: function(xhr, status, error) {
-                            console.error('Reject error:', xhr.responseJSON);
-                            let errorMessage = 'Terjadi kesalahan saat menolak booking.';
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                errorMessage = xhr.responseJSON.message;
-                            } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                                errorMessage = Object.values(xhr.responseJSON.errors).flat().join('<br>');
-                            }
+                        error: function(xhr) {
+                            const errorMessage = xhr.responseJSON && xhr.responseJSON.message || 'Terjadi kesalahan saat menolak booking.';
                             Swal.fire({
                                 title: 'Error!',
-                                html: errorMessage,
-                                icon: 'error',
-                                confirmButtonText: 'OK'
+                                text: errorMessage,
+                                icon: 'error'
                             });
                         }
                     });
                 });
-            });
-        </script>
-        <script>
-            //Tombol Approve
-            $(document).ready(function() {
+
+                // Tombol Approve
                 $('.approve-btn').click(function(e) {
                     e.preventDefault();
-                    
                     const bookingId = $(this).data('id');
                     const approveUrl = $(this).data('url');
-                    const button = $(this);
                     
-                    // Show confirmation dialog
                     Swal.fire({
                         title: 'Apakah Anda yakin ingin menyetujui booking ini?',
                         icon: 'question',
                         showCancelButton: true,
-                        confirmButtonColor: '#28a745',
-                        cancelButtonColor: '#6c757d',
                         confirmButtonText: 'Ya, Approve!',
-                        cancelButtonText: 'Batal',
-                        reverseButtons: true
+                        cancelButtonText: 'Batal'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // Disable button agar tidak double klik
-                            button.prop('disabled', true);
-                            
                             $.ajax({
                                 url: approveUrl,
                                 type: 'PATCH',
-                                data: {
-                                    _token: $('meta[name="csrf-token"]').attr('content')
-                                },
+                                data: { _token: '{{ csrf_token() }}' },
                                 success: function(response) {
                                     if (response.success) {
-                                        Swal.fire({  
+                                        Swal.fire({
                                             title: 'Berhasil!',
                                             text: 'Booking berhasil disetujui.',
-                                            icon: 'success',
-                                            confirmButtonColor: '#28a745',
+                                            icon: 'success'
                                         }).then(() => {
                                             location.reload();
                                         });
-                                    } else {
-                                        throw new Error(response.message || 'Approval failed');
                                     }
                                 },
-                                error: function(xhr, status, error) {
-                                    console.error('Approval error:', error);
-                                    
+                                error: function(xhr) {
                                     let errorMessage = 'Terjadi kesalahan saat memproses approval.';
-                                    
                                     if (xhr.responseJSON && xhr.responseJSON.message) {
                                         errorMessage = xhr.responseJSON.message;
                                     }
-                                    
                                     Swal.fire({
                                         title: 'Error!',
                                         text: errorMessage,
-                                        icon: 'error',
-                                        confirmButtonColor: '#dc3545'
+                                        icon: 'error'
                                     });
-                                    
-                                    button.prop('disabled', false);
                                 }
                             });
                         }
                     });
                 });
-            });
-            
-            //Tombol Checkout
-            $(document).ready(function() {
+
+                // Tombol Checkout
                 $('.checkout-btn').click(function(e) {
                     e.preventDefault();
-                    
                     const bookingId = $(this).data('id');
                     const checkoutUrl = $(this).data('url');
-                    const button = $(this);
                     
-                    // Show confirmation dialog
                     Swal.fire({
                         title: 'Konfirmasi Checkout',
                         text: 'Apakah Anda yakin ingin checkout kamar ini?',
                         icon: 'question',
                         showCancelButton: true,
-                        confirmButtonColor: '#28a745',
-                        cancelButtonColor: '#6c757d',
                         confirmButtonText: 'Ya, Checkout!',
-                        cancelButtonText: 'Batal',
-                        reverseButtons: true
+                        cancelButtonText: 'Batal'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            button.prop('disabled', true);
-                            
                             $.ajax({
                                 url: checkoutUrl,
                                 type: 'PATCH',
-                                data: {
-                                    _token: $('meta[name="csrf-token"]').attr('content')
-                                },
+                                data: { _token: '{{ csrf_token() }}' },
                                 success: function(response) {
                                     if (response.success) {
                                         Swal.fire({
                                             title: 'Berhasil!',
                                             text: 'Kamar berhasil di-checkout',
-                                            icon: 'success',
-                                            confirmButtonColor: '#28a745'
+                                            icon: 'success'
                                         }).then(() => {
                                             location.reload();
                                         });
-                                    } else {
-                                        throw new Error(response.message || 'Checkout failed');
                                     }
                                 },
-                                error: function(xhr, status, error) {
-                                    console.error('Checkout error:', xhr.responseJSON);
-                                    
+                                error: function(xhr) {
                                     let errorMessage = 'Terjadi kesalahan saat memproses checkout.';
-                                    
                                     if (xhr.responseJSON && xhr.responseJSON.message) {
                                         errorMessage = xhr.responseJSON.message;
                                     } else if (xhr.status === 404) {
                                         errorMessage = 'Booking tidak ditemukan.';
-                                    } else if (xhr.status === 403) {
-                                        errorMessage = 'Anda tidak memiliki akses untuk melakukan checkout.';
-                                    } else if (xhr.status === 500) {
-                                        errorMessage = 'Terjadi kesalahan server. Silakan coba lagi.';
                                     }
-                                    
                                     Swal.fire({
                                         title: 'Error!',
                                         text: errorMessage,
-                                        icon: 'error',
-                                        confirmButtonColor: '#dc3545'
+                                        icon: 'error'
                                     });
-                                    
-                                    // Re-enable button
-                                    button.prop('disabled', false);
                                 }
                             });
                         }
                     });
                 });
-            });         
-        </script>
-        <script>
-            $('#perpanjangModal').on('show.bs.modal', function (event) {
-                var button = $(event.relatedTarget)
-                var id = button.data('id')
-                var nama = button.data('nama')
-                var kamar = button.data('kamar')
-                var tanggalawal = button.data('tgl_awal')
-                var tanggalSelesai = button.data('tanggal_selesai')
 
-                var modal = $(this)
-                modal.find('#perpanjang_id').val(id)
-                modal.find('#perpanjang_nama').text(nama)
-                modal.find('#perpanjang_kamar').text(kamar)
-                modal.find('#perpanjang_selesai').text(tanggalSelesai)
-                modal.find('#perpanjang_awal').text(tanggalawal)
+                // Modal Perpanjang
+                $('#perpanjangModal').on('show.bs.modal', function(event) {
+                    const button = $(event.relatedTarget);
+                    const data = button.data();
+                    const modal = $(this);
 
-                var minDate = new Date(tanggalSelesai);
-                minDate.setDate(minDate.getDate() + 1); // Tambah 1 hari
+                    modal.find('#perpanjang_id').val(data.id);
+                    modal.find('#perpanjang_nama').text(data.nama);
+                    modal.find('#perpanjang_kamar').text(data.kamar);
+                    modal.find('#perpanjang_selesai').text(data.tanggal_selesai);
+                    modal.find('#perpanjang_awal').text(data.tgl_awal);
 
-                // Format kembali ke YYYY-MM-DD
-                let day = ("0" + minDate.getDate()).slice(-2);
-                let month = ("0" + (minDate.getMonth() + 1)).slice(-2);
-                let formattedMinDate = minDate.getFullYear() + "-" + month + "-" + day;
+                    const minDate = new Date(data.tanggal_selesai);
+                    minDate.setDate(minDate.getDate() + 1);
+                    const formattedMinDate = minDate.toISOString().slice(0, 10);
+                    
+                    modal.find('#tanggal_selesai_baru').attr('min', formattedMinDate).val(formattedMinDate);
+                    modal.find('#perpanjangForm').attr('action', `/bookingkamar/booking/perpanjangan/${data.id}`);
+                });
 
-                modal.find('#tanggal_selesai_baru').attr('min', formattedMinDate);
-                modal.find('#tanggal_selesai_baru').val(formattedMinDate); // Opsional: langsung isi dengan default date
-                modal.find('#perpanjangForm').attr('action', `/bookingkamar/booking/perpanjangan/${id}`);
-            })
-        </script>
-        <script>
-            $('#exportBtn').on('click', function() {
-                var formData = $('#exportForm').serialize(); // Get the form data
+                // Modal Cek Ketersediaan
+                $('#ketersediaanModal').on('show.bs.modal', function(event) {
+                    const btn = $(event.relatedTarget);
+                    const data = btn.data();
+                    
+                    $('#ketersediaan_id').val(data.id);
+                    $('#ketersediaan_nama').text(data.nama);
+                    $('#ketersediaan_kamar').text(data.kamar);
+                    $('#ketersediaan_awal').text(data.tgl_mulai);
+                    $('#ketersediaan_selesai').text(data.tanggal_selesai);
 
-                // Trigger the Excel export request with the selected filters
-                window.location.href = "{{ route('bookingkamar.export') }}?" + formData;
+                    const minDate = new Date(data.tanggal_selesai);
+                    minDate.setDate(minDate.getDate() + 1);
+                    const formattedMin = minDate.toISOString().slice(0, 10);
 
-                // Use JavaScript to simulate a click event on the element with data-dismiss="modal"
-                $('[data-dismiss="modal"]').click();
-            });
-        </script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const forms = document.querySelectorAll('form.show-loading-on-submit');
+                    const tanggalCek = $('#tanggal_cek');
+                    tanggalCek.attr('min', formattedMin).val('');
+                    
+                    $('#infoKetersediaan').html('');
+                    $('#btnAjukanPerpanjangan').addClass('d-none');
+                });
 
-                forms.forEach(function(form) {
-                    form.addEventListener('submit', function () {
-                        const modalElement = document.getElementById('loadingModal');
-                        const loadingModal = new bootstrap.Modal(modalElement, {
-                            backdrop: 'static',
-                            keyboard: false
-                        });
-                        loadingModal.show();
+                // Event listener saat tanggal cek ketersediaan berubah
+                $('#tanggal_cek').on('change', function() {
+                    const id = $('#ketersediaan_id').val();
+                    const tanggal = $(this).val();
+                    
+                    if (tanggal) {
+                        cekKetersediaan(id, tanggal);
+                    }
+                });
+
+                // Tombol Ajukan 
+                $('#btnAjukanPerpanjangan').on('click', function() {
+                    const id = $('#ketersediaan_id').val();
+                    const form = $('#ketersediaanForm');
+                    
+                    form.attr('action', `/bookingkamar/booking/perpanjangan/${id}/ajukan`);
+                    form.submit();
+                });
+                
+                // Fungsi AJAX untuk cek ketersediaan
+                window.cekKetersediaan = function(id, tanggal) {
+                    $.ajax({
+                        url: `/bookingkamar/booking/availability/${id}`,
+                        method: 'GET',
+                        data: { tanggal },
+                        success: function (res) {
+                            const info = $('#infoKetersediaan');
+                            const ajukanBtn = $('#btnAjukanPerpanjangan');
+
+                            info.html('');
+
+                            if (res.available) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Kamar Tersedia!',
+                                    text: 'Silakan ajukan perpanjangan.',
+                                });
+                                ajukanBtn.removeClass('d-none');
+                            } else {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Kamar Tidak Tersedia',
+                                    html: `
+                                        <p>Kamar penuh pada tanggal ${res.first_full_date}.</p>
+                                        <p>Silakan pilih tanggal lain.</p>
+                                    `,
+                                });
+                                ajukanBtn.addClass('d-none');
+                            }
+                        },
+                        error: function (xhr) {
+                            let msg = 'Gagal mengecek ketersediaan.';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                msg = xhr.responseJSON.message;
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: msg,
+                            });
+                            $('#infoKetersediaan').html(`<div class="alert alert-warning mb-0">${msg}</div>`);
+                            $('#btnAjukanPerpanjangan').addClass('d-none');
+                        }
+                    });
+                };
+
+                //form export
+                $('#exportBtn').on('click', function() {
+                    const formData = $('#exportForm').serialize();
+                    window.location.href = `{{ route('bookingkamar.export') }}?${formData}`;
+                    $('[data-dismiss="modal"]').click();
+                });
+
+                //loading modal
+                $(document).on('submit', 'form.show-loading-on-submit', function () {
+                    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'), {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+                    loadingModal.show();
+                });
+
+                //form edit
+                $(document).on('click', '.btn-warning[data-bs-target="#editModal"]', function () {
+
+                });
+
+                // Submit form update via AJAX
+                $(document).on('submit', '#editBookingForm', function (e) {
+                    e.preventDefault();
+                    const form = $(this);
+                    const actionUrl = form.attr('action');
+                    const formData = new FormData(this);
+
+                    $.ajax({
+                        url: actionUrl,
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil',
+                                    text: response.message
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            let message = 'Terjadi kesalahan saat menyimpan data.';
+                            if (xhr.responseJSON && xhr.responseJSON.errors) {
+                                message = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                html: message
+                            });
+                        }
                     });
                 });
             });
-        </script>
 
-        <script>
-        $(document).ready(function () {
-            // Inisialisasi Select2
-            $('.select2-edit-kamar, .select2-edit-jabatan, .select2-edit-regional').select2({
-                dropdownParent: $('#editModal'),
-                width: '100%',
-                placeholder: function(){
-                    return $(this).data('placeholder');
-                },
-                theme: 'bootstrap-5'
-            });
-
-            // Reset form
+            // Fungsi resetFormEdit
             function resetFormEdit() {
                 $('#editBookingForm')[0].reset();
                 $('#editKamarId').val(null).trigger('change.select2');
@@ -780,140 +895,7 @@
                 $('#editRegional').val(null).trigger('change.select2');
                 $('#currentDokumenInfo').text('');
             }
-
-            // Buka modal edit
-            $(document).on('click', '.btn-warning[data-bs-target="#editModal"]', function () {
-                resetFormEdit();
-                const id = $(this).data('id');
-
-                $.ajax({
-                    url: `/bookingkamar/edit/${id}`,
-                    method: 'GET',
-                    success: function (data) {
-                        const booking = data.booking;
-                        const kamarList = data.kamar_list;
-                        const jabatanList = data.jabatan_list;
-                        const regionalList = data.regional_list;
-
-                        $('#editBookingId').val(booking.id);
-                        $('#editNamaPemesan').val(booking.nama_pemesan);
-                        $('#editEmail').val(booking.email);
-                        $('#editNoHp').val(booking.no_hp);
-                        $('#editTanggalMulai').val(booking.tanggal_mulai);
-                        $('#editTanggalSelesai').val(booking.tanggal_selesai);
-                        $('#editCatatan').val(booking.catatan);
-                        $('#editBookingForm').attr('action', `/bookingkamar/update/${booking.id}`);
-
-                        // Dropdown Kamar
-                        const kamarSelect = $('#editKamarId');
-                        kamarSelect.empty().append('<option value="" disabled selected>Pilih Kamar</option>');
-                        $.each(kamarList, function (i, kamar) {
-                            const namaMess = kamar.mess ? kamar.mess.nama : '-';
-                            kamarSelect.append(
-                                `<option value="${kamar.id}">${namaMess} - ${kamar.nama_kamar}</option>`
-                            );
-                        });
-                        kamarSelect.val(booking.kamar_id).trigger('change.select2');
-
-                        // Dropdown Jabatan
-                        const jabatanSelect = $('#editJabatan');
-                        jabatanSelect.empty().append('<option value="" disabled selected>Pilih Jabatan</option>');
-                        $.each(jabatanList, function (i, jabatan) {
-                            jabatanSelect.append(
-                                `<option value="${jabatan.jabatan}">${jabatan.jabatan}</option>`
-                            );
-                        });
-                        jabatanSelect.val(booking.jabatan).trigger('change.select2');
-
-                        // Dropdown Regional
-                        const regionalSelect = $('#editRegional');
-                        regionalSelect.empty().append('<option value="" disabled>Pilih Regional</option>');
-                        $.each(regionalList, function (i, regional) {
-                            regionalSelect.append(
-                                `<option value="${regional.id_regional}">${regional.nama_regional}</option>`
-                            );
-                        });
-                        regionalSelect.val(booking.regional).trigger('change.select2');
-
-                        // Dropdown Regional
-                        $('#editRegional').val(booking.regional).trigger('change.select2');
-
-                        // Dokumen pendukung
-                        if (booking.dokumen_pendukung) {
-                            $('#currentDokumenInfo').html(
-                                `Dokumen saat ini: <a href="/storage/${booking.dokumen_pendukung}" target="_blank">${booking.dokumen_pendukung.split('/').pop()}</a>`
-                            );
-                        } else {
-                            $('#currentDokumenInfo').text('Belum ada dokumen pendukung.');
-                        }
-                    },
-                    error: function (xhr) {
-                        console.error('Gagal ambil data booking:', xhr);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal Ambil Data',
-                            text: 'Terjadi kesalahan saat mengambil data booking.'
-                        });
-                    }
-                });
-            });
-
-            // Submit form update via AJAX
-            $(document).on('submit', '#editBookingForm', function (e) {
-                e.preventDefault();
-
-                const form = $(this);
-                const actionUrl = form.attr('action');
-                const formData = new FormData(this);
-
-                $.ajax({
-                    url: actionUrl,
-                    method: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function (response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil',
-                                text: response.message
-                            }).then(() => {
-                                location.reload();
-
-                                // Reload datatable dengan aman
-                                const dt = $('#table').DataTable();
-                                if (dt) {
-                                    dt.ajax.reload(null, false); 
-                                } else {
-                                    location.reload(); 
-                                }
-                            });
-                        }
-                    },
-                    error: function (xhr) {
-                        console.error('Error saat update:', xhr);
-                        let message = 'Terjadi kesalahan saat menyimpan data.';
-                        if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            const errors = xhr.responseJSON.errors;
-                            message = Object.values(errors).flat().join('<br>');
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal',
-                            html: message
-                        });
-                    }
-                });
-            });
-
-            // Reset form saat modal ditutup
-            $('#editModal').on('hidden.bs.modal', function () {
-                resetFormEdit();
-            });
-        });
         </script>
-
-
     </x-slot>
+
 </x-layouts.app>

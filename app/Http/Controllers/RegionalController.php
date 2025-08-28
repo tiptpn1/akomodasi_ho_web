@@ -13,7 +13,6 @@ class RegionalController extends Controller
         $regional = Regional::all();
         return view('admin.regional.regional', compact('regional'));
     }
-
     public function store(Request $request)
     {
         Regional::create([

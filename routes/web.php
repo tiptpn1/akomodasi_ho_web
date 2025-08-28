@@ -133,7 +133,6 @@ Route::group(['prefix' => 'kamar', 'as' => 'kamar.'], function () {
     Route::get('/{id}/reviews', [KamarController::class, 'getReviews'])->name('review');
     Route::delete('/destroy-photo-kamar/{id}', [KamarController::class, 'destroyphotokamar'])->name('destroyphotokamar');
 
-
     // Route::get('/edit/{id}', [MdriverController::class, 'edit'])->name('edit');  // Add this route
     // Route::put('/update/{id}', [MdriverController::class, 'update'])->name('update');
     Route::delete('/destroy/{id}', [KamarController::class, 'destroy'])->name('destroy');
@@ -152,10 +151,13 @@ Route::group(['prefix' => 'bookingkamar', 'as' => 'bookingkamar.'], function () 
     Route::patch('/booking/approve/{id}', [BookingKamarController::class, 'approve'])->name('approve');
     Route::patch('/booking/reject/{id}', [BookingKamarController::class, 'reject'])->name('reject');
     Route::patch('/booking/cancel/{id}', [BookingKamarController::class, 'cancel'])->name('cancel');
+    Route::get('/booking/availability/{id}', [BookingKamarController::class, 'availability'])->name('availability');
     Route::patch('/booking/perpanjangan/{id}', [BookingKamarController::class, 'perpanjangan'])->name('perpanjangan');
+    Route::post('/booking/perpanjangan/{id}/ajukan', [BookingKamarController::class, 'ajukanPerpanjangan'])->name('perpanjangan.ajukan');
     // Route::patch('/booking/perpanjangan', [BookingKamarController::class, 'perpanjangan'])->name('perpanjangan');
     Route::patch('/booking/checkout/{id}', [BookingKamarController::class, 'checkout'])->name('checkout');
     Route::get('/export', [BookingKamarController::class, 'export'])->name('export');
+    
     // Route::get('/list-booking', [BookingKamarController::class, 'list_booking'])->name('bookingkamar.list');
 });
 

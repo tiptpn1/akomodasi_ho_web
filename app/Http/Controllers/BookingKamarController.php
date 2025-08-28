@@ -38,17 +38,15 @@ class BookingKamarController extends Controller
         $jabatan_id = $request->query('jabatan_id', 'all');
         $regional_id = $request->query('regional_id', 'all');
 
-        // Ambil daftar Mess dan Jabatan untuk filter dropdown
+        // filter dropdown
         $messes = MessModel::where('status', 1)->get();
         $jabatans = Jabatan::all();
         $regionals = Regional::all();
         
-        // Jika tanggal belum dipilih, kembalikan koleksi kosong
         if (!$tanggal_mulai || !$tanggal_selesai) {
             $kamars = collect();
             return view('kamar.booking', compact('kamars', 'tanggal_mulai', 'tanggal_selesai', 'messes', 'jabatans','regionals'));
         }
-
 
         $kamars = KamarModel::where('status', 1)->with('reviews')->when($mess_id !== 'all', function ($query) use ($mess_id) {
             return $query->where('mess_id', $mess_id);
@@ -58,8 +56,8 @@ class BookingKamarController extends Controller
         })
         ->get()
         ->map(function ($kamar) use ($tanggal_mulai, $tanggal_selesai, $jabatans) {
-            // Hitung jumlah orang yang sudah booking dalam rentang tanggal
             $jumlahTerbooking = BookingKamar::where('kamar_id', $kamar->id)
+                ->whereIn('status', ['approved']) 
                 ->where(function ($query) use ($tanggal_mulai, $tanggal_selesai) {
                     $query->whereBetween('tanggal_mulai', [$tanggal_mulai, $tanggal_selesai])
                         ->orWhereBetween('tanggal_selesai', [$tanggal_mulai, $tanggal_selesai])
@@ -411,63 +409,137 @@ class BookingKamarController extends Controller
 
     public function perpanjangan(Request $request, $id)
     {
-        // dd('asdsad');
         $request->validate([
             'tanggal_selesai_baru' => 'required|date|after:today',
         ]);
-    
-        // return back()->with('success', 'Perpanjangan berhasil!');
+
         $booking = BookingKamar::findOrFail($id);
         $user = Auth::user();
 
-        $tanggalMulaiBaru = Carbon::parse($booking->tanggal_selesai)->addDay();
+        $tanggalMulaiBaru   = Carbon::parse($booking->tanggal_selesai)->addDay();
         $tanggalSelesaiBaru = Carbon::parse($request->tanggal_selesai_baru);
-        $kapasitas = $booking->kamar->kapasitas;
+        $kapasitas          = $booking->kamar->kapasitas;
 
+        // Cek kapasitas per-hari (tetap seperti punyamu)
         $tanggalIterasi = clone $tanggalMulaiBaru;
-
         while ($tanggalIterasi->lte($tanggalSelesaiBaru)) {
             $jumlahBookingLain = BookingKamar::where('kamar_id', $booking->kamar_id)
-                ->where('status', 'Approved')
+                ->where('status', 'approved')
                 ->where('id', '!=', $booking->id)
                 ->where('tanggal_mulai', '<=', $tanggalIterasi)
                 ->where('tanggal_selesai', '>=', $tanggalIterasi)
                 ->count();
 
-            // hanya tambahkan 1 jika booking saat ini juga 'Approved'
-            $totalPenghuni = $jumlahBookingLain + ($booking->status === 'Approved' ? 1 : 0);
-
-            \Log::info("Tanggal {$tanggalIterasi->toDateString()}: Jumlah booking lain = {$jumlahBookingLain}, Total = {$totalPenghuni}/{$kapasitas}");
-
+            $totalPenghuni = $jumlahBookingLain + ($booking->status === 'approved' ? 1 : 0);
             if ($totalPenghuni >= $kapasitas) {
                 return back()->with('error', 'Gagal perpanjang. Kamar sudah penuh pada tanggal ' . $tanggalIterasi->toDateString());
             }
-
             $tanggalIterasi->addDay();
         }
 
-        // Jika aman, lakukan update
-        $booking->update([
-            'tanggal_selesai' => $tanggalSelesaiBaru,
-            'keterangan' => 'Diperpanjang sampai ' . $tanggalSelesaiBaru->toDateString(),
-        ]);
+        $booking->tanggal_selesai_awal = $booking->tanggal_selesai;  
+        $booking->tanggal_selesai      = $tanggalSelesaiBaru->toDateString();
+        $booking->keterangan           = 'perpanjang';
+        $booking->save();
 
-        // Kirim Job ke antrean dengan status 'perpanjangan'
+        // Notifikasi WA (opsional tetap)
         dispatch(new SendWhatsappNotification($booking, 'perpanjangan', $booking->keterangan, null, Auth::user()));
 
         return back()->with('success', 'Perpanjangan berhasil dan pesan WhatsApp akan segera terkirim.');
     }
+    public function availability(Request $request, $id)
+    {
+        $request->validate(['tanggal' => 'required|date']);
+
+        $booking   = BookingKamar::with('kamar')->findOrFail($id);
+        $kapasitas = (int) ($booking->kamar->kapasitas ?? 1);
+
+        $start = Carbon::parse($booking->tanggal_selesai)->addDay()->startOfDay(); // H+1
+        $end   = Carbon::parse($request->tanggal)->endOfDay();
+
+        if ($end->lt($start)) {
+            return response()->json([
+                'available' => false,
+                'message'   => 'Tanggal baru harus setelah tanggal selesai saat ini.'
+            ], 422);
+        }
+
+        $firstFull = null;
+        for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+            $occupied = BookingKamar::where('kamar_id', $booking->kamar_id)
+                ->whereIn('status', ['approved']) 
+                ->whereDate('tanggal_mulai', '<=', $d)
+                ->whereDate('tanggal_selesai', '>=', $d)
+                ->count();
+
+            if (($occupied + 1) > $kapasitas) { // +1 = pemesan ini saat perpanjang
+                $firstFull = $d->toDateString();
+                break;
+            }
+        }
+
+        return $firstFull
+            ? response()->json([
+                'available'       => false,
+                'first_full_date' => $firstFull,
+                'message'         => 'Kamar tidak tersedia pada beberapa tanggal.'
+            ])
+            : response()->json([
+                'available' => true,
+                'message'   => 'Kamar tersedia sampai tanggal tersebut.'
+            ]);
+    }
+    public function ajukanPerpanjangan(Request $request, $id)
+    {
+        $request->validate(['tanggal_selesai_baru' => 'required|date|after:today']);
+        $booking = BookingKamar::with('kamar')->findOrFail($id);
+        $tanggalMulaiBaru   = Carbon::parse($booking->tanggal_selesai)->addDay();
+        $tanggalSelesaiBaru = Carbon::parse($request->tanggal_selesai_baru);
+
+        if ($tanggalSelesaiBaru->lt($tanggalMulaiBaru)) {
+            return back()->with('error', 'Tanggal baru harus setelah tanggal selesai saat ini.');
+        }
+
+        $kapasitas = (int) ($booking->kamar->kapasitas ?? 1);
+        $firstFull = null;
+
+        for ($d = $tanggalMulaiBaru->copy(); $d->lte($tanggalSelesaiBaru); $d->addDay()) {
+            $occupied = BookingKamar::where('kamar_id', $booking->kamar_id)
+                ->whereIn('status', ['approved'])
+                ->whereDate('tanggal_mulai', '<=', $d)
+                ->whereDate('tanggal_selesai', '>=', $d)
+                ->count();
+
+            // +1 mengasumsikan pemesan ini tetap menghuni saat perpanjangan disetujui
+            if (($occupied + 1) > $kapasitas) {
+                $firstFull = $d->toDateString();
+                break;
+            }
+        }
+
+        if ($firstFull) {
+            return back()->with('error', 'Gagal mengajukan. Kamar penuh pada tanggal ' . $firstFull);
+        }
+
+        $booking->update([
+            'tanggal_selesai_awal'  => $booking->tanggal_selesai,
+            'tanggal_selesai'       => $tanggalSelesaiBaru->toDateString(),
+            'catatan'               => 'Pengajuan perpanjangan dari booking #' . $booking->id,
+            'status'                => 'pending',
+            'keterangan'            => 'perpanjang',
+        ]);
+
+        dispatch(new SendWhatsappNotification($booking, 'ajukan_perpanjangan', null, null, Auth::user()));
+        return back()->with('status', 'success')->with('message', 'Pengajuan perpanjangan berhasil dibuat!');
+    }
 
     public function export(Request $request)
     {
-        
         $tgl_awal = $request->input('tgl_awal');
         $tgl_akhir = $request->input('tgl_akhir');
         $mess = $request->input('mess');
         $status = $request->input('status');
 
-        
-        // Query the data based on filters
         $booking = BookingKamar::query();
 
         if ($tgl_awal) {
