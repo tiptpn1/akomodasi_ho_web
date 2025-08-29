@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\SendViconController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\WhatsappController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,7 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::post('auth/login', [AuthController::class, 'login'])->name('login');
+Route::get('/wa/send/{number}', [WhatsappController::class, 'send']);
 Route::middleware('auth.api')->group(function () {
     Route::get('auth/user', [AuthController::class, 'currentUser']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
@@ -128,4 +130,5 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => 'auth.api']
         Route::post('{id}/approve', [KonsumsiController::class, 'approve'])->name('approve');
         Route::post('export', [KonsumsiController::class, 'exportExcel'])->name('export');
     });
+    
 });
