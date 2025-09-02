@@ -20,7 +20,7 @@ class BookingKamar extends Model
     {
         return $this->hasOneThrough(MessModel::class, KamarModel::class, 'id', 'id', 'kamar_id', 'mess_id');
     }
-    public function regional()
+    public function regionalMaster()
     {
         return $this->belongsTo(Regional::class, 'regional', 'id_regional');
     }

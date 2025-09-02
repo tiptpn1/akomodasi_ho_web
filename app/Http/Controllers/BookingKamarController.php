@@ -9,6 +9,7 @@ use App\Models\Regional;
 use App\Models\KamarModel;
 use App\Models\MessModel;
 use App\Models\ReviewModel;
+use App\Services\WhatsappService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,20 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class BookingKamarController extends Controller
 {  
+    public function testWa(Request $request, WhatsappService $wa)
+    {
+        $validated = $request->validate([
+            'phone'   => 'required|string',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        $resp = $wa->send($validated['phone'], $validated['message']);
+
+        return response()->json([
+            'ok'   => $resp->successful(),
+            'data' => $resp->json(),
+        ], $resp->status());
+    }
 
     public function index(Request $request)
     {
