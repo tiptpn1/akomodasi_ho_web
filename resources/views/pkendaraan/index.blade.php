@@ -38,7 +38,7 @@
                     <button id="btnTambah" type="button" data-toggle="modal" data-target="#tambah"
                         class="btn btn-primary btn-sm">Tambah Data</button>
                     <button id="btnExport" type="button" data-toggle="modal" data-target="#exportModal"
-                        class="btn btn-warning btn-sm">Export Data</button>
+                        class="btn btn-warning btn-sm">Filter Data</button>
                 @endif
                 @if (session('success'))
                     <div class="alert alert-success alert-sm alert-dismissible fade show" role="alert"
@@ -153,11 +153,19 @@
                                             </div>
 
                                             <div class="form-group col-md-6">
+                                                <b>No WA <span class="text-danger">*</span></b>
+                                                 <input type="text" class="form-control" name="no_wa"
+                                                    id='no_wa' required>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="row">
+                                        <div class="form-group col-md-12">
                                                 <b>Upload Memo</b>
                                                 <input type="file" class="form-control" name="file_memo"
                                                     id="file_memo" accept=".pdf, .jpg, .jpeg, .png">
                                             </div>
-
                                         </div>
 
 
@@ -312,11 +320,20 @@
                                                     id='pejemputan1' required>
                                             </div>
                                             <div class="form-group col-md-6">
+                                                <b>No WA</b>
+                                                <input type="text" class="form-control" name="no_wa1"
+                                                    id='no_wa1' required>
+                                            </div>
+
+                                        </div>
+
+
+                                        <div class="row">
+                                        <div class="form-group col-md-12">
                                                 <b>Upload Memo</b>
                                                 <input type="file" class="form-control" name="file_memo1"
                                                     id="file_memo1" accept=".pdf, .jpg, .jpeg, .png">
                                             </div>
-
                                         </div>
 
 
@@ -386,7 +403,7 @@
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="exportModalLabel">Export Permintaan Kendaraan</h5>
+                                <h5 class="modal-title" id="exportModalLabel">Filter Permintaan Kendaraan</h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
@@ -396,19 +413,55 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label for="tgl_berangkat_awal">Tanggal Berangkat</label>
+                                                <label for="tgl_awal">Tanggal Berangkat Awal</label>
                                                 <input type="date" class="form-control" id="tgl_awal"
-                                                    name="tgl_awal" value="{{ now()->format('Y-m-d') }}">
+                                                    name="tgl_awal" value="{{ request('tgl_awal') }}">
+                                            </div>
+
+                                            
+                                            <div class="form-group">
+                                                <label>Jenis Tujuan</label>
+                                            <select class="form-control" name="jenis_tujuan">
+                                                <option value="" disabled {{ request('jenis_tujuan') ? '' : 'selected' }}>Pilih Jenis Tujuan</option>
+                                                <option value="Dalam Kota" {{ request('jenis_tujuan') == 'Dalam Kota' ? 'selected' : '' }}>Dalam Kota</option>
+                                                <option value="Luar Kota" {{ request('jenis_tujuan') == 'Luar Kota' ? 'selected' : '' }}>Luar Kota</option>
+                                            </select>
 
                                             </div>
+                                        </div>
+
+                                        <div class="col-md-6">
                                             <div class="form-group">
+                                                <label for="tgl_akhir">Tanggal Berangkat Akhir</label>
+                                                <input type="date" class="form-control" id="tgl_akhir"
+                                                    name="tgl_akhir" value="{{ request('tgl_akhir') }}">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="status">Status</label>
+                                                <select class="form-control" name="status">
+                                                    <option value="" disabled {{ request('status') ? '' : 'selected' }}>Pilih Status</option>
+                                                    <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Approved</option>
+                                                    <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Rejected</option>
+                                                    <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Canceled</option>
+                                                    <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Pengajuan Divisi</option>
+                                                    <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>Seluruh Status</option>
+                                                </select>
+
+                                            </div>
+
+                                        </div>
+
+                                        <div class="col-md-12">
+                                        <div class="form-group">
                                                 <label for="nama_group">Divisi</label>
                                                 <select class="form-control" name="id_divisi">
                                                     @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
-                                                        <option value="" disabled selected>Pilih Divisi</option>
-                                                        <option value='all'>Seluruh Divisi</option>
+                                                        <option value="" disabled {{ request('id_divisi') ? '' : 'selected' }}>Pilih Divisi</option>
+                                                    <option value="all" {{ request('id_divisi') == 'all' ? 'selected' : '' }}>Seluruh Divisi</option>
                                                         @foreach ($get_divisi as $data_divisi)
-                                                            <option value='{{ $data_divisi->master_bagian_nama }}'>
+                                                            <option value='{{ $data_divisi->master_bagian_nama }}'
+                                                                {{ request('id_divisi') == $data_divisi->master_bagian_nama ? 'selected' : '' }}>
                                                                 {{ $data_divisi->master_bagian_nama }}
                                                             </option>
                                                         @endforeach
@@ -417,35 +470,23 @@
                                                         </option>
                                                     @endif
                                                 </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Jenis Tujuan</label>
-                                                <select class="form-control" name="jenis_tujuan">
-                                                    <option value="" disabled selected>Pilih Jenis Tujuan
-                                                    </option>
-                                                    <option value="Dalam Kota">Dalam Kota</option>
-                                                    <option value="Luar Kota">Luar Kota</option>
-                                                    <!-- <option value="Luar Negeri">Luar Negeri</option> -->
+                                                <!-- <select class="form-control" name="id_divisi">
+                                                    <option value="" disabled {{ request('id_divisi') ? '' : 'selected' }}>Pilih Divisi</option>
+                                                    <option value="all" {{ request('id_divisi') == 'all' ? 'selected' : '' }}>Seluruh Divisi</option>
+                                                    @foreach ($get_divisi as $data_divisi)
+                                                        <option value="{{ $data_divisi->master_bagian_nama }}"
+                                                            {{ request('id_divisi') == $data_divisi->master_bagian_nama ? 'selected' : '' }}>
+                                                            {{ $data_divisi->master_bagian_nama }}
+                                                        </option>
+                                                    @endforeach
+                                                </select> -->
 
-                                                </select>
                                             </div>
-                                            <div class="form-group">
-                                                <label for="status">Status</label>
-                                                <select class="form-control" name="status">
-                                                    <option value="" disabled selected>Pilih Status</option>
-                                                    <option value='2'>Approved</option>
-                                                    <option value='3'>Rejected</option>
-                                                    <option value='0'>Canceled</option>
-                                                    <option value='1'>Pengajuan Divisi</option>
-                                                    <option value='all'>Seluruh Status</option>
-
-                                                </select>
                                             </div>
-
-                                        </div>
                                     </div>
+                                    <button type="button" class="btn btn-success mr-2" id="searchBtn">
+    <i class="fa fa-search"></i> Cari
+</button>
                                     <button type="button" class="btn btn-primary" id="exportBtn">Export to
                                         Excel</button>
                                     <button type="reset" class="btn btn-secondary mr-2" id="resetBtn">Reset
@@ -464,9 +505,11 @@
                                     <tr>
                                         <th>No</th>
                                         <th>Aksi</th>
+                                        <th>Tanggal Pengajuan</th>
                                         <th>Status</th>
                                         <th>Divisi</th>
                                         <th>Nama PIC</th>
+                                        <th>No WA</th>
                                         <th>Jenis Tujuan</th>
                                         <th>Tanggal Berangkat</th>
                                         <th>Waktu Berangkat</th>
@@ -545,6 +588,9 @@
                                                 </div>
                                             </td>
                                             <td align="center">
+                                                {{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->format('d-m-Y') : '-' }}
+                                            </td>
+                                            <td align="center">
                                                 @if ($item->status == 0)
                                                     <span class="text-warning">Canceled</span> <!-- Warna orange -->
                                                 @elseif ($item->status == 1)
@@ -561,6 +607,7 @@
                                             </td>
                                             <td align="center">{{ $item->divisi ?? '-' }}</td>
                                             <td align="center">{{ $item->nama_pic ?? '-' }}</td>
+                                            <td align="center">{{ $item->no_wa ?? '-' }}</td>
                                             <td align="center">{{ $item->jenis_tujuan ?? '-' }}</td>
                                             <td align="center">
                                                 {{ $item->tgl_berangkat ? \Carbon\Carbon::parse($item->tgl_berangkat)->format('d-m-Y') : '-' }}
@@ -1267,6 +1314,7 @@
                             $('input[name="tujuan1"]').val(data.tujuan);
                             $('input[name="ket1"]').val(data.ket);
                             $('input[name="pejemputan1"]').val(data.pejemputan);
+                            $('input[name="no_wa1"]').val(data.no_wa);
 
                             // Jika driver & no_polisi null, set driver ke "Rental"
                             let selectedDriver = data.driver && data.driver !== "" ? data.driver :
@@ -1369,6 +1417,19 @@
             });
         </script>
         <script>
+            $('#searchBtn').on('click', function() {
+                    var formData = $('#exportForm').serialize(); 
+                    window.location.href = "{{ route('pkendaraan.index') }}?" + formData; 
+                    $('[data-dismiss="modal"]').click();
+                });
+
+                $('#resetBtn').on('click', function(e) {
+                    e.preventDefault(); // cegah reset default
+                    $('#exportForm')[0].reset(); // reset form
+                    window.location.href = "{{ route('pkendaraan.index') }}"; // reload tanpa query
+                });
+
+
             $('#exportBtn').on('click', function() {
                 var formData = $('#exportForm').serialize(); // Get the form data
 
