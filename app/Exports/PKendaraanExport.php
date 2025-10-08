@@ -32,7 +32,7 @@ class PKendaraanExport implements FromCollection, WithHeadings, WithMapping, Sho
      */
     public function headings(): array
     {
-        return ["Status", "Divisi", "Nama PIC", "Jenis Tujuan", "Tgl Berangkat", "Jam Berangkat", "Jam Kembali", "Tujuan", "Penjemputan", "Driver", "Mobil"];
+        return ["Tanggal Pengajuan", "Status", "Divisi", "Nama PIC", "No WA", "Jenis Tujuan", "Tgl Berangkat", "Jam Berangkat", "Jam Kembali", "Tujuan", "Penjemputan", "Driver", "Mobil"];
     }
 
     /**
@@ -58,9 +58,11 @@ class PKendaraanExport implements FromCollection, WithHeadings, WithMapping, Sho
         $kendaraan = $kendaraan ?: ($row->rental_kendaraan ? "(Rental) " . $row->rental_kendaraan : null);
 
         return [
+            $row->created_at,
             $statusLabels[$row->status] ?? 'Unknown', // Ubah angka status menjadi teks
             $row->divisi,
             $row->nama_pic,
+            $row->no_wa,
             $row->jenis_tujuan,
             $row->tgl_berangkat,
             $row->jam_berangkat,
@@ -78,7 +80,7 @@ class PKendaraanExport implements FromCollection, WithHeadings, WithMapping, Sho
     public function styles(Worksheet $sheet)
     {
         // Membuat header bold & teks rata tengah
-        $sheet->getStyle('A1:K1')->applyFromArray([
+        $sheet->getStyle('A1:M1')->applyFromArray([
             'font' => ['bold' => true],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
             'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
@@ -86,7 +88,7 @@ class PKendaraanExport implements FromCollection, WithHeadings, WithMapping, Sho
 
         // Menambahkan border pada semua sel yang ada
         $lastRow = $sheet->getHighestRow(); // Ambil jumlah baris terakhir
-        $sheet->getStyle('A1:K' . $lastRow)->applyFromArray([
+        $sheet->getStyle('A1:M' . $lastRow)->applyFromArray([
             'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
         ]);
     }

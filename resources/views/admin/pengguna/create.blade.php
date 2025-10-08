@@ -35,7 +35,7 @@
                                             @foreach ($bagian as $b)
                                                 <option value="{{ $b->master_bagian_id }}"
                                                     {{ old('master_nama_bagian_id') == $b->master_bagian_id ? 'selected' : '' }}>
-                                                    {{ $b->master_bagian_nama }}
+                                                     {{ $b->nama_regional }} - {{ $b->master_bagian_nama }}
                                                 </option>
                                             @endforeach
                                         </select>

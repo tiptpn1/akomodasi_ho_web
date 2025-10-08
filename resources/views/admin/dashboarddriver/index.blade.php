@@ -53,6 +53,7 @@
                             <tbody>
                             <tr><td style="width: 30%; text-align: left;">Driver</td><td style="width: 5%; text-align: left;">:</td><td id="det_driver" style="text-align: left;"></td></tr>
 <tr><td style="text-align: left;">No. Polisi</td><td style="text-align: left;">:</td><td id="det_nopol" style="text-align: left;"></td></tr>
+<tr><td style="text-align: left;">Foto Mobil</td><td style="text-align: left;">:</td><td id="det_foto" style="text-align: left;"></td></tr>
 <tr><td style="text-align: left;">PIC</td><td style="text-align: left;">:</td><td id="det_pic" style="text-align: left;"></td></tr>
 <tr><td style="text-align: left;">Divisi</td><td style="text-align: left;">:</td><td id="det_divisi" style="text-align: left;"></td></tr>
 <tr><td style="text-align: left;">Tanggal</td><td style="text-align: left;">:</td><td id="det_tgl" style="text-align: left;"></td></tr>
@@ -129,12 +130,15 @@
             function detail(trip_id) {
                 const url = "{{ route('admin.driver.trip.details', ['id' => ':id']) }}".replace(':id', trip_id);
                 $.getJSON(url, response => {
+                     console.log(response);
                     const data = response.data;
                     if (!data) return;
                     
                     const tgl_split = data.tgl_berangkat.split("-");
                     $('#det_driver').html(data.driver_detail ? data.driver_detail.nama_driver : (data.rental_driver || 'N/A'));
-                    $('#det_nopol').html(data.no_polisi);
+                    $('#det_nopol').html(data.kendaraan_detail.nopol);
+                    
+                    $('#det_foto').html(data.kendaraan_detail.foto ? `<a href="{{ asset('uploads/foto_kendaraan') }}/${data.kendaraan_detail.foto}" target="_blank">Lihat Foto</a>` : 'Tidak ada Foto');
                     $('#det_pic').html(data.nama_pic);
                     $('#det_divisi').html(data.divisi);
                     $('#det_tgl').html(`${tgl_split[2]}-${tgl_split[1]}-${tgl_split[0]}`);

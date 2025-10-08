@@ -10,7 +10,7 @@ use App\Models\PKendaraan;
 use App\Models\MDriver;
 use App\Models\MKendaraan;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Auth; 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
@@ -19,34 +19,87 @@ use Illuminate\Support\Facades\Storage;
 class PKendaraanController extends Controller
 {
 
+    // public function index(Request $request)
+    // {
+    //     $bagian = Auth::user()->master_nama_bagian_id;
+    //     $divisi = Bagian::find($bagian);
+
+    //     if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga'])) {
+    //         // Jika user adalah asisten_ga atau kasubdiv_ga, tampilkan semua data dengan join ke driver dan kendaraan
+    //         $pkendaraan = PKendaraan::with(['driverDetail', 'kendaraanDetail'])->get();
+    //     } else {
+    //         // Jika bukan, tampilkan hanya data sesuai bagian user
+    //         $pkendaraan = PKendaraan::with(['driverDetail', 'kendaraanDetail'])
+    //             ->where('divisi', $divisi->master_bagian_nama)
+    //             ->get();
+    //     }
+        
+
+    //     $get_divisi = Bagian::get();
+    //     // $get_drivers = MDriver::get(); // Ambil semua driver dari database
+    //     $get_drivers = MDriver::where('driver_regional_id',Auth::user()->bagian->regional->id_regional)->get();
+
+    //     $view_data = [
+    //         'pkendaraan' => $pkendaraan,
+    //         'divisi'     => $divisi->master_bagian_nama,
+    //         'get_divisi' => $get_divisi,
+    //         'get_drivers' => $get_drivers,
+    //     ];
+
+    //     return view('pkendaraan.index', $view_data);
+    // }
+
     public function index(Request $request)
-    {
-        $bagian = Auth::user()->master_nama_bagian_id;
-        $divisi = Bagian::find($bagian);
+{
+    $bagian = Auth::user()->master_nama_bagian_id;
+    $divisi = Bagian::find($bagian);
 
-        if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga'])) {
-            // Jika user adalah asisten_ga atau kasubdiv_ga, tampilkan semua data dengan join ke driver dan kendaraan
-            $pkendaraan = PKendaraan::with(['driverDetail', 'kendaraanDetail'])->get();
-        } else {
-            // Jika bukan, tampilkan hanya data sesuai bagian user
-            $pkendaraan = PKendaraan::with(['driverDetail', 'kendaraanDetail'])
-                ->where('divisi', $divisi->master_bagian_nama)
-                ->get();
-        }
-
-        $get_divisi = Bagian::get();
-        // $get_drivers = MDriver::get(); // Ambil semua driver dari database
-        $get_drivers = MDriver::where('driver_regional_id',Auth::user()->bagian->regional->id_regional)->get();
-
-        $view_data = [
-            'pkendaraan' => $pkendaraan,
-            'divisi'     => $divisi->master_bagian_nama,
-            'get_divisi' => $get_divisi,
-            'get_drivers' => $get_drivers,
-        ];
-
-        return view('pkendaraan.index', $view_data);
+    // Query dasar
+    if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga'])) {
+        $query = PKendaraan::with(['driverDetail', 'kendaraanDetail']);
+    } else {
+        $query = PKendaraan::with(['driverDetail', 'kendaraanDetail'])
+            ->where('divisi', $divisi->master_bagian_nama);
     }
+
+    // 🔎 Tambahkan filter dari form modal
+    if ($request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
+        $query->whereBetween('tgl_berangkat', [$request->tgl_awal, $request->tgl_akhir]);
+    } elseif ($request->filled('tgl_awal')) {
+        $query->whereDate('tgl_berangkat', '>=', $request->tgl_awal);
+    } elseif ($request->filled('tgl_akhir')) {
+        $query->whereDate('tgl_berangkat', '<=', $request->tgl_akhir);
+    }
+
+
+    if ($request->filled('id_divisi') && $request->id_divisi !== 'all') {
+        $query->where('divisi', $request->id_divisi);
+    }
+
+    if ($request->filled('jenis_tujuan')) {
+        $query->where('jenis_tujuan', $request->jenis_tujuan);
+    }
+
+    if ($request->filled('status') && $request->status !== 'all') {
+        $query->where('status', $request->status);
+    }
+
+    // Ambil data sesuai filter
+    $pkendaraan = $query->get();
+
+    $get_divisi = Bagian::get();
+    $get_drivers = MDriver::where('driver_regional_id', Auth::user()->bagian->regional->id_regional)->get();
+
+    $view_data = [
+        'pkendaraan'  => $pkendaraan,
+        'divisi'      => $divisi->master_bagian_nama,
+        'get_divisi'  => $get_divisi,
+        'get_drivers' => $get_drivers,
+    ];
+
+    return view('pkendaraan.index', $view_data);
+}
+
 
 
     public function getAvailableDrivers(Request $request)
@@ -213,6 +266,7 @@ class PKendaraanController extends Controller
         $pkendaraan->jam_kembali = $request->jam_kembali;
         $pkendaraan->tujuan = $request->tujuan;
         $pkendaraan->pejemputan = $request->pejemputan;
+         $pkendaraan->no_wa = $request->no_wa;
         $pkendaraan->ket = $request->ket;
 
         // Jika driver yang dipilih adalah "Rental"
@@ -260,6 +314,7 @@ class PKendaraanController extends Controller
                 'tujuan' => $data->tujuan,
                 'ket' => $data->ket,
                 'pejemputan' => $data->pejemputan,
+                'no_wa' => $data->no_wa,
                 'driver' => $data->driver ?? 'Rental', // Jika null, set default Rental
                 'rental_driver' => $data->rental_driver ?? '',
                 'rental_kendaraan' => $data->rental_kendaraan ?? '',
@@ -285,6 +340,7 @@ class PKendaraanController extends Controller
         $pkendaraan->jenis_tujuan = $request->jenis_tujuan1;
         $pkendaraan->tujuan = $request->tujuan1;
         $pkendaraan->pejemputan = $request->pejemputan1;
+        $pkendaraan->no_wa = $request->no_wa1;
         $pkendaraan->no_polisi = $request->no_polisi1;
         $pkendaraan->ket = $request->ket1;
 

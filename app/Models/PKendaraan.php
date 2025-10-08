@@ -68,7 +68,7 @@ class PKendaraan extends Model
         'kendaraan_regional_id','divisi', 'nama_pic', 'tgl_berangkat', 'jam_berangkat', 'jam_kembali',
         'jenis_tujuan', 'tujuan', 'pejemputan', 'file_memo', 'driver',
         'rental_driver', 'rental_kendaraan', 'no_polisi', 'status',
-        'username', 'apprv', 'ket',
+        'username', 'apprv', 'ket','created_at','no_wa',
     ];
 
     /**
