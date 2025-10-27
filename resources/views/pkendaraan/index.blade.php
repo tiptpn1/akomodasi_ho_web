@@ -180,7 +180,7 @@
                                                         </option>
                                                     @endforeach
                                                     <option value="rental">Rental</option>
-                                                    <option value="99">Ojek Online</option>
+                                                    <option value="99">Driver Online</option>
                                                 </select>
                                             </div>
 
@@ -636,7 +636,7 @@
                                                 @if ($item->driverDetail)
                                                     {{ $item->driverDetail->nama_driver }} - {{ $item->driverDetail->no_hp }}
                                                 @elseif ($item->driver == 99)
-                                                    (Ojek Online)
+                                                    (Driver Online)
                                                 @elseif ($item->driver == null)
                                                     (Rental)<br>{{ $item->rental_driver }}
                                                 @else
@@ -647,7 +647,7 @@
                                                 @if ($item->kendaraanDetail)
                                                     {{ $item->kendaraanDetail->nopol }} - {{ $item->kendaraanDetail->tipe_kendaraan }}
                                                 @elseif ($item->driver == 99)
-                                                    (Ojek Online)
+                                                    (Driver Online)
                                                 @elseif ($item->driver == null)
                                                     (Rental)<br>{{ $item->rental_kendaraan }}
                                                 @else
@@ -776,7 +776,7 @@
                                 });
 
                                 driverSelect.append('<option value="rental">Rental</option>');
-                                driverSelect.append('<option value="99">Ojek Online</option>');
+                                driverSelect.append('<option value="99">Driver Online</option>');
                             },
                             error: function(xhr, status, error) {
                                 console.error("Gagal mengambil data driver:", error);
@@ -819,7 +819,7 @@
                                 });
 
                                 driverSelect.append('<option value="rental">Rental</option>');
-                                driverSelect.append('<option value="99">Ojek Online</option>');
+                                driverSelect.append('<option value="99">Driver Online</option>');
                             },
                             error: function(xhr, status, error) {
                                 console.error("Gagal mengambil data driver:", error);
@@ -1198,7 +1198,7 @@
                             });
 
                             driverSelect.append('<option value="Rental">Rental</option>');
-                            driverSelect.append('<option value="99">Ojek Online</option>');
+                            driverSelect.append('<option value="99">Driver Online</option>');
                             driverSelect.val(currentSelection); // Pastikan pilihan tetap terpilih
                             handleRentalFields(currentSelection);
 
@@ -1235,7 +1235,17 @@
                         $('#rental_driver_input, #rental_kendaraan_input').show();
                         $('#no_polisi1').val(null).prop('disabled', true).closest('.form-group').hide();
                         driverWrapper.removeClass('col-md-6').addClass('col-md-12'); // Lebarkan kolom
-                    } else {
+                    } 
+                    else if (selectedDriver === "99") {
+                        // Driver Online: Sembunyikan field Rental dan field Kendaraan
+                        $('#rental_driver_input, #rental_kendaraan_input').hide(); 
+                        $('#no_polisi1').val(null).prop('disabled', true).closest('.form-group').hide(); // Sembunyikan Kendaraan
+                        driverWrapper.removeClass('col-md-12').addClass('col-md-6'); // Kembalikan ukuran
+                        
+                        // Pastikan required field rental hilang
+                        $('#rental_driver, #rental_kendaraan').prop('required', false).val('');
+                    }
+                    else {
                         $('#rental_driver_input, #rental_kendaraan_input').hide();
                         if (!$('#rental_driver').val()) $('#rental_driver').val('');
                         if (!$('#rental_kendaraan').val()) $('#rental_kendaraan').val('');

@@ -1,7 +1,7 @@
 @php
     // Berkas ini adalah view parsial yang dimuat melalui AJAX.
 
-    // Array slot waktu untuk grid jadwal, dari jam 07:00 hingga 21:00 dengan interval 30 menit.
+    // Array slot waktu untuk grid jadwal, dari jam 05:00 hingga 24:00 dengan interval 30 menit.
     $all_jam_with_minutes = [];
     for ($h = 5; $h <= 23; $h++) {
         $hour = str_pad($h, 2, '0', STR_PAD_LEFT);
@@ -11,37 +11,38 @@
     $all_jam_with_minutes[] = '24.00';
 
     /**
-     * Fungsi bantuan untuk menemukan slot waktu terdekat di grid untuk waktu perjalanan tertentu.
-     * Ini penting untuk menyelaraskan waktu mulai/selesai perjalanan ke grid 30 menit.
-     * @param \Carbon\Carbon $carbon - Instance Carbon untuk mem-parsing waktu.
-     * @param array $allJam - Array yang berisi semua slot waktu.
-     * @param string|null $tripTime - Waktu perjalanan dari database (misal: "09:15:00").
-     * @param string $type - Tipe pembulatan, 'start' (ke bawah) atau 'end' (ke atas).
-     * @return string|null - Slot waktu yang sesuai dari grid (misal: "09.00").
+     * Fungsi bantuan untuk menyelaraskan waktu perjalanan ke grid 30 menit.
      */
     function findClosestTimeSlot($carbon, $allJam, $tripTime, $type) {
         if (!$tripTime) return null;
-        $trip_time_obj = $carbon->parse($tripTime);
-        $closest_slot = null;
-        $smallest_diff = PHP_INT_MAX;
+
+        try {
+            $trip_time_obj = $carbon->parse($tripTime);
+        } catch (\Exception $e) {
+            return $type == 'start' ? '05.00' : '24.00';
+        }
+        
+        $prev_slot = null;
 
         foreach ($allJam as $slot) {
             $slot_time_obj = $carbon->parse(str_replace('.', ':', $slot));
-            $diff_seconds = $trip_time_obj->diffInSeconds($slot_time_obj, false);
 
             if ($type == 'start') {
-                if ($diff_seconds <= 0 && abs($diff_seconds) < $smallest_diff) {
-                    $smallest_diff = abs($diff_seconds);
-                    $closest_slot = $slot;
+                // Untuk start time, cari slot terdekat yang sama atau di bawah waktu trip
+                if ($slot_time_obj->greaterThan($trip_time_obj)) {
+                    // Jika slot saat ini sudah melewati waktu trip, kembalikan slot sebelumnya
+                    return $prev_slot ?? $slot; 
                 }
             } else { // 'end'
-                if ($diff_seconds >= 0 && $diff_seconds < $smallest_diff) {
-                    $smallest_diff = $diff_seconds;
-                    $closest_slot = $slot;
+                // Untuk end time, cari slot terdekat yang sama atau di atas waktu trip
+                if ($slot_time_obj->gte($trip_time_obj)) { // <-- PERBAIKAN DI SINI
+                    return $slot;
                 }
             }
+            $prev_slot = $slot;
         }
-        return $closest_slot;
+
+        return end($allJam);
     }
 @endphp
 
@@ -52,49 +53,91 @@
             <tr>
                 <th scope="col" style="width: 80px; min-width: 80px;">Jam</th>
                 @foreach ($drivers as $driver)
-                    <th scope="col" style="min-width: 150px;">{{ $driver->nama_driver }}</th>
+                    @php
+                        // Menggunakan data_get untuk akses aman (penting untuk driver dinamis)
+                        $is_online = data_get($driver, 'is_online', false);
+                        $is_rental = data_get($driver, 'is_rental', false);
+                        $nama_driver = data_get($driver, 'nama_driver', 'Driver N/A');
+                        
+                        $header_class = '';
+                        $header_text = $nama_driver;
+                        
+                        if ($is_online || $is_rental) {
+                            $trip = data_get($driver, 'trips.0');
+                            // Mengakses nopol dari relasi (kendaraanDetail) jika ada, atau dari kolom rental_kendaraan
+                            $nopol = data_get($trip, 'kendaraanDetail.nopol') ?? data_get($trip, 'rental_kendaraan') ?? 'N/A';
+                            
+                            if ($is_online) {
+                                $header_class = 'bg-info text-white';
+                                $header_text = 'Driver Online';
+                            } elseif ($is_rental) {
+                                $header_class = 'bg-warning text-dark';
+                                $header_text = data_get($trip, 'rental_driver') . ' (' . $nopol . ')';
+                            }
+                        }
+                    @endphp
+                    <th scope="col" style="min-width: 150px;">{{ $header_text }}</th>
                 @endforeach
             </tr>
         </thead>
         <tbody>
             @foreach ($all_jam_with_minutes as $time_slot)
                 <tr>
-                    {{-- Tampilkan slot waktu di kolom pertama, gabungkan baris untuk jam penuh --}}
-                    @if (str_ends_with($time_slot, '.00'))
-                        <th scope="row" rowspan="2">{{ $time_slot }}</th>
+                    {{-- Tampilkan slot waktu di kolom pertama --}}
+                    @if (str_ends_with($time_slot, '.00') && $time_slot != '24.00')
+                        <th scope="row" rowspan="2">{{ str_replace('.', ':', $time_slot) }}</th>
+                    @elseif ($time_slot == '24.00')
+                         @continue
                     @endif
                     
                     @foreach ($drivers as $driver)
                         @php
+                            // Mengakses perjalanan dengan aman
+                            $trips = data_get($driver, 'trips'); 
+                            if (!is_array($trips) && !($trips instanceof \Illuminate\Database\Eloquent\Collection)) {
+                                $trips = [];
+                            }
+                            
                             $trip_for_this_slot = null;
                             $rowspan = 1;
                             $is_covered = false;
 
                             // Cek apakah ada perjalanan yang DIMULAI pada slot waktu ini
-                            foreach($driver->p_kendaraans as $trip) {
-                                // Pastikan data waktu ada sebelum diproses
-                                if ($trip->jam_berangkat && $trip->jam_kembali) {
-                                    $start_slot = findClosestTimeSlot($carbon, $all_jam_with_minutes, $trip->jam_berangkat, 'start');
+                            foreach($trips as $trip) {
+                                $jam_berangkat = data_get($trip, 'jam_berangkat');
+                                $jam_kembali = data_get($trip, 'jam_kembali');
+
+                                if ($jam_berangkat && $jam_kembali) {
+                                    $start_slot = findClosestTimeSlot($carbon, $all_jam_with_minutes, $jam_berangkat, 'start');
+                                    
                                     if ($time_slot == $start_slot) {
                                         $trip_for_this_slot = $trip;
                                         // Hitung rowspan
-                                        $end_slot = findClosestTimeSlot($carbon, $all_jam_with_minutes, $trip->jam_kembali, 'end');
+                                        $end_slot = findClosestTimeSlot($carbon, $all_jam_with_minutes, $jam_kembali, 'end');
                                         $start_index = array_search($start_slot, $all_jam_with_minutes);
                                         $end_index = array_search($end_slot, $all_jam_with_minutes);
-                                        // Rowspan adalah selisih indeks, minimal 1
                                         $rowspan = ($end_index - $start_index) >= 1 ? ($end_index - $start_index) : 1;
+                                        
+                                        $current_index = array_search($time_slot, $all_jam_with_minutes);
+                                        $max_rowspan = count($all_jam_with_minutes) - 1 - $current_index;
+                                        $rowspan = min($rowspan, $max_rowspan);
+
                                         break;
                                     }
                                 }
                             }
 
-                            // Jika tidak ada perjalanan yang dimulai, cek apakah slot ini TERTUTUP oleh perjalanan sebelumnya
+                            // Jika tidak ada perjalanan yang dimulai, cek apakah slot ini TERTUTUP
                             if (!$trip_for_this_slot) {
-                                foreach ($driver->p_kendaraans as $trip) {
-                                    if ($trip->jam_berangkat && $trip->jam_kembali) {
-                                        $start_slot = findClosestTimeSlot($carbon, $all_jam_with_minutes, $trip->jam_berangkat, 'start');
-                                        $end_slot = findClosestTimeSlot($carbon, $all_jam_with_minutes, $trip->jam_kembali, 'end');
-                                        // Jika slot waktu saat ini berada di antara slot mulai dan akhir
+                                foreach ($trips as $trip) {
+                                    $jam_berangkat = data_get($trip, 'jam_berangkat');
+                                    $jam_kembali = data_get($trip, 'jam_kembali');
+                                    
+                                    if ($jam_berangkat && $jam_kembali) {
+                                        $start_slot = findClosestTimeSlot($carbon, $all_jam_with_minutes, $jam_berangkat, 'start');
+                                        $end_slot = findClosestTimeSlot($carbon, $all_jam_with_minutes, $jam_kembali, 'end');
+                                        
+                                        // Cek apakah waktu slot saat ini berada di antara start dan end
                                         if ($time_slot > $start_slot && $time_slot < $end_slot) {
                                             $is_covered = true;
                                             break;
@@ -105,21 +148,35 @@
                         @endphp
 
                         @if ($is_covered)
-                            {{-- Jangan render sel apa pun karena sudah ditutupi oleh rowspan --}}
+                            {{-- Jangan render sel karena sudah ditutupi oleh rowspan --}}
                         @elseif ($trip_for_this_slot)
-                            {{-- Render sel perjalanan dengan rowspan yang sudah dihitung --}}
-                            <td rowspan="{{ $rowspan }}" class="trip-cell hover-pointer" onclick="detail('{{ $trip_for_this_slot->id }}')">
+                            @php
+                                // Akses data trip dengan aman
+                                $trip_id = data_get($trip_for_this_slot, 'id');
+                                $tujuan = data_get($trip_for_this_slot, 'tujuan');
+                                $nama_pic = data_get($trip_for_this_slot, 'nama_pic');
+                                $status = data_get($trip_for_this_slot, 'status');
+                                $nopol_kendaraan = data_get($trip_for_this_slot, 'kendaraanDetail.nopol') ?? data_get($trip_for_this_slot, 'rental_kendaraan');
+
+                                $cell_class = 'trip-cell hover-pointer';
+                                if (data_get($driver, 'is_online')) {
+                                    $cell_class = 'trip-cell hover-pointer bg-info';
+                                } elseif (data_get($driver, 'is_rental')) {
+                                    $cell_class = 'trip-cell hover-pointer bg-warning text-dark';
+                                }
+                            @endphp
+                            {{-- Render sel perjalanan dengan rowspan --}}
+                            <td rowspan="{{ $rowspan }}" class="{{ $cell_class }}" onclick="detail('{{ $trip_id }}')">
                                 <div style="font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                    {{ $trip_for_this_slot->tujuan }}
+                                    {{ $tujuan }}
                                 </div>
-                                <div>PIC: {{ $trip_for_this_slot->nama_pic }}</div>
+                                <div>PIC: {{ $nama_pic }}</div>
                                 <div class="text-right mt-1">
-                                <i class="fas fa-2x {{ $trip_for_this_slot->status == 2? 'fa-check-circle' : 'fa-clock' }}" style="color: {{ $trip_for_this_slot->status == 2? 'blue' : 'black' }}"></i>
-                                    
+                                    <i class="fas fa-2x {{ $status == 2? 'fa-check-circle' : 'fa-clock' }}" style="color: {{ $status == 2? 'white' : 'black' }}"></i>
                                 </div>
                             </td>
                         @else
-                            {{-- Render sel kosong yang menandakan driver tersedia --}}
+                            {{-- Render sel kosong --}}
                             <td class="available-cell"></td>
                         @endif
                     @endforeach
