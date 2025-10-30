@@ -1,3 +1,4 @@
+public/uploads
 /.phpunit.cache
 /node_modules
 /public/build
