@@ -88,7 +88,8 @@ class PKendaraanController extends Controller
     $pkendaraan = $query->get();
 
     $get_divisi = Bagian::get();
-    $get_drivers = MDriver::where('driver_regional_id', Auth::user()->bagian->regional->id_regional)->get();
+    //$get_drivers = MDriver::where('driver_regional_id', Auth::user()->bagian->regional->id_regional)->get(); //ini ambil dari database base on regional, gag tau kenapa kok dipakai
+     $get_drivers = MDriver::get(); // Ambil semua driver dari databases
 
     $view_data = [
         'pkendaraan'  => $pkendaraan,
