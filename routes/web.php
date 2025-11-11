@@ -179,6 +179,7 @@ Route::group(['prefix' => 'pkendaraan', 'as' => 'pkendaraan.'], function () {
         ->name('getAvailableDrivers');
     Route::get('/get-available-drivers-admin', [PKendaraanController::class, 'getAvailableDriversAdmin'])
         ->name('getAvailableDrivers');
+    Route::post('/multi-approve', [PKendaraanController::class, 'multiApprove'])->name('multi-approve');
 });
 
 Route::group(['prefix' => 'kartu', 'as' => 'kartu.'], function () {
