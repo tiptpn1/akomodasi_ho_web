@@ -19,35 +19,6 @@ use Illuminate\Support\Facades\Storage;
 class PKendaraanController extends Controller
 {
 
-    // public function index(Request $request)
-    // {
-    //     $bagian = Auth::user()->master_nama_bagian_id;
-    //     $divisi = Bagian::find($bagian);
-
-    //     if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga'])) {
-    //         // Jika user adalah asisten_ga atau kasubdiv_ga, tampilkan semua data dengan join ke driver dan kendaraan
-    //         $pkendaraan = PKendaraan::with(['driverDetail', 'kendaraanDetail'])->get();
-    //     } else {
-    //         // Jika bukan, tampilkan hanya data sesuai bagian user
-    //         $pkendaraan = PKendaraan::with(['driverDetail', 'kendaraanDetail'])
-    //             ->where('divisi', $divisi->master_bagian_nama)
-    //             ->get();
-    //     }
-        
-
-    //     $get_divisi = Bagian::get();
-    //     // $get_drivers = MDriver::get(); // Ambil semua driver dari database
-    //     $get_drivers = MDriver::where('driver_regional_id',Auth::user()->bagian->regional->id_regional)->get();
-
-    //     $view_data = [
-    //         'pkendaraan' => $pkendaraan,
-    //         'divisi'     => $divisi->master_bagian_nama,
-    //         'get_divisi' => $get_divisi,
-    //         'get_drivers' => $get_drivers,
-    //     ];
-
-    //     return view('pkendaraan.index', $view_data);
-    // }
 
     public function index(Request $request)
 {
@@ -146,56 +117,6 @@ class PKendaraanController extends Controller
 
         return response()->json(['drivers' => $available_drivers]);
     }
-
-    // public function getAvailableDriversAdmin(Request $request)
-    // {
-    //     $tgl_berangkat = $request->input('tgl_berangkat');
-    //     $jam_berangkat = $request->input('jam_berangkat');
-    //     $jam_kembali = $request->input('jam_kembali');
-
-    //     if (!$tgl_berangkat || !$jam_berangkat || !$jam_kembali) {
-    //         return response()->json(['drivers' => []]);
-    //     }
-
-    //     $tgl_berangkat = \Carbon\Carbon::createFromFormat('d-m-Y', $tgl_berangkat)->format('Y-m-d');
-    //     $jam_berangkat = date('H:i:s', strtotime($jam_berangkat));
-    //     $jam_kembali = date('H:i:s', strtotime($jam_kembali));
-
-    //     // Cari driver yang sedang digunakan dalam rentang waktu tersebut dan memiliki status = 2
-    //     $driver_terpakai = PKendaraan::where('tgl_berangkat', $tgl_berangkat)
-    //         ->where('status', 2)
-    //         ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
-    //             $query->where(function ($q) use ($jam_berangkat, $jam_kembali) {
-    //                 $q->where('jam_berangkat', '<', $jam_kembali)
-    //                     ->where('jam_kembali', '>', $jam_berangkat);
-    //             });
-    //         })
-    //         ->pluck('driver')
-    //         ->toArray();
-
-    //     // Ambil driver yang tidak sedang bertugas dalam waktu tersebut
-    //     $available_drivers = MDriver::whereNotIn('id_driver', $driver_terpakai)->get();
-
-    //     // Cari kendaraan yang sedang digunakan dalam rentang waktu tersebut dan memiliki status = 2
-    //     $kendaraan_terpakai = PKendaraan::where('tgl_berangkat', $tgl_berangkat)
-    //         ->where('status', 2)
-    //         ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
-    //             $query->where(function ($q) use ($jam_berangkat, $jam_kembali) {
-    //                 $q->where('jam_berangkat', '<', $jam_kembali)
-    //                     ->where('jam_kembali', '>', $jam_berangkat);
-    //             });
-    //         })
-    //         ->pluck('no_polisi')
-    //         ->toArray();
-
-    //     // Ambil kendaraan yang tidak sedang bertugas dalam waktu tersebut
-    //     $available_vehicles = MKendaraan::whereNotIn('id_kendaraan', $kendaraan_terpakai)->get();
-
-    //     return response()->json([
-    //         'drivers' => $available_drivers,
-    //         'vehicles' => $available_vehicles
-    //     ]);
-    // }
 
     public function getAvailableDriversAdmin(Request $request)
     {
@@ -450,124 +371,364 @@ class PKendaraanController extends Controller
         return Excel::download(new PKendaraanExport($data), 'Permintaan_Kendaraan_export.xlsx');
     }
 
-    // public function approve($id)
-    // {
-    //     $pkendaraan = PKendaraan::find($id);
-    //     $pkendaraan->status = 2; // Approved
-    //     $pkendaraan->apprv = Auth::user()->master_user_nama;
-    //     $pkendaraan->save();
+//     public function multiApprove(Request $request)
+// {
+//     // Pastikan user adalah admin yang berhak (opsional, tergantung logic Auth::user()->master_user_nama)
+//     if (!in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga'])) {
+//         return response()->json(['message' => 'Akses ditolak.'], 403);
+//     }
 
-    //     return redirect()->route('pkendaraan.index')->with('success', 'Data approved.');
-    // }
+//     $ids = $request->input('ids');
+//     if (!is_array($ids) || empty($ids)) {
+//         return response()->json(['message' => 'Tidak ada data yang dipilih.'], 400);
+//     }
+
+//     $approvedCount = 0;
+//     $rejectedCount = 0;
+//     $failedApproves = [];
+
+//     // Lakukan loop untuk setiap ID yang dipilih
+//     foreach ($ids as $id) {
+//         $pkendaraan = PKendaraan::find($id);
+
+//         // Pastikan data ada dan status masih 'Pengajuan Divisi' (1)
+//         if (!$pkendaraan || $pkendaraan->status != 1) {
+//             $rejectedCount++; // Atau bisa diabaikan
+//             continue;
+//         }
+
+//         $tgl_berangkat = $pkendaraan->tgl_berangkat;
+//         $jam_berangkat = $pkendaraan->jam_berangkat;
+//         $jam_kembali = $pkendaraan->jam_kembali;
+//         $driver = $pkendaraan->driver;
+//         $no_polisi = $pkendaraan->no_polisi;
+
+//         // Cek bentrok driver
+//         $driver_bentrok = false;
+//         if (!is_null($driver)) {
+//             $driver_bentrok = PKendaraan::where('id', '!=', $id) // Kecuali data ini sendiri (walaupun status belum approved, tapi untuk jaga-jaga)
+//                 ->where('tgl_berangkat', $tgl_berangkat)
+//                 ->where('status', 2) // Hanya yang sudah approved
+//                 ->where('driver', $driver)
+//                 ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
+//                     $query->where(function ($q) use ($jam_berangkat, $jam_kembali) {
+//                         $q->where('jam_berangkat', '<', $jam_kembali)
+//                             ->where('jam_kembali', '>', $jam_berangkat);
+//                     });
+//                 })
+//                 ->exists();
+//         }
+
+//         // Cek bentrok kendaraan
+//         $kendaraan_bentrok = false;
+//         if (!is_null($no_polisi)) {
+//             $kendaraan_bentrok = PKendaraan::where('id', '!=', $id) // Kecuali data ini sendiri
+//                 ->where('tgl_berangkat', $tgl_berangkat)
+//                 ->where('status', 2) // Hanya yang sudah approved
+//                 ->where('no_polisi', $no_polisi)
+//                 ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
+//                     $query->where(function ($q) use ($jam_berangkat, $jam_kembali) {
+//                         $q->where('jam_berangkat', '<', $jam_kembali)
+//                             ->where('jam_kembali', '>', $jam_berangkat);
+//                     });
+//                 })
+//                 ->exists();
+//         }
+
+//         if ($driver_bentrok || $kendaraan_bentrok) {
+//             $rejectedCount++;
+//             $failedApproves[] = "ID {$id} (PIC: {$pkendaraan->nama_pic}) - Driver atau Kendaraan bentrok.";
+//             continue; // Lanjut ke pengajuan berikutnya
+//         }
+
+//         // Jika tidak bentrok, setujui permintaan
+//         $pkendaraan->status = 2; // Approved
+//         $pkendaraan->apprv = Auth::user()->master_user_nama;
+//         $pkendaraan->save();
+//         $approvedCount++;
+//     }
+
+//     $message = "Berhasil menyetujui **{$approvedCount}** data.";
+//     if ($rejectedCount > 0) {
+//         $message .= " Gagal menyetujui **{$rejectedCount}** data karena sudah tidak dalam status pengajuan atau bentrok dengan jadwal lain.";
+//         // Anda bisa menambahkan detail failedApproves di sini jika diperlukan.
+//     }
+
+//     return response()->json(['message' => $message]);
+// }
 
 
-    // public function approve($id)
-    // {
-    //     $pkendaraan = PKendaraan::find($id);
+//    public function approve($id)
+// {
+//     // 1. Cari data pengajuan kendaraan berdasarkan ID
+//     $pkendaraan = PKendaraan::find($id);
 
-    //     if (!$pkendaraan) {
-    //         return redirect()->route('pkendaraan.index')->with('error', 'Data tidak ditemukan.');
-    //     }
+//     if (!$pkendaraan) {
+//         // Jika data tidak ditemukan, redirect dengan pesan error
+//         return redirect()->route('pkendaraan.index')->with('error', 'Data pengajuan tidak ditemukan.');
+//     }
 
-    //     $tgl_berangkat = $pkendaraan->tgl_berangkat;
-    //     $jam_berangkat = $pkendaraan->jam_berangkat;
-    //     $jam_kembali = $pkendaraan->jam_kembali;
-    //     $driver = $pkendaraan->driver;
-    //     $no_polisi = $pkendaraan->no_polisi;
+//     // Pastikan hanya pengajuan yang masih berstatus 1 (Pengajuan Divisi) yang bisa di-approve
+//     if ($pkendaraan->status != 1) {
+//          return redirect()->route('pkendaraan.index')->with('error', 'Pengajuan ini sudah tidak dalam status menunggu persetujuan.');
+//     }
 
-    //     // Cek apakah driver sudah digunakan dalam rentang waktu yang sama
-    //     $driver_bentrok = PKendaraan::where('tgl_berangkat', $tgl_berangkat)
-    //         ->where('status', 2) // Hanya yang sudah approved
-    //         ->where('driver', $driver)
-    //         ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
-    //             $query->where(function ($q) use ($jam_berangkat, $jam_kembali) {
-    //                 $q->where('jam_berangkat', '<', $jam_kembali)
-    //                     ->where('jam_kembali', '>', $jam_berangkat);
-    //             });
-    //         })
-    //         ->exists();
+//     // Ambil detail waktu dan sumber daya dari pengajuan yang akan di-approve
+//     $tgl_berangkat = $pkendaraan->tgl_berangkat;
+//     $jam_berangkat = $pkendaraan->jam_berangkat;
+//     $jam_kembali = $pkendaraan->jam_kembali;
+//     $driver = $pkendaraan->driver;
+//     $no_polisi = $pkendaraan->no_polisi;
 
-    //     // Cek apakah kendaraan sudah digunakan dalam rentang waktu yang sama
-    //     $kendaraan_bentrok = PKendaraan::where('tgl_berangkat', $tgl_berangkat)
-    //         ->where('status', 2) // Hanya yang sudah approved
-    //         ->where('no_polisi', $no_polisi)
-    //         ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
-    //             $query->where(function ($q) use ($jam_berangkat, $jam_kembali) {
-    //                 $q->where('jam_berangkat', '<', $jam_kembali)
-    //                     ->where('jam_kembali', '>', $jam_berangkat);
-    //             });
-    //         })
-    //         ->exists();
+//     // Inisialisasi status bentrok
+//     $driver_bentrok = false;
+//     $kendaraan_bentrok = false;
 
-    //     if ($driver_bentrok || $kendaraan_bentrok) {
-    //         return redirect()->route('pkendaraan.index')->with('error', 'Driver atau kendaraan sudah digunakan pada waktu yang sama.');
-    //     }
+//     // 2. Cek apakah driver sudah digunakan dalam rentang waktu yang sama (jika driver ada)
+//     if (!is_null($driver) && $driver != 99) { // Kecuali jika Driver Online (ID 99) atau Rental (null)
+//         $driver_bentrok = PKendaraan::where('tgl_berangkat', $tgl_berangkat)
+//             ->where('status', 2) // Hanya yang sudah Approved
+//             ->where('driver', $driver)
+//             ->where('id', '!=', $id) // Kecualikan pengajuan ini sendiri (walau status masih 1)
+//             ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
+//                 // Cek tumpang tindih waktu: (StartA < EndB) AND (EndA > StartB)
+//                 $query->where('jam_berangkat', '<', $jam_kembali)
+//                     ->where('jam_kembali', '>', $jam_berangkat);
+//             })
+//             ->exists();
+//     }
 
-    //     // Jika tidak bentrok, setujui permintaan
-    //     $pkendaraan->status = 2; // Approved
-    //     $pkendaraan->apprv = Auth::user()->master_user_nama;
-    //     $pkendaraan->save();
+//     // 3. Cek apakah kendaraan sudah digunakan dalam rentang waktu yang sama (jika kendaraan ada)
+//     if (!is_null($no_polisi)) {
+//         $kendaraan_bentrok = PKendaraan::where('tgl_berangkat', $tgl_berangkat)
+//             ->where('status', 2) // Hanya yang sudah Approved
+//             ->where('no_polisi', $no_polisi)
+//             ->where('id', '!=', $id) // Kecualikan pengajuan ini sendiri
+//             ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
+//                 // Cek tumpang tindih waktu: (StartA < EndB) AND (EndA > StartB)
+//                 $query->where('jam_berangkat', '<', $jam_kembali)
+//                     ->where('jam_kembali', '>', $jam_berangkat);
+//             })
+//             ->exists();
+//     }
 
-    //     return redirect()->route('pkendaraan.index')->with('success', 'Data berhasil disetujui.');
-    // }
+//     // 4. Proses persetujuan atau tolak karena bentrok
+//     if ($driver_bentrok || $kendaraan_bentrok) {
+//         $errorMessage = 'Persetujuan gagal: ';
+//         if ($driver_bentrok) {
+//             $errorMessage .= 'Driver sudah digunakan pada waktu yang sama. ';
+//         }
+//         if ($kendaraan_bentrok) {
+//             $errorMessage .= 'Kendaraan sudah digunakan pada waktu yang sama.';
+//         }
+        
+//         return redirect()->route('pkendaraan.index')->with('error', $errorMessage);
+//     }
 
+//     // 5. Jika tidak bentrok, setujui permintaan
+//     $pkendaraan->status = 2; // Approved
+//     $pkendaraan->apprv = Auth::user()->master_user_nama; // Catat siapa yang menyetujui
+//     $pkendaraan->save();
+
+//     return redirect()->route('pkendaraan.index')->with('success', 'Data berhasil disetujui.');
+// }
+
+private function checkAssignment(PKendaraan $pkendaraan)
+    {
+        // 1. Kasus Driver Online (ID 99)
+        if ($pkendaraan->driver == 99) {
+            return true;
+        }
+        
+        // 2. Kasus Penugasan Standar
+        $hasStandardAssignment = !is_null($pkendaraan->driver) && !is_null($pkendaraan->no_polisi);
+
+        // 3. Kasus Rental
+        $isRental = is_null($pkendaraan->driver) && is_null($pkendaraan->no_polisi);
+        $hasCompleteRental = $isRental && !is_null($pkendaraan->rental_driver) && !is_null($pkendaraan->rental_kendaraan);
+
+        // Pengajuan valid jika: Punya penugasan standar ATAU Punya penugasan rental lengkap.
+        if ($hasStandardAssignment || $hasCompleteRental) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // ----------------------------------------------------
+    // ⭐ PUBLIC FUNCTION APPROVE ($id)
+    // ----------------------------------------------------
     public function approve($id)
     {
+        // 1. Cari data pengajuan kendaraan berdasarkan ID
         $pkendaraan = PKendaraan::find($id);
 
         if (!$pkendaraan) {
-            return redirect()->route('pkendaraan.index')->with('error', 'Data tidak ditemukan.');
+            return redirect()->route('pkendaraan.index')->with('error', 'Data pengajuan tidak ditemukan.');
         }
 
+        // Pastikan hanya pengajuan yang masih berstatus 1 (Pengajuan Divisi) yang bisa di-approve
+        if ($pkendaraan->status != 1) {
+            return redirect()->route('pkendaraan.index')->with('error', 'Pengajuan ini sudah tidak dalam status menunggu persetujuan.');
+        }
+
+        // 2. VALIDASI WAJIB PENUGASAN
+        if (!$this->checkAssignment($pkendaraan)) {
+            return redirect()->route('pkendaraan.index')->with('error', 'Persetujuan gagal: Mohon lengkapi penugasan Driver/Kendaraan sebelum menyetujui.');
+        }
+
+
+        // 3. Ambil detail waktu dan sumber daya
         $tgl_berangkat = $pkendaraan->tgl_berangkat;
         $jam_berangkat = $pkendaraan->jam_berangkat;
         $jam_kembali = $pkendaraan->jam_kembali;
         $driver = $pkendaraan->driver;
         $no_polisi = $pkendaraan->no_polisi;
 
-        // Cek apakah driver sudah digunakan dalam rentang waktu yang sama (jika driver tidak null)
         $driver_bentrok = false;
-        if (!is_null($driver)) {
+        $kendaraan_bentrok = false;
+
+        // 4. Cek Bentrok Driver (Hanya untuk driver standar)
+        if (!is_null($driver) && $driver != 99) { 
             $driver_bentrok = PKendaraan::where('tgl_berangkat', $tgl_berangkat)
-                ->where('status', 2) // Hanya yang sudah approved
+                ->where('status', 2) // Hanya yang sudah Approved
                 ->where('driver', $driver)
+                ->where('id', '!=', $id) // Kecualikan pengajuan ini sendiri
                 ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
-                    $query->where(function ($q) use ($jam_berangkat, $jam_kembali) {
-                        $q->where('jam_berangkat', '<', $jam_kembali)
-                            ->where('jam_kembali', '>', $jam_berangkat);
-                    });
+                    $query->where('jam_berangkat', '<', $jam_kembali)
+                        ->where('jam_kembali', '>', $jam_berangkat);
                 })
                 ->exists();
         }
 
-        // Cek apakah kendaraan sudah digunakan dalam rentang waktu yang sama (jika no_polisi tidak null)
-        $kendaraan_bentrok = false;
+        // 5. Cek Bentrok Kendaraan (Hanya untuk kendaraan standar)
         if (!is_null($no_polisi)) {
             $kendaraan_bentrok = PKendaraan::where('tgl_berangkat', $tgl_berangkat)
-                ->where('status', 2) // Hanya yang sudah approved
+                ->where('status', 2) // Hanya yang sudah Approved
                 ->where('no_polisi', $no_polisi)
+                ->where('id', '!=', $id) // Kecualikan pengajuan ini sendiri
                 ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
-                    $query->where(function ($q) use ($jam_berangkat, $jam_kembali) {
-                        $q->where('jam_berangkat', '<', $jam_kembali)
-                            ->where('jam_kembali', '>', $jam_berangkat);
-                    });
+                    $query->where('jam_berangkat', '<', $jam_kembali)
+                        ->where('jam_kembali', '>', $jam_berangkat);
                 })
                 ->exists();
         }
 
+        // 6. Proses persetujuan atau tolak karena bentrok
         if ($driver_bentrok || $kendaraan_bentrok) {
-            return redirect()->route('pkendaraan.index')->with('error', 'Driver atau kendaraan sudah digunakan pada waktu yang sama.');
+            $errorMessage = 'Persetujuan gagal: ';
+            if ($driver_bentrok) {
+                $errorMessage .= 'Driver sudah digunakan pada waktu yang sama. ';
+            }
+            if ($kendaraan_bentrok) {
+                $errorMessage .= 'Kendaraan sudah digunakan pada waktu yang sama.';
+            }
+            
+            return redirect()->route('pkendaraan.index')->with('error', $errorMessage);
         }
 
-        // Jika tidak bentrok, setujui permintaan
+        // 7. Jika tidak bentrok, setujui permintaan
         $pkendaraan->status = 2; // Approved
-        $pkendaraan->apprv = Auth::user()->master_user_nama;
+        $pkendaraan->apprv = Auth::user()->master_user_nama; // Catat siapa yang menyetujui
         $pkendaraan->save();
 
         return redirect()->route('pkendaraan.index')->with('success', 'Data berhasil disetujui.');
     }
 
 
+    // ----------------------------------------------------
+    // ⭐ PUBLIC FUNCTION MULTI APPROVE (Request $request)
+    // ----------------------------------------------------
+    public function multiApprove(Request $request)
+    {
+        // 1. Autentikasi dan Validasi Request
+        if (!in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga'])) {
+            return response()->json(['message' => 'Akses ditolak.'], 403);
+        }
+
+        $ids = $request->input('ids');
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['message' => 'Tidak ada data yang dipilih.'], 400);
+        }
+
+        $approvedCount = 0;
+        $rejectedCount = 0;
+        $failedApproves = [];
+
+        // 2. Proses Persetujuan Massal
+        foreach ($ids as $id) {
+            $pkendaraan = PKendaraan::find($id);
+
+            // Cek Status dan Keberadaan Data
+            if (!$pkendaraan || $pkendaraan->status != 1) {
+                $rejectedCount++;
+                $failedApproves[] = "ID {$id} (Status tidak valid).";
+                continue; 
+            }
+
+            // VALIDASI WAJIB PENUGASAN
+            if (!$this->checkAssignment($pkendaraan)) {
+                $rejectedCount++;
+                $failedApproves[] = "ID {$id} (PIC: {$pkendaraan->nama_pic}) - Driver/Kendaraan belum ditetapkan.";
+                continue; 
+            }
+
+            $tgl_berangkat = $pkendaraan->tgl_berangkat;
+            $jam_berangkat = $pkendaraan->jam_berangkat;
+            $jam_kembali = $pkendaraan->jam_kembali;
+            $driver = $pkendaraan->driver;
+            $no_polisi = $pkendaraan->no_polisi;
+            
+            $driver_bentrok = false;
+            $kendaraan_bentrok = false;
+
+            // Cek bentrok driver (hanya jika driver standar)
+            if (!is_null($driver) && $driver != 99) {
+                $driver_bentrok = PKendaraan::where('id', '!=', $id) 
+                    ->where('tgl_berangkat', $tgl_berangkat)
+                    ->where('status', 2)
+                    ->where('driver', $driver)
+                    ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
+                        $query->where('jam_berangkat', '<', $jam_kembali)
+                            ->where('jam_kembali', '>', $jam_berangkat);
+                    })
+                    ->exists();
+            }
+
+            // Cek bentrok kendaraan (hanya jika kendaraan standar)
+            if (!is_null($no_polisi)) {
+                $kendaraan_bentrok = PKendaraan::where('id', '!=', $id)
+                    ->where('tgl_berangkat', $tgl_berangkat)
+                    ->where('status', 2)
+                    ->where('no_polisi', $no_polisi)
+                    ->where(function ($query) use ($jam_berangkat, $jam_kembali) {
+                        $query->where('jam_berangkat', '<', $jam_kembali)
+                            ->where('jam_kembali', '>', $jam_berangkat);
+                    })
+                    ->exists();
+            }
+
+            if ($driver_bentrok || $kendaraan_bentrok) {
+                $rejectedCount++;
+                $failedApproves[] = "ID {$id} (PIC: {$pkendaraan->nama_pic}) - Driver atau Kendaraan bentrok.";
+                continue;
+            }
+
+            // Jika lulus semua cek, setujui permintaan
+            $pkendaraan->status = 2; // Approved
+            $pkendaraan->apprv = Auth::user()->master_user_nama;
+            $pkendaraan->save();
+            $approvedCount++;
+        }
+
+        // 3. Respon Akhir
+        $message = "Berhasil menyetujui **{$approvedCount}** data.";
+        if ($rejectedCount > 0) {
+            $message .= " Gagal menyetujui **{$rejectedCount}** data. Driver/Kendaraan belum ditetapkan";
+        }
+
+        return response()->json(['message' => $message]);
+    }
 
     public function reject($id)
     {

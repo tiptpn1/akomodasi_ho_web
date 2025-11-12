@@ -39,6 +39,13 @@
                         class="btn btn-primary btn-sm">Tambah Data</button>
                     <button id="btnExport" type="button" data-toggle="modal" data-target="#exportModal"
                         class="btn btn-warning btn-sm">Filter Data</button>
+                     {{-- TAMBAHKAN INI --}}
+                        @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
+                            <button id="btnMultiApprove" type="button" class="btn btn-success btn-sm" style="display: none;">
+                                <i class="fa fa-check-square-o"></i> Multi Approve
+                            </button>
+                        @endif
+                        {{-- AKHIR TAMBAHAN --}}
                 @endif
                 @if (session('success'))
                     <div class="alert alert-success alert-sm alert-dismissible fade show" role="alert"
@@ -185,18 +192,6 @@
                                             </div>
 
                                         </div>
-
-                                        <!-- <div class="row">
-                                            <div class="form-group col-md-12">
-                                                <b>Driver <span class="text-danger">*</span></b>
-                                                <select name="driver" id="driver" class="form-control" required>
-                                                    <option value="" disabled selected>Pilih Driver</option>
-                                                    <option value="rental">Rental</option>
-                                                </select>
-                                            </div>
-                                        </div> -->
-
-
 
                                         <div class="row" id="rental_fields" style="display: none;">
                                             <div class="form-group col-md-12">
@@ -470,17 +465,6 @@
                                                         </option>
                                                     @endif
                                                 </select>
-                                                <!-- <select class="form-control" name="id_divisi">
-                                                    <option value="" disabled {{ request('id_divisi') ? '' : 'selected' }}>Pilih Divisi</option>
-                                                    <option value="all" {{ request('id_divisi') == 'all' ? 'selected' : '' }}>Seluruh Divisi</option>
-                                                    @foreach ($get_divisi as $data_divisi)
-                                                        <option value="{{ $data_divisi->master_bagian_nama }}"
-                                                            {{ request('id_divisi') == $data_divisi->master_bagian_nama ? 'selected' : '' }}>
-                                                            {{ $data_divisi->master_bagian_nama }}
-                                                        </option>
-                                                    @endforeach
-                                                </select> -->
-
                                             </div>
                                             </div>
                                     </div>
@@ -537,6 +521,25 @@
                                                             $item->status == 2; // Disabled jika tgl_permintaan <= hari ini atau status=0 (Canceled) atau status=2 (Approved)
                                                         $isPending = $item->status == 1; // Hanya aktif jika status = 1
                                                     @endphp
+                                                    
+                                                    
+                                                    @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
+                                                    
+                                                    {{-- TAMBAHKAN CHECKBOX INI DI DALAM DIV GROUP INI --}}
+                                                        @if ($isPending)
+                                                            <!-- <div style="margin: 0 5px;">
+                                                                <input type="checkbox" class="approve-checkbox" data-id="{{ $item->id }}" title="Pilih untuk Multi Approve">
+                                                            </div> -->
+                                                            <div class="btn btn-sm checkbox-mimic" 
+                                                                style="background-color: #cfcfcfff; border-color: #CCCCCC; color: #495057;"> 
+                                                                <input type="checkbox" class="approve-checkbox" data-id="{{ $item->id }}" title="Pilih untuk Multi Approve">
+                                                            </div>
+                                                        @endif
+                                                        {{-- AKHIR TAMBAHAN CHECKBOX --}}   
+                                                        @endif 
+                                                    
+                                                </div>
+                                                <div class="btn-group" role="group">
                                                     <!-- Edit Button -->
                                                     <button type="button" class="btn btn-sm btn-info"
                                                         data-toggle="modal" data-target="#edit"
@@ -560,7 +563,7 @@
                                                 <div class="btn-group" role="group">
                                                     <!-- Approve and Reject Buttons -->
                                                     @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
-                                                        <!-- Approve Button -->
+                                                    <!-- Approve Button -->
                                                         <form
                                                             action="{{ route('pkendaraan.approve', $item->id ?? '-') }}"
                                                             method="POST"
@@ -910,261 +913,6 @@
         </script>
 
         <script>
-            // $(document).ready(function() {
-            //     function fetchAvailableDrivers1(selectedDriver = null) {
-            //         let tgl_berangkat = $("#tgl_berangkat1").val();
-            //         let jam_berangkat = $("#jam_berangkat1").val();
-            //         let jam_kembali = $("#jam_kembali1").val();
-
-            //         if (tgl_berangkat && jam_berangkat && jam_kembali) {
-            //             $.ajax({
-            //                 url: "/pkendaraan/get-available-drivers-admin",
-            //                 type: "GET",
-            //                 data: {
-            //                     tgl_berangkat: tgl_berangkat,
-            //                     jam_berangkat: jam_berangkat,
-            //                     jam_kembali: jam_kembali
-            //                 },
-            //                 dataType: "json",
-            //                 success: function(response) {
-            //                     let driverSelect = $("#driver1");
-            //                     let currentSelection = driverSelect.val() ||
-            //                         selectedDriver; // Simpan driver lama
-
-            //                     driverSelect.empty();
-            //                     driverSelect.append('<option value="" disabled>Pilih Driver</option>');
-
-            //                     $.each(response.drivers, function(index, driver) {
-            //                         let selected = (driver.id_driver == currentSelection) ?
-            //                             'selected' : '';
-            //                         driverSelect.append('<option value="' + driver.id_driver +
-            //                             '" ' + selected + '>' + driver.nama_driver + '</option>'
-            //                         );
-            //                     });
-
-            //                     driverSelect.append('<option value="Rental">Rental</option>');
-
-            //                     // Pastikan pilihan sebelumnya tetap terpilih
-            //                     driverSelect.val(currentSelection);
-
-            //                     // Cek apakah driver adalah "Rental"
-            //                     handleRentalFields(currentSelection);
-            //                 },
-            //                 error: function(xhr, status, error) {
-            //                     console.error("Gagal mengambil data driver:", error);
-            //                 }
-            //             });
-            //         }
-            //     }
-
-            //     function handleRentalFields(selectedDriver) {
-            //         let driverWrapper = $('#driver1').closest('.form-group');
-
-            //         if (selectedDriver === "Rental") {
-            //             $('#rental_driver_input, #rental_kendaraan_input').show();
-            //             $('#no_polisi1').val(null).prop('disabled', true).closest('.form-group').hide();
-            //             driverWrapper.removeClass('col-md-6').addClass('col-md-12'); // Lebarkan kolom
-            //         } else {
-            //             $('#rental_driver_input, #rental_kendaraan_input').hide();
-            //             $('#rental_driver, #rental_kendaraan').val('');
-            //             $('#no_polisi1').prop('disabled', false).closest('.form-group').show();
-            //             driverWrapper.removeClass('col-md-12').addClass('col-md-6'); // Kembalikan ukuran
-            //         }
-            //     }
-
-            //     $(document).on('click', '.btn-info', function() {
-            //         resetFormEdit();
-            //         const id = $(this).data('id');
-
-            //         $.ajax({
-            //             url: `/pkendaraan/edit/${id}`,
-            //             method: 'GET',
-            //             success: function(response) {
-            //                 let data = response.data;
-            //                 let kendaraans = response.kendaraans;
-
-            //                 let tglBerangkat = data.tgl_berangkat ? data.tgl_berangkat.split('-')
-            //                     .reverse().join('-') : '';
-
-            //                 // Set value untuk input
-            //                 $('input[name="id"]').val(data.id);
-            //                 $('input[name="divisi1"]').val(data.divisi);
-            //                 $('input[name="nama_pic1"]').val(data.nama_pic);
-            //                 $('input[name="tgl_berangkat1"]').val(tglBerangkat);
-            //                 $('input[name="jam_berangkat1"]').val(data.jam_berangkat);
-            //                 $('input[name="jam_kembali1"]').val(data.jam_kembali);
-            //                 $('#jenis_tujuan1').val(data.jenis_tujuan);
-            //                 $('input[name="tujuan1"]').val(data.tujuan);
-            //                 $('input[name="pejemputan1"]').val(data.pejemputan);
-
-            //                 let selectedDriver = data.driver;
-
-            //                 $('#no_polisi1').html(
-            //                     `<option value="" disabled selected>Pilih Kendaraan</option>`);
-            //                 kendaraans.forEach(kendaraan => {
-            //                     let selected = (kendaraan.id_kendaraan == data.no_polisi) ?
-            //                         'selected' : '';
-            //                     $('#no_polisi1').append(
-            //                         `<option value="${kendaraan.id_kendaraan}" ${selected}>${kendaraan.nopol} - ${kendaraan.tipe_kendaraan}</option>`
-            //                     );
-            //                 });
-
-            //                 fetchAvailableDrivers1(selectedDriver);
-
-            //                 // Pastikan data rental tetap muncul jika driver adalah "Rental"
-            //                 if (selectedDriver === "Rental") {
-            //                     $('input[name="rental_driver"]').val(data.rental_driver);
-            //                     $('input[name="rental_kendaraan"]').val(data.rental_kendaraan);
-            //                 }
-            //             },
-            //             error: function(xhr) {
-            //                 console.error(xhr.responseText);
-            //             }
-            //         });
-            //     });
-
-            //     // Jika tanggal atau jam berubah, daftar driver diperbarui
-            //     $("#tgl_berangkat1, #jam_berangkat1, #jam_kembali1").on("change", function() {
-            //         let currentDriver = $("#driver1").val();
-            //         fetchAvailableDrivers1(currentDriver);
-            //     });
-
-            //     // Saat dropdown driver diubah manual, jalankan pengecekan rental
-            //     $('#driver1').on('change', function() {
-            //         handleRentalFields($(this).val());
-            //     });
-            // });
-
-
-
-            // $(document).ready(function() {
-            //     function fetchAvailableDrivers1(selectedDriver = null) {
-            //         let tgl_berangkat = $("#tgl_berangkat1").val();
-            //         let jam_berangkat = $("#jam_berangkat1").val();
-            //         let jam_kembali = $("#jam_kembali1").val();
-
-            //         if (!tgl_berangkat || !jam_berangkat || !jam_kembali) return; // Cegah request jika kosong
-
-            //         $.ajax({
-            //             url: "/pkendaraan/get-available-drivers-admin",
-            //             type: "GET",
-            //             data: {
-            //                 tgl_berangkat,
-            //                 jam_berangkat,
-            //                 jam_kembali
-            //             },
-            //             dataType: "json",
-            //             success: function(response) {
-            //                 let driverSelect = $("#driver1");
-            //                 let currentSelection = driverSelect.val() ||
-            //                     selectedDriver; // Simpan driver lama
-
-            //                 driverSelect.empty().append('<option value="" disabled>Pilih Driver</option>');
-
-            //                 $.each(response.drivers, function(index, driver) {
-            //                     let selected = (driver.id_driver == currentSelection) ? 'selected' :
-            //                         '';
-            //                     driverSelect.append(
-            //                         `<option value="${driver.id_driver}" ${selected}>${driver.nama_driver}</option>`
-            //                     );
-            //                 });
-
-            //                 driverSelect.append('<option value="Rental">Rental</option>');
-
-            //                 // Pastikan pilihan sebelumnya tetap terpilih
-            //                 driverSelect.val(currentSelection);
-
-            //                 // Cek apakah driver adalah "Rental"
-            //                 handleRentalFields(currentSelection);
-            //             },
-            //             error: function(xhr, status, error) {
-            //                 console.error("Gagal mengambil data driver:", error);
-            //             }
-            //         });
-            //     }
-
-            //     function handleRentalFields(selectedDriver) {
-            //         let driverWrapper = $('#driver1').closest('.form-group');
-
-            //         if (selectedDriver === "Rental") {
-            //             $('#rental_driver_input, #rental_kendaraan_input').show();
-            //             $('#no_polisi1').val(null).prop('disabled', true).closest('.form-group').hide();
-            //             driverWrapper.removeClass('col-md-6').addClass('col-md-12'); // Lebarkan kolom
-            //         } else {
-            //             $('#rental_driver_input, #rental_kendaraan_input').hide();
-
-            //             // Pastikan data rental tetap ada saat edit
-            //             if (!$('#rental_driver').val()) $('#rental_driver').val('');
-            //             if (!$('#rental_kendaraan').val()) $('#rental_kendaraan').val('');
-
-            //             $('#no_polisi1').prop('disabled', false).closest('.form-group').show();
-            //             driverWrapper.removeClass('col-md-12').addClass('col-md-6'); // Kembalikan ukuran
-            //         }
-            //     }
-
-            //     $(document).on('click', '.btn-info', function() {
-            //         resetFormEdit();
-            //         const id = $(this).data('id');
-
-            //         $.ajax({
-            //             url: `/pkendaraan/edit/${id}`,
-            //             method: 'GET',
-            //             success: function(response) {
-            //                 let data = response.data;
-            //                 let kendaraans = response.kendaraans;
-
-            //                 let tglBerangkat = data.tgl_berangkat ? data.tgl_berangkat.split('-')
-            //                     .reverse().join('-') : '';
-
-            //                 // Set value untuk input
-            //                 $('input[name="id"]').val(data.id);
-            //                 $('input[name="divisi1"]').val(data.divisi);
-            //                 $('input[name="nama_pic1"]').val(data.nama_pic);
-            //                 $('input[name="tgl_berangkat1"]').val(tglBerangkat);
-            //                 $('input[name="jam_berangkat1"]').val(data.jam_berangkat);
-            //                 $('input[name="jam_kembali1"]').val(data.jam_kembali);
-            //                 $('#jenis_tujuan1').val(data.jenis_tujuan);
-            //                 $('input[name="tujuan1"]').val(data.tujuan);
-            //                 $('input[name="pejemputan1"]').val(data.pejemputan);
-
-            //                 let selectedDriver = data.driver;
-
-            //                 $('#no_polisi1').html(
-            //                     '<option value="" disabled selected>Pilih Kendaraan</option>');
-            //                 kendaraans.forEach(kendaraan => {
-            //                     let selected = (kendaraan.id_kendaraan == data.no_polisi) ?
-            //                         'selected' : '';
-            //                     $('#no_polisi1').append(
-            //                         `<option value="${kendaraan.id_kendaraan}" ${selected}>${kendaraan.nopol} - ${kendaraan.tipe_kendaraan}</option>`
-            //                     );
-            //                 });
-
-            //                 fetchAvailableDrivers1(selectedDriver);
-
-            //                 // Pastikan data rental tetap muncul jika driver adalah "Rental"
-            //                 if (selectedDriver === "Rental") {
-            //                     $('input[name="rental_driver"]').val(data.rental_driver);
-            //                     $('input[name="rental_kendaraan"]').val(data.rental_kendaraan);
-            //                 }
-            //             },
-            //             error: function(xhr) {
-            //                 console.error(xhr.responseText);
-            //             }
-            //         });
-            //     });
-
-            //     // Jika tanggal atau jam berubah, daftar driver diperbarui
-            //     $("#tgl_berangkat1, #jam_berangkat1, #jam_kembali1").on("change", function() {
-            //         fetchAvailableDrivers1($("#driver1").val());
-            //     });
-
-            //     // Saat dropdown driver diubah manual, jalankan pengecekan rental
-            //     $('#driver1').on('change', function() {
-            //         handleRentalFields($(this).val());
-            //     });
-            // });
-
-
             $(document).ready(function() {
                 function fetchAvailableDrivers1(selectedDriver = null) {
                     let tgl_berangkat = $("#tgl_berangkat1").val();
@@ -1254,47 +1002,7 @@
                     }
                 }
 
-                // $(document).on('click', '.btn-info', function() {
-                //     resetFormEdit();
-                //     const id = $(this).data('id');
 
-                //     $.ajax({
-                //         url: `/pkendaraan/edit/${id}`,
-                //         method: 'GET',
-                //         success: function(response) {
-                //             let data = response.data;
-                //             let kendaraans = response.kendaraans;
-
-                //             let tglBerangkat = data.tgl_berangkat ? data.tgl_berangkat.split('-')
-                //                 .reverse().join('-') : '';
-
-                //             $('input[name="id"]').val(data.id);
-                //             $('input[name="divisi1"]').val(data.divisi);
-                //             $('input[name="nama_pic1"]').val(data.nama_pic);
-                //             $('input[name="tgl_berangkat1"]').val(tglBerangkat);
-                //             $('input[name="jam_berangkat1"]').val(data.jam_berangkat);
-                //             $('input[name="jam_kembali1"]').val(data.jam_kembali);
-                //             $('#jenis_tujuan1').val(data.jenis_tujuan);
-                //             $('input[name="tujuan1"]').val(data.tujuan);
-                //             $('input[name="pejemputan1"]').val(data.pejemputan);
-
-                //             let selectedDriver = data.driver;
-                //             fetchAvailableDrivers1(selectedDriver);
-
-                //             // Update kendaraan
-                //             updateAvailableVehicles(kendaraans);
-                //             $('#no_polisi1').val(data.no_polisi);
-
-                //             if (selectedDriver === "Rental") {
-                //                 $('input[name="rental_driver"]').val(data.rental_driver);
-                //                 $('input[name="rental_kendaraan"]').val(data.rental_kendaraan);
-                //             }
-                //         },
-                //         error: function(xhr) {
-                //             console.error(xhr.responseText);
-                //         }
-                //     });
-                // });
 
                 $(document).on('click', '.btn-info', function() {
                     resetFormEdit(); // Pastikan form benar-benar direset
@@ -1451,5 +1159,126 @@
             });
             // });
         </script>
+
+<script>
+    $(document).ready(function() {
+        // --- DEKLARASI DAN INISIALISASI ---
+
+        // 1. Inisialisasi DataTables (Memperbaiki Scope dan Mencegah Reinitialise)
+        const dataTableElement = $('#dataTables-kendaraan');
+
+        // Hancurkan DataTables lama jika ada
+        if ($.fn.DataTable.isDataTable(dataTableElement)) {
+            dataTableElement.DataTable().destroy();
+        }
+        
+        // Deklarasikan variabel dataTable agar bisa diakses
+        const dataTable = dataTableElement.DataTable({
+            responsive: true,
+            // Opsional: stateSave: true, 
+        });
+
+        // Objek untuk menyimpan ID pengajuan yang dicentang di semua halaman
+        let selectedApproves = {};
+
+        const btnMultiApprove = $('#btnMultiApprove');
+
+        // --- FUNGSI UTAMA ---
+
+        // Fungsi untuk memperbarui status tombol Multi Approve
+        function updateMultiApproveButton() {
+            // Hitung total ID yang dicentang
+            const totalSelected = Object.keys(selectedApproves).length;
+            
+            if (totalSelected > 0) {
+                btnMultiApprove.show();
+            } else {
+                btnMultiApprove.hide();
+            }
+        }
+        
+        // Fungsi untuk menangani perubahan pada checkbox
+        function handleCheckboxChange() {
+            const id = $(this).data('id');
+            const isChecked = $(this).prop('checked');
+            
+            // 👇 TAMBAHKAN LOG DEBUGGING INI (Opsional, tapi bagus untuk dipastikan)
+            // console.log('Checkbox Changed. ID:', id, 'Checked:', isChecked); 
+            
+            // Perbarui status di objek selectedApproves
+            if (isChecked) {
+                selectedApproves[id] = true;
+            } else {
+                delete selectedApproves[id];
+            }
+            
+            updateMultiApproveButton();
+        }
+
+        // Fungsi untuk memuat ulang status checkbox saat halaman DataTables berubah
+        function syncCheckboxes() {
+            // Iterasi melalui semua checkbox yang ada di halaman saat ini
+            $('.approve-checkbox').each(function() {
+                const id = $(this).data('id');
+                // Cek apakah ID ini ada di selectedApproves
+                if (selectedApproves[id]) {
+                    $(this).prop('checked', true);
+                } else {
+                    $(this).prop('checked', false);
+                }
+            });
+        }
+        
+        // --- EVENT BINDING ---
+
+        // A. Gunakan Event Delegation untuk checkbox: 
+        $('#dataTables-kendaraan tbody').on('change', '.approve-checkbox', handleCheckboxChange);
+
+        // B. Sinkronkan status checkbox setiap kali DataTables menggambar ulang
+        // KODE INI SEKARANG BERFUNGSI KARENA VARIABEL dataTable SUDAH DIDEKLARASIKAN
+        dataTable.on('draw.dt', function() {
+            syncCheckboxes();
+        });
+
+        // C. Event listener untuk tombol Multi Approve
+        btnMultiApprove.on('click', function() {
+            const selectedIds = Object.keys(selectedApproves);
+
+            // 👇 TAMBAHKAN LOG DEBUGGING DI SINI
+            console.log('Multi Approve Clicked. Sending IDs:', selectedIds);
+
+            if (selectedIds.length === 0) {
+                alert('Pilih setidaknya satu pengajuan untuk disetujui.');
+                return;
+            }
+            
+            // ... (lanjutan kode AJAX) ...
+            if (confirm(`Apakah yakin menyetujui ${selectedIds.length} data terpilih ini?`)) {
+                // Kirim request AJAX ke controller
+                $.ajax({
+                    url: '{{ route('pkendaraan.multi-approve') }}',
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        ids: selectedIds
+                    },
+                    success: function(response) {
+                        alert(response.message);
+                        window.location.reload(); 
+                    },
+                    error: function(xhr) {
+                        console.error('Error Multi Approve:', xhr.responseText);
+                        alert('Terjadi kesalahan saat melakukan persetujuan massal. Silakan cek konsol browser.');
+                    }
+                });
+            }
+        });
+        
+        // Inisialisasi awal saat halaman dimuat
+        syncCheckboxes();
+        updateMultiApproveButton(); 
+    });
+</script>
+
     </x-slot>
 </x-layouts.app>
