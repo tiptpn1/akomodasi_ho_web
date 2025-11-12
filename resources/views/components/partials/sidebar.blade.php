@@ -23,10 +23,10 @@
                         <div class="sb-nav-link-icon"></div>
                         Dashboard Agenda
                     </a>
-                     <!-- <a class="nav-link" href="{{ route('admin.driver.index') }}">
+                     <a class="nav-link" href="{{ route('admin.driver.index') }}">
                         <div class="sb-nav-link-icon"></div>
                         Dashboard Kendaraan
-                    </a> -->
+                    </a>
                     <a class="nav-link" href="{{ route('admin.vicon.index') }}">
                         <div class="sb-nav-link-icon"></div>
                         Jadwal Agenda
