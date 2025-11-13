@@ -55,6 +55,9 @@ class PKendaraanController extends Controller
         $query->where('status', $request->status);
     }
 
+    $query->orderBy('created_at', 'desc');
+
+
     // Ambil data sesuai filter
     $pkendaraan = $query->get();
 
