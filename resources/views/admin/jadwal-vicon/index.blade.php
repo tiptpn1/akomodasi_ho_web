@@ -20,6 +20,7 @@
                 color: white !important;
             }
         </style>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 
         <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     </x-slot>
@@ -38,6 +39,12 @@
                     onclick="window.location='{{ route('admin.vicon.resetfilter') }}'">
                     Reload/Reset Filter
                 </button>
+
+                @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
+                    <button id="btnMultiApprove" type="button" class="btn btn-success btn-sm" style="display: none;">
+                                <i class="fa fa-check-square-o"></i> Multi Approve
+                            </button>
+                @endif
 <br>
 <br>
 
@@ -1790,10 +1797,139 @@
             })
         </script>
 
-        <script>
-            $(document).ready(function () {
-                $('#bagian').select2();
+<script>
+    $(document).ready(function() {
+        // --- DEKLARASI CORE MULTI APPROVE LOGIC ---
+        let selectedApproves = {}; // Menyimpan ID yang dicentang di semua halaman
+        const btnMultiApprove = $('#btnMultiApprove');
+
+        // Fungsi yang menampilkan/menyembunyikan tombol Multi Approve
+        function updateMultiApproveButton() {
+            const totalSelected = Object.keys(selectedApproves).length;
+            if (totalSelected > 0) {
+                btnMultiApprove.show();
+            } else {
+                btnMultiApprove.hide();
+            }
+        }
+        
+        // Menangani perubahan status checkbox dan memperbarui list ID yang dipilih
+        function handleCheckboxChange() {
+            const id = $(this).data('id');
+            const isChecked = $(this).prop('checked');
+            
+            if (isChecked) {
+                selectedApproves[id] = true;
+            } else {
+                delete selectedApproves[id];
+            }
+            
+            updateMultiApproveButton(); 
+        }
+
+        // Menyinkronkan status checkbox di halaman DataTables yang sedang dilihat
+        function syncCheckboxes() {
+            $('#dataTables-agendavicon').find('.approve-checkbox').each(function() {
+                const id = $(this).data('id');
+                if (selectedApproves[id]) {
+                    $(this).prop('checked', true);
+                } else {
+                    $(this).prop('checked', false);
+                }
             });
-        </script>
+            // Memastikan tombol diperbarui setelah sinkronisasi (penting saat pindah halaman)
+            updateMultiApproveButton(); 
+        }
+
+
+        // --- INTEGRASI DENGAN DATATABLES & AJAX ---
+        
+        // 1. Dapatkan atau Inisialisasi DataTables Instance
+        // Menggunakan logic pencegahan reinitialization agar fetchData() aman
+        const dataTableElement = $('#dataTables-agendavicon');
+        let dataTable;
+
+        if ($.fn.DataTable.isDataTable(dataTableElement)) {
+            dataTable = dataTableElement.DataTable();
+        } else {
+            // Karena Anda memanggil DataTables di fetchData(), kita panggil fetchData
+            // dan event listener akan diikat di sana.
+            // Biarkan fetchData yang menginisialisasi tabel.
+            // Kita hanya perlu memastikan binding ulang setelah fetchData selesai.
+            
+            // PENTING: Jika Anda memanggil fetchData() di ready() utama, 
+            // fungsi ini akan menginisialisasi tabel. Kita tangkap instance-nya setelah inisialisasi.
+            // Karena fetchData menginisialisasi ulang tabel, kita harus menargetkan tabel setelah draw.
+        }
+
+        // 2. BINDING EVENT DELEGATION
+        // Event ini menangani centang/batal centang pada baris yang dimuat dinamis oleh DataTables.
+        $('#dataTables-agendavicon tbody').off('change', '.approve-checkbox').on('change', '.approve-checkbox', handleCheckboxChange);
+
+        // 3. BINDING SYNC SETELAH DATATABLES DRAW
+        // Ini memastikan status checkbox dipertahankan saat pindah halaman.
+        // Karena fetchData() menghancurkan dan membuat ulang tabel, kita perlu mengikat ini setelah setiap fetchData.
+
+        const originalFetchData = fetchData;
+        fetchData = function(tipeAgenda) {
+            // Panggil fetchData original
+            originalFetchData(tipeAgenda); 
+            
+            // Tangkap instance DataTables baru setelah AJAX/draw selesai
+            // dan bind ulang event draw untuk syncCheckboxes
+            $('#dataTables-agendavicon').one('draw.dt', function() {
+                syncCheckboxes();
+            });
+            
+            // Panggil sync saat pertama kali dimuat
+            syncCheckboxes();
+        };
+
+
+        // 4. EVENT LISTENER UNTUK TOMBOL MULTI APPROVE (AJAX POST)
+        btnMultiApprove.on('click', function() {
+            const selectedIds = Object.keys(selectedApproves);
+
+            if (selectedIds.length === 0) {
+                alert('Pilih setidaknya satu agenda untuk disetujui.');
+                return;
+            }
+
+            if (confirm(`Apakah yakin menyetujui ${selectedIds.length} data terpilih ini?`)) {
+                // Tampilkan loading saat proses
+                btnMultiApprove.html('<i class="fas fa-spin fa-spinner"></i> Memproses...');
+                btnMultiApprove.prop('disabled', true);
+                
+                $.ajax({
+                    // Route untuk Vicon Multi Approve
+                    url: '{{ route('admin.vicon.multi-approve') }}', 
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        ids: selectedIds
+                    },
+                    success: function(response) {
+                        swal({ title: 'Success!', text: response.message, type: 'success', timer: 1500 });
+                        selectedApproves = {}; // Reset list setelah berhasil
+                        // Muat ulang data tabel
+                        fetchData($('#semuaAgenda').hasClass('btn-primary') ? 'semua' : 'hari_ini');
+                    },
+                    error: function(xhr) {
+                        console.error('Error Multi Approve:', xhr.responseText);
+                        swal({ title: 'Gagal!', text: 'Terjadi kesalahan saat persetujuan massal. Cek konsol.', type: 'error', timer: 1500 });
+                    },
+                    complete: function() {
+                        btnMultiApprove.html('<i class="fa fa-check-square-o"></i> Multi Approve');
+                        btnMultiApprove.prop('disabled', false);
+                        // updateMultiApproveButton(); // Akan dipanggil oleh fetchData()
+                    }
+                });
+            }
+        });
+        
+        // Panggil sync saat DOM sudah siap
+        syncCheckboxes(); 
+    });
+</script>
     @endpush
 </x-layouts.app>

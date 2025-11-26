@@ -782,35 +782,220 @@ class SendViconController extends Controller
             $row[] = $item->keterangan;
             $row[] = $item->status_approval == 1 ? 'Approved' : 'Waiting for Approve';
 
-            if (!in_array(Auth::user()->master_hak_akses_id, [5, 6])) {
-                $approval_btn = '';
-                if ($item->status_approval == 0) {
-                    if (in_array($item->ruangan, ['Ruangan Rapat Teh', 'Ruangan Rapat Karet', 'Ruangan Rapat Robusta']) || in_array($item->id_ruangan, [13, 14, 15])) {
-                        if (auth()->user()->master_hak_akses_id == 4 || auth()->user()->master_hak_akses_id == 2) {
-                            $approval_btn = '<button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" class="btn btn-success btn-approve" onclick="approve(' . $item->id . ', \'' . $item->acara . '\')"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-check"></i></div></button>';
-                        }
-                    } else if (auth()->user()->master_hak_akses_id == 2) {
-                        $approval_btn = '<button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" class="btn btn-success btn-approve" onclick="approve(' . $item->id . ', \'' . $item->acara . '\')"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-check"></i></div></button>';
-                    }
-                }
+            // if (!in_array(Auth::user()->master_hak_akses_id, [5, 6])) {
+            //     $approval_btn = '';
+            //     if ($item->status_approval == 0) {
+            //         if (in_array($item->ruangan, ['Ruangan Rapat Teh', 'Ruangan Rapat Karet', 'Ruangan Rapat Robusta']) || in_array($item->id_ruangan, [13, 14, 15])) {
+            //             if (auth()->user()->master_hak_akses_id == 4 || auth()->user()->master_hak_akses_id == 2) {
+            //                 $approval_btn = '<button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" class="btn btn-success btn-approve" onclick="approve(' . $item->id . ', \'' . $item->acara . '\')"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-check"></i></div></button>';
+            //             }
+            //         } else if (auth()->user()->master_hak_akses_id == 2) {
+            //             $approval_btn = '<button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" class="btn btn-success btn-approve" onclick="approve(' . $item->id . ', \'' . $item->acara . '\')"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-check"></i></div></button>';
+            //         }
+            //     }
 
-                $detailButton = '<button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="detail(' . "'" . $item->id . "'" . ')" class="btn btn-primary btn-sm"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-eye" aria-hidden="true"></i></div>';
-                $absensiButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="absensi(' . "'" . $item->id . "'" . ')" class="btn btn-outline-success btn-sm"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-star"></i></div>';
-                // $invitation = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="invitation(' . "'" . $item->id . "'" . ')" class="btn btn-info btn-sm"><i class="nav-icon fas fa-file"></i>';
-                $editButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="update(' . "'" . $item->id . "'" . ')" class="btn btn-warning btn-sm"><i class="nav-icon fas fa-edit"></i>';
-                $hapusButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" class="btn btn-sm btn-danger" onclick="hapus(' . "'" . $item->id . "'" . '); return false"><i class="far fa-trash-alt"></i>';
+            //     $detailButton = '<button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="detail(' . "'" . $item->id . "'" . ')" class="btn btn-primary btn-sm"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-eye" aria-hidden="true"></i></div>';
+            //     $absensiButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="absensi(' . "'" . $item->id . "'" . ')" class="btn btn-outline-success btn-sm"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-star"></i></div>';
+            //     // $invitation = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="invitation(' . "'" . $item->id . "'" . ')" class="btn btn-info btn-sm"><i class="nav-icon fas fa-file"></i>';
+            //     $editButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="update(' . "'" . $item->id . "'" . ')" class="btn btn-warning btn-sm"><i class="nav-icon fas fa-edit"></i>';
+            //     $hapusButton = '<center><button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" class="btn btn-sm btn-danger" onclick="hapus(' . "'" . $item->id . "'" . '); return false"><i class="far fa-trash-alt"></i>';
+    
+            //     if (!is_null($item->token)) {
+            //         $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ?   $detailButton . $absensiButton . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ?  $detailButton . $absensiButton . $editButton . $hapusButton : $detailButton . $absensiButton) : '');
+            //         $row[] = '<center>' .  $approval_btn . $actionButton;
+            //     } else {
+            //         $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ?  $detailButton . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ?  $detailButton . $editButton . $hapusButton : $detailButton) : '');
+            //         $row[] = '<center>' . $approval_btn . $actionButton;
+            //     }
+            // } else {
+            //     $row[] = '<center>
+            //             <button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="detail(' . "'" . $item->id . "'" . ')" class="btn btn-primary btn-sm"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-eye" aria-hidden="true"></i></div>';
+            // }
 
-                if (!is_null($item->token)) {
-                    $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ? $detailButton . $absensiButton . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ? $detailButton . $absensiButton . $editButton . $hapusButton : $detailButton . $absensiButton) : '');
-                    $row[] = '<center>' . $approval_btn . $actionButton;
-                } else {
-                    $actionButton = in_array(auth()->user()->master_hak_akses_id, [2, 4]) ? $detailButton . $editButton . $hapusButton : ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg' ? ($item->status_approval == 0 ? $detailButton . $editButton . $hapusButton : $detailButton) : '');
-                    $row[] = '<center>' . $approval_btn . $actionButton;
-                }
-            } else {
-                $row[] = '<center>
-                        <button style="margin-right: 6px; margin-bottom: 3px; width:30px; height:30px;" onclick="detail(' . "'" . $item->id . "'" . ')" class="btn btn-primary btn-sm"><div class="d-flex align-items-center justify-content-center"><i class="fas fa-eye" aria-hidden="true"></i></div>';
+
+if (!in_array(Auth::user()->master_hak_akses_id, [5, 6])) {
+
+    // Wrapper tombol agar vertikal rapi
+    $wrapperStart = '<div style="display:flex; flex-direction:column; align-items:center;">';
+    $wrapperEnd = '</div>';
+
+    // Checklist rapi (hanya untuk status_approval == 0)
+$checklistButton = '
+<div style="margin-right:6px; margin-bottom:3px; width:30px; height:30px; display:flex; align-items:center; justify-content:center;">
+    <input type="checkbox" 
+           class="approve-checkbox" 
+           data-id="' . $item->id . '" 
+            style="transform: scale(2.35);">
+</div>';
+
+
+    // Checklist hanya muncul jika BELUM di-approve
+    $checklist = $item->status_approval == 0 ? $checklistButton : '';
+
+    // Tombol Approve
+    $approval_btn = '';
+    if ($item->status_approval == 0) {
+        if (
+            in_array($item->ruangan, ['Ruangan Rapat Teh', 'Ruangan Rapat Karet', 'Ruangan Rapat Robusta']) ||
+            in_array($item->id_ruangan, [13, 14, 15])
+        ) {
+            if (auth()->user()->master_hak_akses_id == 4 || auth()->user()->master_hak_akses_id == 2) {
+                $approval_btn = '
+                <button class="btn btn-success btn-approve"
+                    style="margin-right:6px; margin-bottom:3px; width:30px; height:30px; display:flex; align-items:center; justify-content:center;"
+                    onclick="approve(' . $item->id . ', \'' . $item->acara . '\')">
+                    <i class="fas fa-check"></i>
+                </button>';
             }
+        } else if (auth()->user()->master_hak_akses_id == 2) {
+            $approval_btn = '
+            <button class="btn btn-success btn-approve"
+                style="margin-right:6px; margin-bottom:3px; width:30px; height:30px; display:flex; align-items:center; justify-content:center;"
+                onclick="approve(' . $item->id . ', \'' . $item->acara . '\')">
+                <i class="fas fa-check"></i>
+            </button>';
+        }
+    }
+
+    // Tombol Detail
+    $detailButton = '
+    <button class="btn btn-primary btn-sm"
+        style="margin-right:6px; margin-bottom:3px; width:30px; height:30px; display:flex; align-items:center; justify-content:center;"
+        onclick="detail(' . "'" . $item->id . "'" . ')">
+        <i class="fas fa-eye"></i>
+    </button>';
+
+    // Tombol Absensi
+    $absensiButton = '
+    <button class="btn btn-outline-success btn-sm"
+        style="margin-right:6px; margin-bottom:3px; width:30px; height:30px; display:flex; align-items:center; justify-content:center;"
+        onclick="absensi(' . "'" . $item->id . "'" . ')">
+        <i class="fas fa-star"></i>
+    </button>';
+
+    // Tombol Edit
+    $editButton = '
+    <button class="btn btn-warning btn-sm"
+        style="margin-right:6px; margin-bottom:3px; width:30px; height:30px; display:flex; align-items:center; justify-content:center;"
+        onclick="update(' . "'" . $item->id . "'" . ')">
+        <i class="fas fa-edit"></i>
+    </button>';
+
+    // Tombol Hapus
+    $hapusButton = '
+    <button class="btn btn-danger btn-sm"
+        style="margin-right:6px; margin-bottom:3px; width:30px; height:30px; display:flex; align-items:center; justify-content:center;"
+        onclick="hapus(' . "'" . $item->id . "'" . '); return false">
+        <i class="far fa-trash-alt"></i>
+    </button>';
+
+
+    // ------------------- LOGIKA TOKEN -------------------
+    if (!is_null($item->token)) {
+
+        // Akses pejabat
+        if (in_array(auth()->user()->master_hak_akses_id, [2, 4])) {
+
+            $actionButton =
+                $checklist .
+                $approval_btn .
+                $detailButton .
+                $absensiButton .
+                $editButton .
+                $hapusButton;
+
+        } else {
+
+            // Akses user bagian
+            if ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg') {
+
+                if ($item->status_approval == 0) {
+                    $actionButton =
+                        $checklist .
+                        $approval_btn .
+                        $detailButton .
+                        $absensiButton .
+                        $editButton .
+                        $hapusButton;
+                } else {
+                    $actionButton =
+                        $approval_btn .   // approve hilang otomatis
+                        $detailButton .
+                        $absensiButton .
+                        $editButton .
+                        $hapusButton;
+                }
+
+            } else {
+                $actionButton = '';
+            }
+        }
+
+        $row[] = $wrapperStart . $actionButton . $wrapperEnd;
+
+    } else {
+
+        // ----------- TANPA TOKEN (Tidak ada Absensi) -----------
+        if (in_array(auth()->user()->master_hak_akses_id, [2, 4])) {
+
+            $actionButton =
+                $checklist .
+                $approval_btn .
+                $detailButton .
+                $editButton .
+                $hapusButton;
+
+        } else {
+
+            if ($item->bagian_id == auth()->user()->master_nama_bagian_id || auth()->user()->master_user_nama == 'op_dosg') {
+
+                if ($item->status_approval == 0) {
+                    $actionButton =
+                        $checklist .
+                        $approval_btn .
+                        $detailButton .
+                        $editButton .
+                        $hapusButton;
+                } else {
+                    $actionButton =
+                        $detailButton .
+                        $editButton .
+                        $hapusButton;
+                }
+
+            } else {
+                $actionButton = '';
+            }
+        }
+
+        $row[] = $wrapperStart . $actionButton . $wrapperEnd;
+    }
+
+} else {
+
+    // ------------------- ROLE 5 & 6 -------------------
+    $wrapperStart = '<div style="display:flex; flex-direction:column; align-items:center;">';
+    $wrapperEnd = '</div>';
+
+    // Checklist tetap hanya untuk status 0
+    $checklist = $item->status_approval == 0 ? '
+    <div style="margin-right:6px; margin-bottom:3px; width:30px; height:30px; display:flex; align-items:center; justify-content:center;">
+        <input type="checkbox" class="btn-checklist" value="' . $item->id . '" style="width:16px; height:16px;">
+    </div>' : '';
+
+    $detailButton = '
+    <button class="btn btn-primary btn-sm"
+        style="margin-right:6px; margin-bottom:3px; width:30px; height:30px; display:flex; align-items:center; justify-content:center;"
+        onclick="detail(' . "'" . $item->id . "'" . ')">
+        <i class="fas fa-eye"></i>
+    </button>';
+
+    $row[] = $wrapperStart . $checklist . $detailButton . $wrapperEnd;
+}
+
+
+
+
 
             $data[] = $row;
         }
@@ -963,4 +1148,79 @@ class SendViconController extends Controller
         $pdf = Pdf::loadView('exports.pdf.export_by_date', $view_data)->setPaper('A4', 'landscape');
         return $pdf->stream('Rekap Agenda ' . $downloadTime . '.pdf');
     }
+
+public function multiApprove(Request $request)
+{
+    if (!in_array(Auth::user()->master_hak_akses_id, [2, 4])) { 
+        return response()->json(['message' => 'Akses ditolak.'], 403);
+    }
+    
+    $ids = $request->input('ids');
+    if (!is_array($ids) || empty($ids)) {
+        return response()->json(['message' => 'Tidak ada agenda yang dipilih.'], 400);
+    }
+
+    $approvedCount = 0;
+    $rejectedCount = 0;
+    $rejectedReasons = [];
+
+    foreach ($ids as $id) {
+        $agenda = SendVicon::find($id);
+        
+        // Cek 1: Keberadaan Data dan Status
+        if (!$agenda || $agenda->status_approval != 0) {
+            $rejectedReasons[] = "ID {$id}: Status tidak valid atau data tidak ditemukan.";
+            $rejectedCount++;
+            continue; 
+        }
+        
+        // FIX KRITIS: Gunakan method cekctr_approve yang terbukti berhasil
+        if (!is_null($agenda->id_ruangan) || !empty($agenda->ruangan_lain)) {
+            $check_vicon = SendVicon::cekctr_approve(
+                $agenda->tanggal, 
+                $agenda->id_ruangan, 
+                $agenda->waktu, 
+                $agenda->waktu2
+            );
+
+            // Cek 2: Pengecekan Bentrok
+            if ($check_vicon > 0) {
+                // Pesan ini hanya akan muncul jika memang terdeteksi bentrok oleh logika yang sama dengan Single Approve
+                $rejectedReasons[] = "ID {$id} (Acara: {$agenda->acara}): Bentrok Jadwal Terdeteksi (Logic Single Approve).";
+                $rejectedCount++;
+                continue; 
+            }
+        }
+        
+        // 3. Jika Lolos, Proses Approval
+        try {
+            // Update Konsumsi
+            $konsumsi = Konsumsi::where('id_sendvicon', $id)->first();
+            if ($konsumsi && $konsumsi->status == 0) {
+                $konsumsi->status = 1;
+                $konsumsi->save();
+            }
+            
+            // Update Status Vicon (Agenda)
+            $agenda->status_approval = 1; 
+            $agenda->save();
+            
+            $approvedCount++;
+
+        } catch (\Throwable $th) {
+            $rejectedReasons[] = "ID {$id} (Acara: {$agenda->acara}): Error Sistem saat Save - " . $th->getMessage();
+            $rejectedCount++;
+        }
+    }
+
+    // 4. Respon Akhir
+    $message = "Berhasil menyetujui **{$approvedCount}** agenda.";
+    if ($rejectedCount > 0) {
+        $message .= " Gagal menyetujui **{$rejectedCount}** agenda. Detail kegagalan: " . implode(" | ", $rejectedReasons);
+    }
+
+    return response()->json(['message' => $message]);
+}
+
+
 }

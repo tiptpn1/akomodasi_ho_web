@@ -89,6 +89,7 @@ Route::group(['prefix' => 'makansiang', 'as' => 'makansiang.'], function () {
     // Route::get('/data', [MakanSiangController::class, 'data'])->name('data');
     Route::post('/approve/{id}', [MakanSiangController::class, 'approve'])->name('approve');
     Route::post('/reject/{id}', [MakanSiangController::class, 'reject'])->name('reject');
+    Route::post('/multi-approve', [MakanSiangController::class, 'multiApprove'])->name('multi-approve');
 
 });
 
@@ -295,6 +296,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         Route::get('export-excel', [SendViconController::class, 'exportExcel'])->name('excel');
         Route::get('export-pdf', [SendViconController::class, 'exportPdf'])->name('pdf');
         Route::post('approve', [SendViconController::class, 'approveSendvicond'])->name('approve');
+        Route::post('multi-approve', [SendViconController::class, 'multiApprove'])->name('multi-approve');
     });
 
     Route::group(['prefix' => 'absensi', 'as' => 'absensi.'], function () {

@@ -186,6 +186,46 @@ class MakanSiangController extends Controller
         return redirect()->route('makansiang.index')->with('success', 'Data approved.');
     }
 
+    public function multiApprove(Request $request)
+    {
+        // 1. Autentikasi dan Validasi Akses
+        if (!in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga'])) {
+            return response()->json(['message' => 'Akses ditolak.'], 403);
+        }
+
+        $ids = $request->input('ids');
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['message' => 'Tidak ada data yang dipilih.'], 400);
+        }
+
+        $approvedCount = 0;
+        $rejectedCount = 0;
+        
+        // 2. Proses Persetujuan Massal
+        foreach ($ids as $id) {
+            $makansiang = MakanSiang::find($id);
+
+            // Hanya proses jika statusnya 1 (Pengajuan Divisi)
+            if ($makansiang && $makansiang->status == 1) {
+                $makansiang->status = 2; // Approved
+                $makansiang->apprv = Auth::user()->master_user_nama;
+                $makansiang->save();
+                $approvedCount++;
+            } else {
+                $rejectedCount++;
+            }
+        }
+
+        // 3. Respon Akhir
+        $message = "Berhasil menyetujui **{$approvedCount}** data.";
+        if ($rejectedCount > 0) {
+            $message .= " Gagal menyetujui **{$rejectedCount}** data karena statusnya tidak lagi 'Pengajuan Divisi'.";
+        }
+
+        return response()->json(['message' => $message]);
+    }
+    
+
     public function reject($id)
     {
         $makansiang = MakanSiang::find($id);

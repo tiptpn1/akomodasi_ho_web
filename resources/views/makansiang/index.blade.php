@@ -36,6 +36,12 @@
                 <button id="btnTambah" type="button" data-toggle="modal" data-target="#tambah" class="btn btn-primary btn-sm">Tambah Data</button>
                 <button id="btnExport" type="button" data-toggle="modal" data-target="#exportModal" class="btn btn-warning btn-sm">Export Data</button>
                 @endif
+                 @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
+                            <button id="btnMultiApprove" type="button" class="btn btn-success btn-sm" style="display: none;">
+                                <i class="fa fa-check-square-o"></i> Multi Approve
+                            </button>
+                        @endif
+
                 @if(session('success'))
                 <div class="alert alert-success alert-sm alert-dismissible fade show" role="alert" style="max-width: 400px; margin:">
                     {{ session('success') }}
@@ -267,6 +273,21 @@
                                                     $isDisabled = $requestDate->lte($today) || $item->status == 0 || $item->status == 2; // Disabled jika tgl_permintaan <= hari ini atau status = 0 (Canceled) atau status = 2 (Approved)
                                                     $isPending = $item->status == 1; // Hanya aktif jika status = 1
                                                 @endphp
+
+                                                 @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
+                                                    
+                                                    {{-- TAMBAHKAN CHECKBOX INI DI DALAM DIV GROUP INI --}}
+                                                        @if ($isPending)
+                                                            <!-- <div style="margin: 0 5px;">
+                                                                <input type="checkbox" class="approve-checkbox" data-id="{{ $item->id }}" title="Pilih untuk Multi Approve">
+                                                            </div> -->
+                                                            <div class="btn btn-sm checkbox-mimic" 
+                                                                style="background-color: #cfcfcfff; border-color: #CCCCCC; color: #495057;"> 
+                                                                <input type="checkbox" class="approve-checkbox" data-id="{{ $item->id }}" title="Pilih untuk Multi Approve">
+                                                            </div>
+                                                        @endif
+                                                        {{-- AKHIR TAMBAHAN CHECKBOX --}}   
+                                                        @endif 
                                                 <!-- Edit Button -->
                                                 <button 
                                                     type="button" 
@@ -589,5 +610,101 @@
             });
             // });
         </script>
+
+        <script>
+    $(document).ready(function() {
+        // --- INI ADALAH INISIALISASI DATATABLES ANDA YANG DIMODIFIKASI ---
+        const dataTableElement = $('#dataTables-kaskecil');
+        
+        // Pencegahan reinitialization dan deklarasi variabel dataTable
+        if ($.fn.DataTable.isDataTable(dataTableElement)) {
+            dataTableElement.DataTable().destroy();
+        }
+        const dataTable = dataTableElement.DataTable({
+            responsive: true,
+        });
+
+        // --- LOGIKA MULTI APPROVE ---
+        let selectedApproves = {};
+        const btnMultiApprove = $('#btnMultiApprove');
+
+        function updateMultiApproveButton() {
+            const totalSelected = Object.keys(selectedApproves).length;
+            if (totalSelected > 0) {
+                btnMultiApprove.show();
+            } else {
+                btnMultiApprove.hide();
+            }
+        }
+        
+        function handleCheckboxChange() {
+            const id = $(this).data('id');
+            const isChecked = $(this).prop('checked');
+            
+            if (isChecked) {
+                selectedApproves[id] = true;
+            } else {
+                delete selectedApproves[id];
+            }
+            
+            updateMultiApproveButton();
+        }
+
+        function syncCheckboxes() {
+            // Menggunakan delegasi untuk menemukan semua checkbox di halaman saat ini
+            $('#dataTables-kaskecil').find('.approve-checkbox').each(function() {
+                const id = $(this).data('id');
+                if (selectedApproves[id]) {
+                    $(this).prop('checked', true);
+                } else {
+                    $(this).prop('checked', false);
+                }
+            });
+        }
+
+        // A. Event Delegation untuk checkbox pada DataTables
+        // Menangani centang/batal centang pada baris yang dimuat ulang
+        $('#dataTables-kaskecil tbody').on('change', '.approve-checkbox', handleCheckboxChange);
+
+        // B. Sinkronkan status checkbox setiap kali DataTables menggambar ulang (ganti halaman)
+        dataTable.on('draw.dt', function() {
+            syncCheckboxes();
+        });
+
+        // C. Event listener untuk tombol Multi Approve
+        btnMultiApprove.on('click', function() {
+            const selectedIds = Object.keys(selectedApproves);
+
+            if (selectedIds.length === 0) {
+                alert('Pilih setidaknya satu pengajuan untuk disetujui.');
+                return;
+            }
+
+            if (confirm(`Apakah yakin menyetujui ${selectedIds.length} data terpilih ini?`)) {
+                $.ajax({
+                    url: '{{ route('makansiang.multi-approve') }}',
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        ids: selectedIds
+                    },
+                    success: function(response) {
+                        alert(response.message);
+                        window.location.reload(); 
+                    },
+                    error: function(xhr) {
+                        console.error('Error Multi Approve:', xhr.responseText);
+                        alert('Terjadi kesalahan saat melakukan persetujuan massal. Silakan cek konsol browser Anda.');
+                    }
+                });
+            }
+        });
+        
+        // Inisialisasi awal
+        syncCheckboxes();
+        updateMultiApproveButton(); 
+    });
+</script>
+
     </x-slot>
 </x-layouts.app>
