@@ -46,6 +46,7 @@ class KamarModel extends Model
     public function isAvailable($tanggal_mulai, $tanggal_selesai)
     {
         $bookedCount = $this->bookings()
+        ->where('status', 'approved')
             ->where(function ($query) use ($tanggal_mulai, $tanggal_selesai) {
                 $query->whereBetween('tanggal_mulai', [$tanggal_mulai, $tanggal_selesai])
                     ->orWhereBetween('tanggal_selesai', [$tanggal_mulai, $tanggal_selesai])

@@ -87,11 +87,13 @@
                             Kendaraan
                         </a> -->
                     @endif
-                    @if (Auth::user()->hakAkses->hak_akses_id == 1)
+                    @if (in_array(Auth::user()->hakAkses->hak_akses_id, [1, 2]))
                         <a class="nav-link" href="{{ route('admin.ruangan.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Master Ruangan
                         </a>
+                    @endif
+                    @if (Auth::user()->hakAkses->hak_akses_id == 1)
                         <!-- <a class="nav-link" href="{{ route('admin.masterlink.index') }}">
                             <div class="sb-nav-link-icon"></div>
                             Link
@@ -123,10 +125,13 @@
         <div class="sb-sidenav-footer">
             <div class="small">Logged in as:</div>
             {{ Auth::user()->master_user_nama }} -  {{ Auth::user()->bagian->regional->nama_regional}}
-            <a href="{{ route('admin.logout') }}">
+            <a href="{{ route('admin.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                 Logout
                 <i class="fas fa-sign-out-alt"></i>
             </a>
+            <form id="logout-form" action="{{ route('admin.logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
         </div>
     </nav>
 </div>

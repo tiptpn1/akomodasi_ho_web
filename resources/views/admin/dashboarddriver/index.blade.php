@@ -110,6 +110,7 @@
                         date: dateValue
                     },
                     success: function(response) {
+                        // KEMBALIKAN KE SEMULA: Langsung tampilkan response HTML ke dalam div
                         $('#scheduleContent').html(response);
                     },
                     error: function(xhr, status, error) {

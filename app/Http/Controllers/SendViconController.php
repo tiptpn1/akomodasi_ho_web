@@ -197,13 +197,20 @@ class SendViconController extends Controller
                 $daftar_ruangan = "<h5>Daftar ruangan yang tersedia pada tanggal dan waktu tersebut :</h5><h5><b><span style='color:green'>" . implode(", ", $array_ruangan) . "<span></b></h5>";
             }
 
-            $checkJadwal = SendVicon::cekctr($eventDate, $validated['ruangan'], $waktu1, $waktu2);
+            $checkJadwal = SendVicon::cekctr2($eventDate, $validated['ruangan'], $waktu1, $waktu2);
             $cekvicon_nama_waktu = SendVicon::cekvicon_nama_waktu($validated['acara'], $eventDate, $waktu1, $waktu2);
+            
+            $isConflict = false;
             if ($checkJadwal > 3) {
                 Session::flash('gglindex_ruangan', '<h4><b>Ruang rapat tersebut sudah dipesan untuk rapat lain pada waktu bersamaan, tetap ingin melakukan pemesanan?</b></h4>' . $daftar_ruangan);
-            } else if ($cekvicon_nama_waktu > 1) {
+                $isConflict = true;
+            }
+            if ($cekvicon_nama_waktu > 1) {
                 Session::flash('gglindex_nama', 'Nama acara pada waktu dan tanggal tersebut telah ada pada Tabel Pemesanan, apakah Anda tetap ingin melakukan pemesanan dengan jadwal tersebut?');
-            } else {
+                $isConflict = true;
+            }
+
+            if (!$isConflict) {
                 Session::flash('success', 'Pemesanan berhasil dilakukan');
             }
         }
@@ -279,7 +286,7 @@ class SendViconController extends Controller
                         $daftar_ruangan = "<h5>Daftar ruangan yang tersedia pada tanggal dan waktu tersebut :</h5><h5><b><span style='color:green'>" . implode(", ", $array_ruangan) . "<span></b></h5>";
                     }
 
-                    $checkRuangan = SendVicon::cekctr_approve($eventDate, $validated['ruangan'], $waktu1, $waktu2);
+                    $checkRuangan = SendVicon::cekctr2($eventDate, $validated['ruangan'], $waktu1, $waktu2);
                     $checkAgenda = SendVicon::cekvicon_nama_waktu_ruangan($validated['acara'], $eventDate, $waktu1, $waktu2, $validated['ruangan']);
 
                     if ($checkRuangan > 0 || $checkAgenda > 0) {
@@ -289,7 +296,7 @@ class SendViconController extends Controller
 
                         if (!Session::has('success')) {
                             if ($checkRuangan > 0) {
-                                Session::flash('ggl_ruangan', '<h4><b>Ruang rapat tersebut sudah diapprove untuk rapat lain pada waktu bersamaan</b></h4>' . $daftar_ruangan);
+                                Session::flash('ggl_ruangan', '<h4><b>Ruang rapat tersebut sudah dipesan untuk rapat lain pada waktu bersamaan</b></h4>' . $daftar_ruangan);
                             } else if ($checkAgenda > 0) {
                                 Session::flash('ggl_nama', 'Nama acara pada waktu dan tanggal tersebut telah ada pada Tabel Pemesanan');
                             }
@@ -473,7 +480,7 @@ class SendViconController extends Controller
 
             $sendvicon = SendVicon::find($id);
             if ($sendvicon) {
-                $check_vicon = SendVicon::cekctr_approve($tanggal, $validated['ruangan'], $validated['waktu'], $validated['waktu2']);
+                $check_vicon = SendVicon::cekctr2($tanggal, $validated['ruangan'], $validated['waktu'], $validated['waktu2']);
 
                 // if ($check_vicon > 0 && ($sendvicon->tanggal != $tanggal || strpos($sendvicon, $validated['waktu']) === false || strpos($sendvicon, $validated['waktu2']) === false)) {
                 //     return response()->json([
@@ -584,7 +591,7 @@ class SendViconController extends Controller
             $cek = '0,';
             $cek_acara = '0,';
             $cekvicon_nama_waktu = SendVicon::cekvicon_nama_waktu($vicon->acara, $vicon->tanggal, $vicon->waktu, $vicon->waktu2);
-            $cekjadwal = SendVicon::cekctr($vicon->tanggal, $vicon->id_ruangan, $vicon->waktu, $vicon->waktu2);
+            $cekjadwal = SendVicon::cekctr2($vicon->tanggal, $vicon->id_ruangan, $vicon->waktu, $vicon->waktu2);
 
             if ($cekjadwal > 0) {
                 $cek = '1,';
@@ -669,7 +676,7 @@ class SendViconController extends Controller
             ->first();
 
         // Ambil tipe agenda dari request, default 'hari_ini' jika tidak ada
-            $tipeAgenda = $request->input('tipe_agenda', 'hari_ini');
+            $tipeAgenda = $request->input('tipe_agenda', 'semua');
 
 
         if (Auth::user()->hak_akses == 7) {
@@ -847,7 +854,7 @@ class SendViconController extends Controller
             if ($check_vicon > 0) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Sudah terdapat agenda yang di approve di tanggal dan waktu yang sama',
+                    'message' => 'Sudah terdapat agenda yang dipesan di tanggal dan waktu yang sama',
                 ], 422);
             }
 

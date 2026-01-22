@@ -17,9 +17,9 @@
                                         <th>
                                             <center>No</center>
                                         </th>
-                                        <th>
+                                        <!-- <th>
                                             <center>Regional</center>
-                                        </th>
+                                        </th> -->
                                         <th>
                                             <center>Ruangan</center>
                                         </th>
@@ -43,7 +43,7 @@
                                     @foreach ($ruangan as $index => $result)
                                         <tr>
                                             <td style="text-align: center;">{{ $index + 1 }}</td>
-                                            <td>{{ $result->regional->nama_regional }}</td>
+                                            <!-- <td> //$result->regional->nama_regional }}</td> -->
                                             <td>{{ $result->nama }}</td>
                                             <td>Lantai {{ $result->lantai }}</td>
                                             <td>{{ $result->kapasitas }} Orang</td>
@@ -79,22 +79,6 @@
                     <form id="antoform" class="form-horizontal calender" role="form"
                         action="{{ route('admin.ruangan.store') }}" method="post" enctype="multipart/form-data">
                         @csrf
-
-                        <div class="form-group">
-                            <label class="col-sm-13 control-label"></label>
-                            <div class="col-sm-12">
-    <b>Regional *</b>
-    <select class="form-control" name="ruangan_regional_id" required>
-        <option value="">-- Pilih Regional --</option> {{-- Opsi default --}}
-        @foreach ($regionals as $regional)
-            <option value="{{ $regional->id_regional }}"
-                @if (isset($result) && $result->ruangan_regional_id == $regional->id_regional) selected @endif>
-                {{ $regional->nama_regional }}
-            </option>
-        @endforeach
-    </select>
-    </div>
-</div>
                         <div class="form-group">
                             <label class="col-sm-13 control-label"></label>
                             <div class="col-sm-12">
@@ -157,22 +141,6 @@
                             @csrf
                             @method('PUT') <!-- Menambahkan metode PUT untuk update -->
                             <input type="hidden" name="id" value="{{ $result->id }}">
-                             {{-- Tambahkan bagian ini untuk dropdown Regional --}}
-                    <div class="form-group">
-                        <label>Regional *</label>
-                        <select class="form-control" name="ruangan_regional_id" required>
-                            <option value="">-- Pilih Regional --</option>
-                            @foreach ($regionals as $regional)
-                                <option value="{{ $regional->id_regional }}"
-                                    {{-- Ini adalah kunci untuk memilih opsi yang sudah ada --}}
-                                    @if ($result->ruangan_regional_id == $regional->id_regional) selected @endif
-                                >
-                                    {{ $regional->nama_regional }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    {{-- Akhir bagian dropdown Regional --}}
                             <div class="form-group">
                                 <label class="col-sm-13 control-label"></label>
                                 <div class="col-sm-12">

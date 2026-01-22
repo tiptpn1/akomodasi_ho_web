@@ -67,6 +67,9 @@ Route::post('sendvicon/store', [SendViconController::class, 'store'])->name('sen
 Route::post('sendvicon/cancel', [SendViconController::class, 'cancel'])->name('sendvicon.cancel');
 Route::get('sendvicon/check-nama', [SendViconController::class, 'ceknama'])->name('sendvicon.ceknama');
 
+// Route untuk tes kirim WhatsApp
+Route::get('/test-whatsapp', [BookingKamarController::class, 'testWhatsapp'])->name('test.whatsapp');
+
 Route::group(['prefix' => 'konsumsi', 'as' => 'konsumsi.'], function () {
     Route::get('/', [KonsumsiController::class, 'index'])->name('index');
     Route::put('/update/{id}', [KonsumsiController::class, 'update'])->name('update');
@@ -230,7 +233,7 @@ Route::group(['prefix' => 'kaskecil', 'as' => 'kaskecil.', 'middleware' => 'role
 });
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
-    route::get('logout', [UserController::class, 'logout'])->name('logout');
+    route::post('logout', [UserController::class, 'logout'])->name('logout');
 
     Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
         Route::group(['middleware' => 'role:admin,GA,divisi,sekper,read'], function () {
@@ -315,7 +318,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
         })->name('petugas');
     });
 
-    Route::group(['middleware' => 'role:admin'], function () {
+    Route::group(['middleware' => 'role:admin,GA'], function () {
         // Route untuk Link
         Route::group(['prefix' => 'masterlink', 'as' => 'masterlink.'], function () {
             Route::get('/', [LinkController::class, 'index'])->name('index');

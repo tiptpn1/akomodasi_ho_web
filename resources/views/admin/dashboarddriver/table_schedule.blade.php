@@ -63,20 +63,19 @@
                         $header_text = $nama_driver;
                         
                         if ($is_online || $is_rental) {
-                            $trip = data_get($driver, 'trips.0');
-                            // Mengakses nopol dari relasi (kendaraanDetail) jika ada, atau dari kolom rental_kendaraan
-                            $nopol = data_get($trip, 'kendaraanDetail.nopol') ?? data_get($trip, 'rental_kendaraan') ?? 'N/A';
-                            
                             if ($is_online) {
-                                $header_class = 'bg-info text-white';
-                                $header_text = 'Driver Online';
+                                $header_text = 'Grab'; // Sesuai permintaan
                             } elseif ($is_rental) {
-                                $header_class = 'bg-warning text-dark';
-                                $header_text = data_get($trip, 'rental_driver') . ' (' . $nopol . ')';
+                                // AMBIL DATA DARI SUMBER YANG BENAR: $driver['trips'][0]
+                                // Ini adalah trip pertama untuk kolom rental ini.
+                                $rental_trip = data_get($driver, 'trips.0');
+                                $rental_driver_name = data_get($rental_trip, 'rental_driver', 'Rental');
+                                $rental_nopol = data_get($rental_trip, 'kendaraanDetail.nopol') ?? data_get($rental_trip, 'rental_kendaraan', 'N/A');
+                                $header_text = "$rental_driver_name ($rental_nopol)";
                             }
                         }
                     @endphp
-                    <th scope="col" style="min-width: 150px;">{{ $header_text }}</th>
+                    <th scope="col" class="{{ $header_class }}" style="min-width: 150px;">{{ $header_text }}</th>
                 @endforeach
             </tr>
         </thead>

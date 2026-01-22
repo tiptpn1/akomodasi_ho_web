@@ -8,6 +8,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardDriverController extends Controller
 {
@@ -28,93 +29,71 @@ class DashboardDriverController extends Controller
             return response()->json(['message' => 'Sesi Anda telah berakhir'], 419);
         }
 
+        DB::enableQueryLog(); // <-- AKTIFKAN LOG
+
         try {
             // Konversi tanggal dari format 'm/d/Y' (datepicker JS) ke 'Y-m-d' (DB)
             $date = Carbon::createFromFormat('m/d/Y', $request->date)->format('Y-m-d');
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Format tanggal tidak valid.'], 400);
+            return response()->json(['message' => "Format tanggal tidak valid: '{$request->date}'. Harap gunakan format MM/DD/YYYY."], 400);
         }
 
         try {
             // 1. Ambil Driver Reguler (Selain ID 99)
-            $regularDrivers = MDriver::where('driver_regional_id', Auth::user()->bagian->regional->id_regional)
-            ->where('id_driver', '!=', 99) 
-            ->with(['p_kendaraans' => function ($query) use ($date) {
-                $query->where('tgl_berangkat', $date)
-                ->where('status', 2)
-                ->orderBy('jam_berangkat', 'asc');
-            }])
-            ->get();
+            $allDrivers = MDriver::where('id_driver', '!=', 99)->get();
+            $grabDriver = MDriver::find(99);
 
-            // 2. Ambil Perjalanan untuk Driver Online (ID 99)
-            // Relasi kendaraanDetail juga dimuat agar data Nopol tersedia di view
-            $onlineTrips = PKendaraan::where('tgl_berangkat', $date)
-                ->where('status', 2)
-                ->where('driver', 99)
-                ->with('kendaraanDetail')
-                ->orderBy('jam_berangkat', 'asc')
-                ->get();
-                
-            // 3. Ambil Perjalanan untuk Rental Driver
-            $rentalTrips = PKendaraan::where('tgl_berangkat', $date)
-                ->where('status', 2)
-                // Driver adalah NULL atau 0 DAN rental_driver terisi
-                ->where(function ($query) {
-                    $query->whereNull('driver')
-                          ->orWhere('driver', 0);
-                })
-                ->whereNotNull('rental_driver')
+            // 2. Ambil SEMUA perjalanan pada tanggal yang dipilih dalam satu query
+            $allTripsOnDate = PKendaraan::where('tgl_berangkat', $date)
+                ->with(['kendaraanDetail', 'driverDetail']) // Eager load relasi yang dibutuhkan
                 ->orderBy('jam_berangkat', 'asc')
                 ->get();
 
-
-            // Proses Driver Online dan Rental Driver menjadi kolom dinamis (setiap trip = 1 kolom)
-            $dynamicDrivers = [];
-
-            // Memproses Driver Online (ID 99)
-            foreach ($onlineTrips as $index => $trip) {
-                $driverName = 'Online Driver ' . ($index + 1);
-                $dynamicDrivers[] = [
-                    'nama_driver' => $driverName,
-                    'is_online' => true,
-                    'is_rental' => false,
-                    'trips' => [$trip], // Hanya 1 trip per kolom
-                    'original_trip_id' => $trip->id,
-                ];
-            }
-            
-            // Memproses Rental Driver
-            foreach ($rentalTrips as $index => $trip) {
-                $driverName = $trip->rental_driver;
-                $dynamicDrivers[] = [
-                    'nama_driver' => "Rental ({$driverName}) " . ($index + 1),
+            // 3. Siapkan struktur data final, dimulai dengan driver reguler
+            $finalDrivers = [];
+            foreach ($allDrivers as $driver) {
+                $finalDrivers[$driver->id_driver] = [
+                    'nama_driver' => $driver->nama_driver,
                     'is_online' => false,
-                    'is_rental' => true,
-                    'trips' => [$trip], // Hanya 1 trip per kolom
-                    'original_trip_id' => $trip->id,
+                    'is_rental' => false,
+                    'trips' => [], // Awalnya kosong
                 ];
             }
 
+            // 4. SELALU tambahkan "Grab" dan "Rental" sebagai kolom statis
+            if ($grabDriver) {
+                $finalDrivers[99] = ['nama_driver' => 'Grab', 'is_online' => true, 'is_rental' => false, 'trips' => []];
+            }
+            $finalDrivers['rental'] = ['nama_driver' => 'Rental', 'is_online' => false, 'is_rental' => true, 'trips' => []];
 
-            // Gabungkan semua driver: Reguler + Dinamis (Online/Rental)
-            $allDrivers = $regularDrivers->toArray();
-            
-            // Konversi koleksi driver reguler agar formatnya sama dengan dynamicDrivers
-            foreach ($allDrivers as $key => $driver) {
-                $allDrivers[$key]['is_online'] = false;
-                $allDrivers[$key]['is_rental'] = false;
-                $allDrivers[$key]['trips'] = $driver['p_kendaraans'];
+            // 5. Distribusikan perjalanan yang ditemukan ke "ember" driver yang sesuai
+            foreach ($allTripsOnDate as $trip) {
+                // Cek apakah ini perjalanan rental
+                $isRentalTrip = $trip->rental_driver && ($trip->driver == null || $trip->driver == 0);
+
+                if ($isRentalTrip) {
+                    // Masukkan ke ember "Rental"
+                    $finalDrivers['rental']['trips'][] = $trip;
+                } elseif ($trip->driver == 99 && isset($finalDrivers[99])) {
+                    // Masukkan ke ember "Grab"
+                    $finalDrivers[99]['trips'][] = $trip;
+                } elseif (isset($finalDrivers[$trip->driver])) {
+                    // Masukkan ke ember driver reguler
+                    $finalDrivers[$trip->driver]['trips'][] = $trip;
+                }
             }
 
-            // Gabungkan semua array untuk dikirim ke view
-            $finalDrivers = array_merge($allDrivers, $dynamicDrivers);
-
+            // Konversi ke array non-asosiatif agar bisa di-looping di view
+            $finalDrivers = array_values($finalDrivers);
 
             $data = [
                 'drivers' => $finalDrivers,
                 'carbon' => new Carbon(),
             ];
 
+            // dd($data); // Untuk debug jika perlu
+
+            // KEMBALIKAN KE SEMULA: Render view dan kirim sebagai HTML
             return view('admin.dashboarddriver.table_schedule', $data);
 
         } catch (\Throwable $th) {
@@ -162,14 +141,14 @@ class DashboardDriverController extends Controller
     //         ->where('id_driver', '!=', 99) 
     //         ->with(['p_kendaraans' => function ($query) use ($date) {
     //             $query->where('tgl_berangkat', $date)
-    //             ->where('status', 2)
+    //             //->where('status', 2)
     //             ->orderBy('jam_berangkat', 'asc');
     //         }])
     //         ->get();
 
     //         // 2. Ambil Perjalanan untuk Driver Online (ID 99)
     //         $onlineTrips = PKendaraan::where('tgl_berangkat', $date)
-    //             ->where('status', 2)
+    //             //->where('status', 2)
     //             ->where('driver', 99)
     //             ->with('kendaraanDetail')
     //             ->orderBy('jam_berangkat', 'asc')
@@ -177,7 +156,7 @@ class DashboardDriverController extends Controller
                 
     //         // 3. Ambil Perjalanan untuk Rental Driver
     //         $rentalTrips = PKendaraan::where('tgl_berangkat', $date)
-    //             ->where('status', 2)
+    //             //->where('status', 2)
     //             ->where(function ($query) {
     //                 $query->whereNull('driver')
     //                       ->orWhere('driver', 0);
@@ -277,18 +256,18 @@ public function export_pdf(Request $request)
 
         try {
             // 1. Ambil Driver Reguler (Selain ID 99)
-            $regularDrivers = MDriver::where('driver_regional_id', Auth::user()->bagian->regional->id_regional)
-            ->where('id_driver', '!=', 99) 
+            //$regularDrivers = MDriver::where('driver_regional_id', Auth::user()->bagian->regional->id_regional)
+            $regularDrivers = MDriver::where('id_driver', '!=', 99) 
             ->with(['p_kendaraans' => function ($query) use ($date) {
                 $query->where('tgl_berangkat', $date)
-                ->where('status', 2)
+                //->where('status', 2)
                 ->orderBy('jam_berangkat', 'asc');
             }])
             ->get();
 
             // 2. Ambil Perjalanan untuk Driver Online (ID 99)
             $onlineTrips = PKendaraan::where('tgl_berangkat', $date)
-                ->where('status', 2)
+                //->where('status', 2)
                 ->where('driver', 99)
                 ->with('kendaraanDetail')
                 ->orderBy('jam_berangkat', 'asc')
@@ -296,7 +275,7 @@ public function export_pdf(Request $request)
                 
             // 3. Ambil Perjalanan untuk Rental Driver
             $rentalTrips = PKendaraan::where('tgl_berangkat', $date)
-                ->where('status', 2)
+                //->where('status', 2)
                 ->where(function ($query) {
                     $query->whereNull('driver')
                           ->orWhere('driver', 0);

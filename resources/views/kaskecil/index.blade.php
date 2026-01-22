@@ -127,7 +127,7 @@
                                         <div class="row hidden-section">
                                             <div class="form-group col-md-6">
                                                 <b>Jumlah KM </b><span class="text-success">*otomatis</span>
-                                                <input type="text" class="form-control" id="jumlah_km" disabled readonly>
+                                                <input type="text" class="form-control" id="jumlah_km_tambah" disabled readonly>
                                             </div>
                                         </div>
                                         <div class="row hidden-section">
@@ -197,7 +197,7 @@
                                             </div>
                                             <div class="form-group col-md-6">
                                                 <b>Total Biaya </b><span class="text-success">*otomatis</span>
-                                                <input type="text" class="form-control rupiah" id="total_biaya" readonly disabled>
+                                                <input type="text" class="form-control rupiah" id="total_biaya_tambah" readonly disabled>
                                             </div>
                                         </div>
                                         <!-- Modal Footer (buttons) -->
@@ -270,7 +270,7 @@
                                                 <input type="number" class="form-control " name="nominal" required>
                                             </div>
                                         </div>
-                                        <div class="row ">
+                                        <div class="row hidden-section">
                                             <div class="form-group col-md-6">
                                                 <b>Kendaraan</b>
                                                 <select class="form-control" name="id_kendaraan">
@@ -290,7 +290,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="row ">
+                                        <div class="row hidden-section">
                                             <div class="form-group col-md-6">
                                                 <b>KM Awal</b>
                                                 <input type="number" class="form-control" name="km_awal">
@@ -300,13 +300,13 @@
                                                 <input type="number" class="form-control" name="km_akhir">
                                             </div>
                                         </div>
-                                        <div class="row ">
+                                        <div class="row hidden-section">
                                             <div class="form-group col-md-6">
                                                 <b>Jumlah KM </b><span class="text-success">*otomatis</span>
-                                                <input type="text" class="form-control" id="jumlah_km" disabled readonly>
+                                                <input type="text" class="form-control" id="jumlah_km_edit" disabled readonly>
                                             </div>
                                         </div>
-                                        <div class="row ">
+                                        <div class="row hidden-section">
                                             <div class="form-group col-md-6">
                                                 <b>Liter Bensin </b>
                                                 <input type="number" class="form-control" name="liter_bensin">
@@ -316,7 +316,7 @@
                                                 <input type="number" class="form-control" name="harga_bensin">
                                             </div>
                                         </div>
-                                        <div class="row">
+                                        <div class="row hidden-section">
                                             <div class="form-group col-md-6">
                                                 <b>Biaya Tol </b>
                                                 <input type="number" class="form-control " name="tol">
@@ -373,7 +373,7 @@
                                             </div>
                                             <div class="form-group col-md-6">
                                                 <b>Total Biaya </b><span class="text-success">*otomatis</span>
-                                                <input type="text" class="form-control rupiah" id="total_biaya" readonly disabled>
+                                                <input type="text" class="form-control rupiah" id="total_biaya_edit" readonly disabled>
                                             </div>
                                         </div>
                                         <!-- Modal Footer (buttons) -->
@@ -650,6 +650,10 @@
                         $('input[name="dibayarkan_oleh"]').val(data.dibayarkan_oleh);
                         $('input[name="tgl_dibayarkan"]').val(data.tgl_dibayarkan);
                         $('textarea[name="keterangan"]').val(data.keterangan);
+
+                        // Manually trigger change event to show/hide sections and run calculations
+                        $('#form_edit select[name="id_group"]').trigger('change');
+                        $('#form_edit').trigger('input');
                     },
                     error: function(xhr) {
                         console.error(xhr.responseText);
@@ -659,25 +663,32 @@
         </script>
         <script>
             // Function to calculate "Jumlah KM" and "Total Biaya"
-            document.querySelector('form').addEventListener('input', function() {
-                let km_awal = parseFloat(document.querySelector('[name="km_awal"]').value) || 0;
-                let km_akhir = parseFloat(document.querySelector('[name="km_akhir"]').value) || 0;
-                let nominal = parseFloat(document.querySelector('[name="nominal"]').value.replace(/[^0-9.-]+/g, "")) || 0;
-                let ppn = parseFloat(document.querySelector('[name="ppn"]').value.replace(/[^0-9.-]+/g, "")) || 0;
-                let harga_bensin = parseFloat(document.querySelector('[name="harga_bensin"]').value.replace(/[^0-9.-]+/g, "")) || 0;
-                let pph = parseFloat(document.querySelector('[name="pph"]').value.replace(/[^0-9.-]+/g, "")) || 0;
-                let tol = parseFloat(document.querySelector('[name="tol"]').value.replace(/[^0-9.-]+/g, "")) || 0;
-                let parkir = parseFloat(document.querySelector('[name="parkir"]').value.replace(/[^0-9.-]+/g, "")) || 0;
-                let biaya_aplikasi = parseFloat(document.querySelector('[name="biaya_aplikasi"]').value.replace(/[^0-9.-]+/g, "")) || 0;
-                let lain_lain = parseFloat(document.querySelector('[name="lain_lain"]').value.replace(/[^0-9.-]+/g, "")) || 0;
+            function calculateTotals(form) {
+                let km_awal = parseFloat(form.querySelector('[name="km_awal"]').value) || 0;
+                let km_akhir = parseFloat(form.querySelector('[name="km_akhir"]').value) || 0;
+                let nominal = parseFloat(form.querySelector('[name="nominal"]').value.replace(/[^0-9.-]+/g, "")) || 0;
+                let ppn = parseFloat(form.querySelector('[name="ppn"]').value.replace(/[^0-9.-]+/g, "")) || 0;
+                let harga_bensin = parseFloat(form.querySelector('[name="harga_bensin"]').value.replace(/[^0-9.-]+/g, "")) || 0;
+                let pph = parseFloat(form.querySelector('[name="pph"]').value.replace(/[^0-9.-]+/g, "")) || 0;
+                let tol = parseFloat(form.querySelector('[name="tol"]').value.replace(/[^0-9.-]+/g, "")) || 0;
+                let parkir = parseFloat(form.querySelector('[name="parkir"]').value.replace(/[^0-9.-]+/g, "")) || 0;
+                let biaya_aplikasi = parseFloat(form.querySelector('[name="biaya_aplikasi"]').value.replace(/[^0-9.-]+/g, "")) || 0;
+                let lain_lain = parseFloat(form.querySelector('[name="lain_lain"]').value.replace(/[^0-9.-]+/g, "")) || 0;
 
                 // Calculate "Jumlah KM"
                 let jumlah_km = km_akhir - km_awal;
-                document.getElementById('jumlah_km').value = jumlah_km;
+                form.querySelector('input[id^="jumlah_km"]').value = jumlah_km > 0 ? jumlah_km : 0;
 
                 // Calculate "Total Biaya"
                 let total_biaya = nominal + ppn + pph + tol + parkir + biaya_aplikasi + lain_lain + harga_bensin;
-                document.getElementById('total_biaya').value = total_biaya;
+                form.querySelector('input[id^="total_biaya"]').value = new Intl.NumberFormat('id-ID').format(Math.round(total_biaya));
+            }
+
+            // Add event listeners to both forms
+            document.querySelectorAll('#form_tambah, #form_edit').forEach(form => {
+                form.addEventListener('input', function() {
+                    calculateTotals(this);
+                });
             });
         </script>
         <script>
@@ -710,26 +721,24 @@
         <script>
             $(document).ready(function() {
                 const groupIdsToShow = [2, 3, 5, 13, 17, 18];
-
-                // Pastikan elemen hidden-section tersembunyi saat halaman dimuat
-                $('.hidden-section').hide();
-
-                // Pengecekan awal jika dalam mode edit
-                const selectedGroupId = parseInt($('select[name="id_group"]').val());
-                if (groupIdsToShow.includes(selectedGroupId)) {
-                    $('.hidden-section').show(); // Tampilkan elemen
-                    $('.hidden-section input, .hidden-section select').attr('required', true); // Tambahkan validasi required
-                }
-                // Event listener untuk dropdown id_group
-                $('select[name="id_group"]').on('change', function() {
-                    const selectedGroupId = parseInt($(this).val());
+    
+                function toggleVehicleFields(form) {
+                    const selectedGroupId = parseInt($(form).find('select[name="id_group"]').val());
+                    const hiddenSections = $(form).find('.hidden-section');
+    
                     if (groupIdsToShow.includes(selectedGroupId)) {
-                        $('.hidden-section').show(); // Tampilkan elemen
-                        //$('.hidden-section input, .hidden-section select').attr('required', true); // Tambahkan validasi required
+                        hiddenSections.show();
                     } else {
-                        $('.hidden-section').hide(); // Sembunyikan elemen
-                        $('.hidden-section input, .hidden-section select').removeAttr('required'); // Hapus validasi required
+                        hiddenSections.hide();
+                        // Kosongkan nilai field yang disembunyikan agar tidak ikut terhitung
+                        hiddenSections.find('input, select').val('');
                     }
+                }
+    
+                // Event listener untuk kedua form
+                $('#form_tambah, #form_edit').on('change', 'select[name="id_group"]', function() {
+                    const form = $(this).closest('form');
+                    toggleVehicleFields(form);
                 });
             });
         </script>

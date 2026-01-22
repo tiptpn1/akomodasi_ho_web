@@ -1393,9 +1393,9 @@
 
             function fetchData(tipeAgenda) {
                 // Ini akan mengubah 'undefined' menjadi 'hari_ini'. (default)
-                if (tipeAgenda !== 'semua') {
-        tipeAgenda = 'hari_ini';
-    }
+    //             if (tipeAgenda != 'semua') {
+    //     tipeAgenda = 'hari_ini';
+    // }
         
                 // --- TAMBAHAN: Logika untuk sorot tombol dan ubah judul ---
     if (tipeAgenda === 'hari_ini') {

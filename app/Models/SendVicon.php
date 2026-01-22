@@ -142,6 +142,35 @@ class SendVicon extends Model
         return $cekfin;
     }
 
+    public static function cekctr2($tanggal, $ruangan, $waktu1, $waktu2)
+    {
+        $cekfin = 0;
+
+        // Cek jika ruangan tidak null dan bukan 'Tidak Membutuhkan Ruangan'
+        if (!is_null($ruangan) and $ruangan != 99) {
+            $cekfin =self::where('id_ruangan', $ruangan)
+                    ->where('tanggal', $tanggal)
+                    ->where(function ($q) use ($waktu1, $waktu2) {
+                        return $q->where(function ($q2) use ($waktu1, $waktu2) {
+                            return $q2->where('waktu', '<=', $waktu1)
+                            ->where('waktu2', '>=', $waktu2);
+                        })
+                        ->orWhere(function ($q2) use ($waktu1, $waktu2) {
+                            return  $q2->where('waktu', '>=', $waktu1)
+                                ->where('waktu', '<=', $waktu2);
+                        })
+                        ->orWhere(function ($q2) use ($waktu1, $waktu2) {
+                            return  $q2->where('waktu2', '>=', $waktu1)
+                                ->where('waktu2', '<=', $waktu2);
+                        });
+                    })
+                    //->where('status_approval', 1)
+                    ->count();
+        }
+
+        return $cekfin;
+    }
+
     // mirip dengan function cekctr namun menambahkan kondisi vicon sudah di approve
     public static function cekctr_approve($tanggal, $ruangan, $waktu1, $waktu2)
     {

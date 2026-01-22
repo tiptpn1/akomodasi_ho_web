@@ -23,6 +23,11 @@ class DashboardAgendaController extends Controller
 
     public function index()
     {
+        // Jika master_bagian_id adalah 53, redirect ke URL tertentu
+    if (Auth::user()->Bagian && Auth::user()->Bagian->master_bagian_id == 53) {
+        return redirect()->away('https://arhan.ptpn1.co.id/bookingkamar/list_booking');
+    }
+        
         // Ambil bagian_reg berdasarkan master_bagian_id dari user yang login
         $bagian_reg = Bagian::where('master_bagian_id', Auth::user()->master_nama_bagian_id)
             ->orderBy('master_bagian_id', 'desc')
@@ -63,6 +68,7 @@ class DashboardAgendaController extends Controller
             // $ruangan = $this->model->getSpesificData(array('lantai' => $lantai), $date);
 
             $ruangan = $this->model->getSpesificData(array('lantai' => $lantai), $date)
+                    ->where('status', 'Aktif')
                     ->where('ruangan_regional_id', Auth::user()->bagian->regional->id_regional)
                     ->get(); // Tambahkan ->get() untuk mengeksekusi query
 

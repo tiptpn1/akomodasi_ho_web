@@ -187,6 +187,13 @@
                                         data-dokumen="{{ $booking->dokumen_pendukung }}">
                                         Detail
                                     </button>
+                                        @if(Auth::user()->Bagian->master_bagian_id == 53 && $booking->status == 'approved')
+                                        <form action="{{ route('bookingkamar.checkout', $booking->id) }}" method="POST" class="d-inline show-loading-on-submit">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-warning btn-sm">Checkout</button>
+                                        </form>
+                                        @endif
                                     @if (in_array(Auth::user()->master_user_nama, ['asisten_ga', 'kasubdiv_ga']))
                                         @if($booking->status == 'pending')
                                             <form action="{{ route('bookingkamar.approve', $booking->id) }}" method="POST" class="d-inline show-loading-on-submit">

@@ -123,7 +123,7 @@
                                     <td>{{ $absensi->jabatan }}</td>
                                     <td>{{ $absensi->instansi }}</td>
                                     <td style="text-align: center;">
-                                        {{ Carbon\Carbon::parse($absensi->created)->format('H:i:s') }}
+                                        {{ Carbon\Carbon::parse($absensi->created_at)->format('H:i:s') }}
                                     </td>
                                 </tr>
                             @endforeach

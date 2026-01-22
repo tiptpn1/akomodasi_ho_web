@@ -10,9 +10,11 @@ class RuanganController extends Controller
 {
     public function index()
     {
-        $ruangan = Ruangan::with('regional')->get();
-        $regionals = MRegional::all(); // Ini yang baru ditambahkan
-        return view('admin.ruangan.ruangan', compact('ruangan', 'regionals'));
+        // $ruangan = Ruangan::with('regional')->get();
+        // $regionals = MRegional::all(); // Ini yang baru ditambahkan
+        // return view('admin.ruangan.ruangan', compact('ruangan', 'regionals'));
+        $ruangan = Ruangan::all();
+        return view('admin.ruangan.ruangan', compact('ruangan'));
     }
 
     public function store(Request $request)
@@ -21,7 +23,7 @@ class RuanganController extends Controller
             'nama' => $request->nama,
             'lantai' => $request->lantai,
             'kapasitas' => $request->kapasitas,
-            'ruangan_regional_id' => $request->ruangan_regional_id,
+            //'ruangan_regional_id' => $request->ruangan_regional_id,
             'status' => $request->status
         ]);
         return redirect()->route('admin.ruangan.index')
@@ -35,7 +37,7 @@ class RuanganController extends Controller
             'nama' => $request->nama,
             'lantai' => $request->lantai,
             'kapasitas' => $request->kapasitas,
-            'ruangan_regional_id' => $request->ruangan_regional_id,
+            //'ruangan_regional_id' => $request->ruangan_regional_id,
             'status' => $request->status
         ]);
 

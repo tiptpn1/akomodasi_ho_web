@@ -62,6 +62,7 @@ class BookingKamarController extends Controller
         ->map(function ($kamar) use ($tanggal_mulai, $tanggal_selesai, $jabatans) {
             // Hitung jumlah orang yang sudah booking dalam rentang tanggal
             $jumlahTerbooking = BookingKamar::where('kamar_id', $kamar->id)
+                ->where('status', 'approved')
                 ->where(function ($query) use ($tanggal_mulai, $tanggal_selesai) {
                     $query->whereBetween('tanggal_mulai', [$tanggal_mulai, $tanggal_selesai])
                         ->orWhereBetween('tanggal_selesai', [$tanggal_mulai, $tanggal_selesai])
@@ -549,6 +550,25 @@ class BookingKamarController extends Controller
 
         // Export logic (using Laravel Excel)
         return Excel::download(new BookingExport($data), 'booking_kamar_export.xlsx');
+        }
+
+    public function testWhatsapp()
+    {
+        // Ganti dengan nomor tujuan yang valid untuk pengetesan
+        $target = '082134706151'; 
+        $message = 'Ini adalah pesan tes dari aplikasi ARHAN.';
+
+        try {
+            $response = Whatsapp::send($target, $message);
+
+            if ($response->successful()) {
+                return "Pesan WhatsApp berhasil dikirim ke " . $target;
+            } else {
+                return "Gagal mengirim pesan WhatsApp. Response: " . $response->body();
+            }
+        } catch (\Exception $e) {
+            return "Terjadi error saat mengirim WhatsApp: " . $e->getMessage();
+        }
     }
 
 }
